@@ -1,5 +1,5 @@
 [package]
-name = "ansi-parser-in-rust_"
+name = "ansi-parser"
 version = "0.1.0"
 edition = "2021"
 

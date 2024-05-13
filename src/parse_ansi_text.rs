@@ -1,4 +1,3 @@
-pub mod span;
 pub mod types;
 pub mod colors;
 pub mod constants;
@@ -10,7 +9,6 @@ use ansi_parser::{Output, AnsiParser};
 
 use types::Span;
 use crate::parse_ansi_text::ansi_sequence_helpers::*;
-use crate::parse_ansi_text::span::*;
 
 
 pub fn parse_ansi_text(str: &str) -> Vec<Span> {
@@ -42,7 +40,7 @@ fn create_span_from_output(parsed: Vec<Output>) -> Vec<Span> {
 
     let mut all_spans: Vec<Span> = vec![];
 
-    let mut span: Span = create_unstyled_span("".to_string());
+    let mut span: Span = Span::empty();
 
     for output in parsed {
         println!("Output: {:?}", output);
@@ -62,21 +60,39 @@ fn create_span_from_output(parsed: Vec<Output>) -> Vec<Span> {
                     AnsiSequenceType::Reset => {
                         // Ignore spans that are just empty text even if they have style as this won't be shown
                         if span.text.len() > 0 {
-                            all_spans.push(span);
+                            all_spans.push(span.clone());
                         }
                         
-                        span = create_unstyled_span("".to_string());
+                        span = Span::empty();
                     },
                     AnsiSequenceType::ForegroundColor(color) => {
+                        // TODO - test for different rgb values
+                        if span.text.len() > 0 && span.color != color {
+                            all_spans.push(span.clone());
+                            span = span.with_text("".to_string());
+                        }
                         span.color = color;
                     },
                     AnsiSequenceType::BackgroundColor(color) => {
+                        // TODO - test for different rgb values
+                        if span.text.len() > 0 && span.bg_color != color {
+                            all_spans.push(span.clone());
+                            span = span.with_text("".to_string());
+                        }
                         span.bg_color = color;
                     },
                     AnsiSequenceType::Brightness(brightness) => {
+                        if span.text.len() > 0 && span.brightness != brightness {
+                            all_spans.push(span.clone());
+                            span = span.with_text("".to_string());
+                        }
                         span.brightness = brightness;
                     },
                     AnsiSequenceType::TextStyle(style) => {
+                        if span.text.len() > 0 && span.text_style != style {
+                            all_spans.push(span.clone());
+                            span = span.with_text("".to_string());
+                        }
                         // Merge the style
                         span.text_style = span.text_style | style;
                     },
@@ -88,7 +104,8 @@ fn create_span_from_output(parsed: Vec<Output>) -> Vec<Span> {
 
     // Add last span if it has text
     if span.text.len() > 0 {
-        all_spans.push(span);
+        // TODO - maybe no need to clone here as it's the last one
+        all_spans.push(span.clone());
     }
 
     return all_spans

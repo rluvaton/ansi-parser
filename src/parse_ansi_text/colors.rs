@@ -6,7 +6,7 @@ pub enum ColorType {
     Background(Color),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Copy)]
 pub enum Color {
     None,
 
@@ -142,11 +142,11 @@ pub const WHITE_BACKGROUND_CODE: &str = "\x1B[47m";
 #[allow(dead_code)]
 pub fn RGB_FOREGROUND_CODE(r: u8, g: u8, b: u8) -> String {
     // \x1B[38;2;R;G;Bm	
-    format!("\x1B[38;2;{};{};{}m", r, g, b)
+    return format!("\x1B[38;2;{};{};{}m", r, g, b)
 }
 
 #[allow(dead_code)]
 pub fn RGB_BACKGROUND_CODE(r: u8, g: u8, b: u8) -> String {
-    format!("\x1B[48;2;{};{};{}m", r, g, b)
+    return format!("\x1B[48;2;{};{};{}m", r, g, b)
 }
 

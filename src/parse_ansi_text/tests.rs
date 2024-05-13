@@ -8,7 +8,6 @@ mod tests {
     use crate::parse_ansi_text::style::*;
     use crate::parse_ansi_text::types::*;
     use crate::parse_ansi_text::parse_ansi_text;
-    use crate::parse_ansi_text::span::create_unstyled_span;
 
     #[test]
     fn empty_text_should_return_empty_array() {
@@ -24,14 +23,14 @@ mod tests {
     #[test]
     fn single_text_without_ansi_codes_should_return_array_with_one_unstyled_span() {
         let input = "Hello, world!";
-        let expected = vec![create_unstyled_span("Hello, world!".to_string())];
+        let expected = vec![Span::empty().with_text("Hello, world!".to_string())];
         assert_eq!(parse_ansi_text(input), expected);
     }
 
     #[test]
     fn multiline_text_without_ansi_codes_should_return_array_with_one_unstyled_span() {
         let input = "Hello, world!\nhow are you";
-        let expected = vec![create_unstyled_span("Hello, world!\nhow are you".to_string())];
+        let expected = vec![Span::empty().with_text("Hello, world!\nhow are you".to_string())];
         assert_eq!(parse_ansi_text(input), expected);
     }
 
@@ -307,6 +306,33 @@ mod tests {
     }
 
     #[test]
+    fn when_rgb_values_in_foreground_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_foreground_color() {
+        let input = [
+            RGB_FOREGROUND_CODE(188, 29, 68).as_str(),
+            "Hello, world!",
+            RGB_FOREGROUND_CODE(255, 19, 94).as_str(),
+            "How are you?",
+            RESET_CODE,
+        ].join("");
+        let expected = vec![Span {
+            color: Color::Rgb(188, 29, 68),
+
+            text: "Hello, world!".to_string(),
+            bg_color: Color::None,
+            brightness: Brightness::None,
+            text_style: TextStyle::None,
+        }, Span {
+            color: Color::Rgb(255, 19, 94),
+
+            text: "How are you?".to_string(),
+            bg_color: Color::None,
+            brightness: Brightness::None,
+            text_style: TextStyle::None,
+        }];
+        assert_eq!(parse_ansi_text(&input), expected);
+    }
+
+    #[test]
     fn when_background_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_background_color() {
         let input = [
             BLACK_BACKGROUND_CODE,
@@ -324,6 +350,33 @@ mod tests {
             text_style: TextStyle::None,
         }, Span {
             bg_color: Color::Red,
+
+            text: "How are you?".to_string(),
+            color: Color::None,
+            brightness: Brightness::None,
+            text_style: TextStyle::None,
+        }];
+        assert_eq!(parse_ansi_text(&input), expected);
+    }
+
+    #[test]
+    fn when_rgb_background_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_background_color() {
+        let input = [
+            RGB_BACKGROUND_CODE(188, 29, 68).as_str(),
+            "Hello, world!",
+            RGB_BACKGROUND_CODE(255, 19, 94).as_str(),
+            "How are you?",
+            RESET_CODE,
+        ].join("");
+        let expected = vec![Span {
+            bg_color: Color::Rgb(188, 29, 68),
+
+            text: "Hello, world!".to_string(),
+            color: Color::None,
+            brightness: Brightness::None,
+            text_style: TextStyle::None,
+        }, Span {
+            bg_color: Color::Rgb(255, 19, 94),
 
             text: "How are you?".to_string(),
             color: Color::None,
@@ -361,7 +414,7 @@ mod tests {
     }
 
     #[test]
-    fn when_text_style_change_after_some_text_without_reset_should_create_a_new_span_with_new_text_style() {
+    fn when_text_style_change_after_some_text_without_reset_should_create_a_new_span_with_merged_text_style() {
         let input = [
             ITALIC_CODE,
             "Hello, world!",
@@ -377,7 +430,7 @@ mod tests {
             brightness: Brightness::None,
             color: Color::None,
         }, Span {
-            text_style: TextStyle::Underline,
+            text_style: TextStyle::Italic | TextStyle::Underline,
 
             text: "How are you?".to_string(),
             bg_color: Color::None,
@@ -408,14 +461,14 @@ mod tests {
 
             text: "Hello, world!".to_string(),
             bg_color: Color::White,
-            brightness: Brightness::Dim,
+            brightness: Brightness::Bold,
             text_style: TextStyle::Italic,
         }, Span {
             color: Color::Red,
 
             text: "How are you?".to_string(),
             bg_color: Color::White,
-            brightness: Brightness::Dim,
+            brightness: Brightness::Bold,
             text_style: TextStyle::Italic,
         }];
         assert_eq!(parse_ansi_text(&input), expected);
@@ -438,14 +491,14 @@ mod tests {
 
             text: "Hello, world!".to_string(),
             color: Color::White,
-            brightness: Brightness::Dim,
+            brightness: Brightness::Bold,
             text_style: TextStyle::Italic,
         }, Span {
             bg_color: Color::Red,
 
             text: "How are you?".to_string(),
             color: Color::White,
-            brightness: Brightness::Dim,
+            brightness: Brightness::Bold,
             text_style: TextStyle::Italic,
         }];
         assert_eq!(parse_ansi_text(&input), expected);
@@ -482,7 +535,7 @@ mod tests {
     }
 
     #[test]
-    fn when_text_style_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_text_style() {
+    fn when_text_style_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_merged_text_style() {
         let input = [
             WHITE_FOREGROUND_CODE,
             BLACK_BACKGROUND_CODE,
@@ -501,7 +554,7 @@ mod tests {
             bg_color: Color::Black,
             brightness: Brightness::Bold,
         }, Span {
-            text_style: TextStyle::Underline,
+            text_style: TextStyle::Italic | TextStyle::Underline,
 
             text: "How are you?".to_string(),
             color: Color::White,
@@ -838,10 +891,9 @@ mod tests {
     }
 
 
-    // ------------------------------------------------------------
-    // TODO
+    // -----------------------------------------------------------------------------------------------------
     // Style added after text should create a new span with the same color/brightness and merged text style
-    // ------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------
 
     #[test]
     fn style_added_after_text_should_create_new_span_and_merge_with_style_before() {

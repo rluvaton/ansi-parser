@@ -23,7 +23,7 @@ fn main() {
     println!("With text:\n{contents}");
 
     let spans = parse_ansi_text::parse_ansi_text(&contents);
-    
+
     //Print the parsed output
     for span in spans {
         println!("{:?}", span);

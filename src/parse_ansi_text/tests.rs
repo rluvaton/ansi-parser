@@ -94,7 +94,7 @@ mod tests {
             RESET_CODE,
         ].join("");
         let expected = vec![
-            
+
             Span::empty()
                 .with_text_style(expected_text_style)
                 .with_text("Hello, world!".to_string())
@@ -428,7 +428,7 @@ mod tests {
         }];
         assert_eq!(parse_ansi_text(&input), expected);
     }
-    
+
     // ----------------------------------------------------------------------------------------------
     // Color/Style/Brightness changed after some text without text afterward with other style before
     // ----------------------------------------------------------------------------------------------

@@ -53,14 +53,11 @@ mod tests {
             "Hello, world!",
             RESET_CODE,
         ].join("");
-        let expected = vec![Span {
-            color: expected_color,
-
-            text: "Hello, world!".to_string(),
-            bg_color: Color::None,
-            brightness: Brightness::None,
-            text_style: TextStyle::None,
-        }];
+        let expected = vec![
+            Span::empty()
+                .with_color(expected_color)
+                .with_text("Hello, world!".to_string())
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
@@ -78,14 +75,11 @@ mod tests {
             "Hello, world!",
             RESET_CODE,
         ].join("");
-        let expected = vec![Span {
-            bg_color: expected_color,
-
-            text: "Hello, world!".to_string(),
-            color: Color::None,
-            brightness: Brightness::None,
-            text_style: TextStyle::None,
-        }];
+        let expected = vec![
+            Span::empty()
+                .with_bg_color(expected_color)
+                .with_text("Hello, world!".to_string())
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
@@ -99,14 +93,12 @@ mod tests {
             "Hello, world!",
             RESET_CODE,
         ].join("");
-        let expected = vec![Span {
-            text_style: expected_text_style,
-
-            text: "Hello, world!".to_string(),
-            bg_color: Color::None,
-            color: Color::None,
-            brightness: Brightness::None,
-        }];
+        let expected = vec![
+            
+            Span::empty()
+                .with_text_style(expected_text_style)
+                .with_text("Hello, world!".to_string())
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
@@ -118,14 +110,11 @@ mod tests {
             "Hello, world!",
             RESET_CODE,
         ].join("");
-        let expected = vec![Span {
-            brightness: expected_brightness,
-
-            text: "Hello, world!".to_string(),
-            bg_color: Color::None,
-            color: Color::None,
-            text_style: TextStyle::None,
-        }];
+        let expected = vec![
+            Span::empty()
+                .with_brightness(expected_brightness)
+                .with_text("Hello, world!".to_string())
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 

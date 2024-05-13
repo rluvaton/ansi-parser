@@ -1,6 +1,6 @@
 bitflags::bitflags! {
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-    pub struct Style: u8 {
+    pub struct TextStyle: u8 {
         
         const None = 0b00000000;
         
@@ -44,13 +44,13 @@ pub fn get_brightness_type(code: u8) -> Brightness {
 }
 
 
-pub fn get_style_type(code: u8) -> Style { 
+pub fn get_text_style_type(code: u8) -> TextStyle { 
     return match code {
-        3 => Style::Italic,
-        4 => Style::Underline,
-        7 => Style::Inverse,
-        9 => Style::Strikethrough,
-        _ => Style::None,
+        3 => TextStyle::Italic,
+        4 => TextStyle::Underline,
+        7 => TextStyle::Inverse,
+        9 => TextStyle::Strikethrough,
+        _ => TextStyle::None,
     }
 }
 

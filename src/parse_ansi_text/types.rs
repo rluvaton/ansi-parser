@@ -1,6 +1,6 @@
 
 use crate::parse_ansi_text::colors::Color;
-use crate::parse_ansi_text::style::{Brightness, Style};
+use crate::parse_ansi_text::style::{Brightness, TextStyle};
 
 
 // See more here for ansi codes: https://tforgione.fr/posts/ansi-escape-codes/
@@ -11,7 +11,7 @@ pub struct Span {
     pub bg_color: Color,
 
     pub brightness: Brightness,
-    pub style: Style,
+    pub text_style: TextStyle,
 }
 
 

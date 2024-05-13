@@ -1,5 +1,5 @@
 use crate::parse_ansi_text::colors::Color;
-use crate::parse_ansi_text::style::{Brightness, Style};
+use crate::parse_ansi_text::style::{Brightness, TextStyle};
 use crate::parse_ansi_text::types::*;
 
 pub fn create_unstyled_span(text: String) -> Span {
@@ -7,7 +7,7 @@ pub fn create_unstyled_span(text: String) -> Span {
         text: text,
         color: Color::None,
         bg_color: Color::None,
-        style: Style::empty(),
+        text_style: TextStyle::None,
         brightness: Brightness::None,
     }
 }
@@ -34,7 +34,7 @@ mod tests {
 
             color: Color::None,
             bg_color: Color::None,
-            style: Style::empty(),
+            text_style: TextStyle::None,
             brightness: Brightness::None,
         });
     }

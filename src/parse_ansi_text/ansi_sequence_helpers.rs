@@ -8,7 +8,7 @@ pub enum AnsiSequenceType {
     ForegroundColor(Color),
     BackgroundColor(Color),
     Brightness(Brightness),
-    Style(Style),
+    TextStyle(TextStyle),
 }
 
 pub fn get_type_from_ansi_sequence(seq: &AnsiSequence) -> AnsiSequenceType {
@@ -55,10 +55,10 @@ pub fn get_type_from_ansi_sequence(seq: &AnsiSequence) -> AnsiSequenceType {
                 return AnsiSequenceType::Brightness(brightness);
             }
             
-            let style = get_style_type(vec[0]);
+            let style = get_text_style_type(vec[0]);
             
-            if style != Style::None {
-                return AnsiSequenceType::Style(style);
+            if style != TextStyle::None {
+                return AnsiSequenceType::TextStyle(style);
             }
             
             println!("Unrecognized graphics mode: {:?}", vec);

@@ -17,14 +17,14 @@ pub fn get_type_from_ansi_sequence(seq: &AnsiSequence) -> AnsiSequenceType {
         return AnsiSequenceType::Unsupported;
     }
 
-    println!("Supported Ansi sequence: {:?}", seq);
+    // println!("Supported Ansi sequence: {:?}", seq);
     
     // Instead of match as we only support single, change to if not set graphics mode panic
 
     match seq {
         // TODO - what it means?
         AnsiSequence::SetGraphicsMode(vec) => {
-            println!("SetGraphicsMode: {:?}", vec);
+            // println!("SetGraphicsMode: {:?}", vec);
             
             if vec.len() == 0 {
                 println!("Unrecognized graphics mode: {:?}", vec);
@@ -70,7 +70,7 @@ pub fn get_type_from_ansi_sequence(seq: &AnsiSequence) -> AnsiSequenceType {
         }
     }
     
-            return AnsiSequenceType::Unsupported;
+    return AnsiSequenceType::Unsupported;
 }
 
 pub fn is_ansi_sequence_code_supported(seq: &AnsiSequence) -> bool {

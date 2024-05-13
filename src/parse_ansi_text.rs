@@ -43,11 +43,11 @@ fn create_span_from_output(parsed: Vec<Output>) -> Vec<Span> {
     let mut span: Span = Span::empty();
 
     for output in parsed {
-        println!("Output: {:?}", output);
+        // println!("Output: {:?}", output);
 
         match output {
             Output::TextBlock(text) => {
-                println!("Text block: {}", text);
+                // println!("Text block: {}", text);
                 span.text.push_str(text);
             },
             Output::Escape(seq) => {
@@ -66,7 +66,6 @@ fn create_span_from_output(parsed: Vec<Output>) -> Vec<Span> {
                         span = Span::empty();
                     },
                     AnsiSequenceType::ForegroundColor(color) => {
-                        // TODO - test for different rgb values
                         if span.text.len() > 0 && span.color != color {
                             all_spans.push(span.clone());
                             span = span.with_text("".to_string());
@@ -74,7 +73,6 @@ fn create_span_from_output(parsed: Vec<Output>) -> Vec<Span> {
                         span.color = color;
                     },
                     AnsiSequenceType::BackgroundColor(color) => {
-                        // TODO - test for different rgb values
                         if span.text.len() > 0 && span.bg_color != color {
                             all_spans.push(span.clone());
                             span = span.with_text("".to_string());
@@ -104,8 +102,8 @@ fn create_span_from_output(parsed: Vec<Output>) -> Vec<Span> {
 
     // Add last span if it has text
     if span.text.len() > 0 {
-        // TODO - maybe no need to clone here as it's the last one
-        all_spans.push(span.clone());
+        // No need to clone as it's the last one
+        all_spans.push(span);
     }
 
     return all_spans

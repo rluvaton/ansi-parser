@@ -7,7 +7,8 @@ mod tests {
     use crate::parse_ansi_text::constants::*;
     use crate::parse_ansi_text::style::*;
     use crate::parse_ansi_text::types::*;
-    use crate::parse_ansi_text::parse_ansi_text;
+    use crate::parse_ansi_text::{parse_ansi_text, parse_ansi_text_with_options};
+    use crate::parse_ansi_text::parse_options::ParseOptions;
 
     #[test]
     fn empty_text_should_return_empty_array() {
@@ -940,14 +941,71 @@ mod tests {
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
+    // -----------------------
+    // Test with initial span
+    // -----------------------
 
-
-
-    // TODO - add test for same style/color/brightness after text should not create a new span
-
-    // TODO - add tests for every combination
     #[test]
-    fn style_combination() {
+    fn span_should_have_the_same_style_as_the_initial_span() {
+        let input = [
+            "Hello, world!",
+            RESET_CODE,
+        ].join("");
+        let expected = vec![Span {
+            color: Color::Red,
+
+            text: "Hello, world!".to_string(),
+            bg_color: Color::None,
+            brightness: Brightness::None,
+            text_style: TextStyle::None,
+        }];
+
+        let parse_options = ParseOptions::default()
+            .with_initial_span(
+                Span::empty()
+                    .with_color(Color::Red)
+            );
+
+        assert_eq!(parse_ansi_text_with_options(&input, parse_options), expected);
+    }
+
+    #[test]
+    fn non_first_spans_should_not_have_the_same_style_as_the_initial_span() {
+        let input = [
+            "Hello, world!",
+            RESET_CODE,
+            "How are you?",
+        ].join("");
+        let expected = vec![Span {
+            color: Color::Red,
+
+            text: "Hello, world!".to_string(),
+            bg_color: Color::None,
+            brightness: Brightness::None,
+            text_style: TextStyle::None,
+        }, Span {
+            color: Color::None,
+
+            text: "How are you?".to_string(),
+            bg_color: Color::None,
+            brightness: Brightness::None,
+            text_style: TextStyle::None,
+        }];
+
+        let parse_options = ParseOptions::default()
+            .with_initial_span(
+                Span::empty()
+                    .with_color(Color::Red)
+            );
+
+        assert_eq!(parse_ansi_text_with_options(&input, parse_options), expected);
+    }
+
+
+
+
+    #[test]
+    fn multiple_styles() {
         let input = [
             &*RGB_BACKGROUND_CODE(188, 29, 68),
             &*RGB_FOREGROUND_CODE(255, 19, 94),

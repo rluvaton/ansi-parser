@@ -3,23 +3,24 @@ use std::iter::Iterator;
 use ansi_parser::{AnsiParseIterator, AnsiParser, Output};
 
 use crate::parse_ansi_text::ansi_sequence_helpers::{AnsiSequenceType, get_type_from_ansi_sequence};
+use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::types::Span;
 
 pub trait ParseAnsiAsSpans {
-    fn parse_ansi_as_spans(&self) -> ParseAnsiAsSpansIterator<'_>;
+    fn parse_ansi_as_spans(&self, options: ParseOptions) -> ParseAnsiAsSpansIterator<'_>;
 }
 
 impl ParseAnsiAsSpans for str {
-    fn parse_ansi_as_spans(&self) -> ParseAnsiAsSpansIterator<'_> {
-        ParseAnsiAsSpansIterator { iter: self.ansi_parse(), current_span: Span::empty() }
+    fn parse_ansi_as_spans(&self, options: ParseOptions) -> ParseAnsiAsSpansIterator<'_> {
+        ParseAnsiAsSpansIterator { iter: self.ansi_parse(), current_span: options.initial_span, split_spans_to_lines: options.split_spans_to_lines }
     }
 }
 
 
 #[cfg(any(feature = "std", test))]
 impl ParseAnsiAsSpans for String {
-    fn parse_ansi_as_spans(&self) -> ParseAnsiAsSpansIterator<'_> {
-        ParseAnsiAsSpansIterator { iter: self.ansi_parse(), current_span: Span::empty() }
+    fn parse_ansi_as_spans(&self, options: ParseOptions) -> ParseAnsiAsSpansIterator<'_> {
+        ParseAnsiAsSpansIterator { iter: self.ansi_parse(), current_span: options.initial_span, split_spans_to_lines: options.split_spans_to_lines }
     }
 }
 
@@ -35,6 +36,9 @@ pub struct ParseAnsiAsSpansIterator<'a> {
     iter: AnsiParseIterator<'a>,
     // str: &'a str,
     current_span: Span,
+
+    // Option
+    split_spans_to_lines: bool,
 }
 
 impl<'a> Iterator for ParseAnsiAsSpansIterator<'a> {
@@ -73,10 +77,10 @@ impl<'a> Iterator for ParseAnsiAsSpansIterator<'a> {
                                     .with_text("".to_string())
                                     // Apply the color
                                     .with_color(color);
-                                
+
                                 return Some(span);
                             }
-                            
+
                             self.current_span.color = color;
                         },
                         AnsiSequenceType::BackgroundColor(color) => {
@@ -108,7 +112,7 @@ impl<'a> Iterator for ParseAnsiAsSpansIterator<'a> {
                                 let span = self.current_span.clone();
                                 self.current_span = self.current_span.clone()
                                     .with_text("".to_string())
-                                    
+
                                     // Merge the style
                                     .with_text_style(self.current_span.text_style | style);
 
@@ -219,6 +223,7 @@ mod tests {
     use crate::parse_ansi_text::ansi_parse_iterator_to_span_iterator::ParseAnsiAsSpans;
     use crate::parse_ansi_text::colors::*;
     use crate::parse_ansi_text::constants::*;
+    use crate::parse_ansi_text::parse_options::ParseOptions;
     use crate::parse_ansi_text::types::*;
 
     #[test]
@@ -228,9 +233,9 @@ mod tests {
             "Hello, World!",
             RESET_CODE,
         ].join("");
-        
-        let output: Vec<Span> = input_str.parse_ansi_as_spans().collect();
-        
+
+        let output: Vec<Span> = input_str.parse_ansi_as_spans(ParseOptions::default()).collect();
+
         let expected = vec![Span::empty().with_text("Hello, World!".to_string()).with_bg_color(Color::Red)];
         assert_eq!(output, expected);
     }

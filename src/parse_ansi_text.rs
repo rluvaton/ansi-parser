@@ -12,9 +12,9 @@ pub mod constants;
 pub mod style;
 mod ansi_sequence_helpers;
 mod tests;
-mod parse_ansi_as_spans_iterator;
-mod parse_options;
-mod parse_ansi_split_by_lines_as_spans_iterator;
+pub mod parse_ansi_as_spans_iterator;
+pub mod parse_options;
+pub mod parse_ansi_split_by_lines_as_spans_iterator;
 mod split_spans_to_lines;
 
 pub fn parse_ansi_text(str: &str) -> Vec<Span> {

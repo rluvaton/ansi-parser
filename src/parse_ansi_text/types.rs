@@ -1,9 +1,9 @@
-
+use std::ops::BitAnd;
+use serde::{Deserialize, Serialize, Serializer};
 use crate::parse_ansi_text::colors::Color;
 use crate::parse_ansi_text::style::{Brightness, TextStyle};
 
 
-// See more here for ansi codes: https://tforgione.fr/posts/ansi-escape-codes/
 #[derive(Debug, PartialEq, Clone)]
 pub struct Span {
     pub text: String,
@@ -13,6 +13,52 @@ pub struct Span {
     pub brightness: Brightness,
     pub text_style: TextStyle,
 }
+
+// TODO - find a better way to create a new struct for json
+#[derive(Debug, PartialEq, Clone, Serialize)]
+pub struct SpanJson {
+    // Always serialize
+    pub text: String,
+
+    // Colors
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bg_color: Option<String>,
+    
+    // Brightness
+    
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub bold: bool,
+    
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub dim: bool,
+    
+    // Text Style
+    
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub italic: bool,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub underline: bool,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub inverse: bool,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub strikethrough: bool,
+}
+
+
+impl Serialize for Span {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+    {
+        // TODO - change this to move to span json and than use the regular serialize
+
+        return serializer.serialize_str("");
+    }
+}
+
 
 impl Span {
     
@@ -58,6 +104,43 @@ impl Span {
             bg_color: span.bg_color,
             brightness: span.brightness,
             text_style: span.text_style,
+        }
+    }
+}
+
+impl SpanJson {
+    pub fn create_from_span(span: &Span) -> SpanJson {
+        SpanJson {
+            text: span.text.clone(),
+            
+            // Colors
+            color: Self::get_color_str_from_color(span.color),
+            bg_color: Self::get_color_str_from_color(span.bg_color),
+            
+            // Brightness
+            bold: span.brightness == Brightness::Bold,
+            dim: span.brightness == Brightness::Dim,
+            
+            // Text style
+            italic: span.text_style & TextStyle::Italic != TextStyle::empty(),
+            underline: span.text_style & TextStyle::Underline != TextStyle::empty(),
+            inverse: span.text_style & TextStyle::Inverse != TextStyle::empty(),
+            strikethrough: span.text_style & TextStyle::Strikethrough != TextStyle::empty(),
+        }
+    }
+
+    fn get_color_str_from_color(color: Color) -> Option<String> {
+        match color {
+            Color::None => None,
+            Color::Black => Some("black".to_string()),
+            Color::Red => Some("red".to_string()),
+            Color::Green => Some("green".to_string()),
+            Color::Yellow => Some("yellow".to_string()),
+            Color::Blue => Some("blue".to_string()),
+            Color::Magenta => Some("magenta".to_string()),
+            Color::Cyan => Some("cyan".to_string()),
+            Color::White => Some("white".to_string()),
+            Color::Rgb(r, g, b) => Some(format!("rgb({}, {}, {})", r, g, b))
         }
     }
 }

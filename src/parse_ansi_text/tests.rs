@@ -941,9 +941,9 @@ mod tests {
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
-    // -----------------------
-    // Test with initial span
-    // -----------------------
+    // -------------------------------
+    // Parse options with initial span
+    // -------------------------------
 
     #[test]
     fn span_should_have_the_same_style_as_the_initial_span() {

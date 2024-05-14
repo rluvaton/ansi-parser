@@ -2,7 +2,7 @@ use ansi_parser::AnsiParser;
 
 use types::Span;
 
-use crate::parse_ansi_text::ansi_parse_iterator_to_span_iterator::ParseAnsiAsSpans;
+use crate::parse_ansi_text::parse_ansi_as_spans_iterator::ParseAnsiAsSpans;
 use crate::parse_ansi_text::parse_options::ParseOptions;
 
 pub mod types;
@@ -11,7 +11,7 @@ pub mod constants;
 pub mod style;
 mod ansi_sequence_helpers;
 mod tests;
-mod ansi_parse_iterator_to_span_iterator;
+mod parse_ansi_as_spans_iterator;
 mod parse_options;
 
 pub fn parse_ansi_text(str: &str) -> Vec<Span> {

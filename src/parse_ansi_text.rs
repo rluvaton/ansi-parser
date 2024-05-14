@@ -3,6 +3,7 @@ use ansi_parser::AnsiParser;
 use types::Span;
 
 use crate::parse_ansi_text::parse_ansi_as_spans_iterator::ParseAnsiAsSpans;
+use crate::parse_ansi_text::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLines;
 use crate::parse_ansi_text::parse_options::ParseOptions;
 
 pub mod types;
@@ -13,6 +14,8 @@ mod ansi_sequence_helpers;
 mod tests;
 mod parse_ansi_as_spans_iterator;
 mod parse_options;
+mod parse_ansi_split_by_lines_as_spans_iterator;
+mod split_spans_to_lines;
 
 pub fn parse_ansi_text(str: &str) -> Vec<Span> {
     //Parse the first two blocks in the list
@@ -29,5 +32,11 @@ pub fn parse_ansi_text(str: &str) -> Vec<Span> {
 pub fn parse_ansi_text_with_options(str: &str, options: ParseOptions) -> Vec<Span> {
     return str
         .parse_ansi_as_spans(options)
+        .collect();
+}
+
+pub fn parse_ansi_text_split_by_lines(str: &str, options: ParseOptions) -> Vec<Vec<Span>> {
+    return str
+        .parse_ansi_as_spans_by_lines(options)
         .collect();
 }

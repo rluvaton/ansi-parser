@@ -8,7 +8,7 @@ mod tests {
     use crate::parse_ansi_text::constants::*;
     use crate::parse_ansi_text::style::*;
     use crate::parse_ansi_text::types::*;
-    use crate::parse_ansi_text::{parse_ansi_text, parse_ansi_text_with_options};
+    use crate::parse_ansi_text::*;
     use crate::parse_ansi_text::parse_options::ParseOptions;
 
     #[test]
@@ -1003,6 +1003,43 @@ mod tests {
     }
 
 
+    // ----------------------------------
+    // Parse options with split by lines
+    // ----------------------------------
+
+    #[test]
+    fn spans_should_have_same_style_when_split_by_line() {
+        let input = [
+            &*RGB_BACKGROUND_CODE(188, 29, 68),
+            &*RGB_FOREGROUND_CODE(255, 19, 94),
+            ITALIC_CODE,
+            UNDERLINE_CODE,
+            BOLD_CODE,
+            "Hello, world!\nHow are you?",
+            RESET_CODE,
+        ].join("");
+        let expected = vec![vec![Span {
+            text: "Hello, world!".to_string(),
+            color: Color::Rgb(255, 19, 94),
+            bg_color: Color::Rgb(188, 29, 68),
+            brightness: Brightness::Bold,
+            text_style: TextStyle::Italic | TextStyle::Underline,
+        }], vec![Span {
+            text: "How are you?".to_string(),
+            color: Color::Rgb(255, 19, 94),
+            bg_color: Color::Rgb(188, 29, 68),
+            brightness: Brightness::Bold,
+            text_style: TextStyle::Italic | TextStyle::Underline,
+        }]];
+
+        let parse_options = ParseOptions::default()
+            .with_initial_span(
+                Span::empty()
+                    .with_color(Color::Red)
+            );
+
+        assert_eq!(parse_ansi_text_split_by_lines(&input, parse_options), expected);
+    }
 
 
     #[test]

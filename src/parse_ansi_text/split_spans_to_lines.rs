@@ -20,31 +20,15 @@ impl<IteratorType> Iterator for SplitToLines<IteratorType>
     fn next(&mut self) -> Option<Self::Item> {
         // Have some span from previous iteration that was cut off
         if self.pending_span.is_some() {
-            let mut pending_span = self.pending_span.as_mut().unwrap();
+            let pending_span = self.pending_span.clone().unwrap();
 
             // If this span still contain text, than extract the 2 spans, one with the text until the new line and the other with the rest of the text
             if pending_span.text.contains("\n") {
-                let i = pending_span.text.find("\n").unwrap();
-
-                // Create new span with the text until the newline
-                let new_span = pending_span.clone().with_text(pending_span.text[..i].to_string());
-                
-                let mut line = self.line.clone().unwrap();
-                if !new_span.text.is_empty() {
-                    line.push(new_span);
-                }
-
-                self.line = Some(vec![]);
-
-                // Remove the string from it
-                pending_span.text = pending_span.text[(i + 1)..].to_string();
-                self.pending_span = Some(pending_span.clone());
-
-                return Some(line);
+                return Some(self.add_span_with_new_line(pending_span));
             }
-            
+
             if !pending_span.text.is_empty() {
-                self.line.as_mut().unwrap().push(pending_span.clone());
+                self.line.as_mut().unwrap().push(pending_span);
             }
 
             self.pending_span = None;
@@ -52,21 +36,7 @@ impl<IteratorType> Iterator for SplitToLines<IteratorType>
 
         while let Some(span) = self.iter.next() {
             if span.text.contains("\n") {
-                let i = span.text.find("\n").unwrap();
-
-                let new_span = span.clone()
-                    .with_text(span.text[..i].to_string());
-
-                let mut line = self.line.clone().unwrap();
-                if !new_span.text.is_empty() {
-                    line.push(new_span.clone());
-                }
-
-                self.line = Some(vec![]);
-
-                // Remove the string from it
-                self.pending_span = Some(span.clone().with_text(span.text[(i + 1)..].to_string()));
-                return Some(line);
+                return Some(self.add_span_with_new_line(span));
             }
 
             if !span.text.is_empty() {
@@ -82,6 +52,27 @@ impl<IteratorType> Iterator for SplitToLines<IteratorType>
         }
         
         return None;
+    }
+}
+
+impl<IteratorType> SplitToLines<IteratorType> where IteratorType: Iterator<Item=Span> {
+    fn add_span_with_new_line(&mut self, span: Span) -> Vec<Span> {
+        let i = span.text.find("\n").unwrap();
+
+        // Create new span with the text until the newline
+        let new_span = span.clone().with_text(span.text[..i].to_string());
+
+        let mut line = self.line.clone().unwrap();
+        if !new_span.text.is_empty() {
+            line.push(new_span);
+        }
+
+        self.line = Some(vec![]);
+
+        // Remove the string from it
+        self.pending_span = Some(span.clone().with_text(span.text[(i + 1)..].to_string()));
+
+        return line;
     }
 }
 

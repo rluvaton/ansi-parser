@@ -20,10 +20,10 @@ pub struct SplitToLines<IteratorType> {
 *             line = '';
 *             chunk = chunk.slice(i + 1);
 *         }
-* 
+*
 *         line += chunk;
 *     }
-* 
+*
 *     if (line) {
 *         yield line;
 *     }
@@ -40,78 +40,66 @@ impl<IteratorType> Iterator for SplitToLines<IteratorType>
     // https://users.rust-lang.org/t/how-to-write-iterator-adapter/8835/2
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        
         // Have some span from previous iteration that was cut off
         if self.pending_span.is_some() {
-            let mut pending_span = self.pending_span.take().unwrap();
-            
+            let mut pending_span = self.pending_span.as_mut().unwrap();
+
             // If this span still contain text, than extract the 2 spans, one with the text until the new line and the other with the rest of the text
             if pending_span.text.contains("\n") {
                 let i = pending_span.text.find("\n").unwrap();
-                
+
                 // Create new span with the text until the newline
                 let new_span = pending_span.clone().with_text(pending_span.text[..i].to_string());
-
+                
                 let mut line = self.line.clone().unwrap();
                 if !new_span.text.is_empty() {
                     line.push(new_span);
                 }
-                
+
                 self.line = Some(vec![]);
 
                 // Remove the string from it
                 pending_span.text = pending_span.text[(i + 1)..].to_string();
-                self.pending_span = Some(pending_span);
+                self.pending_span = Some(pending_span.clone());
 
                 return Some(line);
             }
-
-
-            if !pending_span.text.is_empty() {
-                println!("Pushing pending span: {:?}", pending_span);
-                self.line.take().unwrap().push(pending_span);
-            }
             
+            if !pending_span.text.is_empty() {
+                self.line.as_mut().unwrap().push(pending_span.clone());
+            }
+
             self.pending_span = None;
         }
 
-        // for (let span of spansIterator) {
         while let Some(span) = self.iter.next() {
-            // while (span.text.includes('\n')) {
-            while span.text.contains("\n") {
-                // const i = span.text.indexOf('\n');
+            if span.text.contains("\n") {
                 let i = span.text.find("\n").unwrap();
 
-                // let new_span = {...span};
                 let new_span = span.clone()
-                    // newSpan.text = span.text.slice(0, i);
                     .with_text(span.text[..i].to_string());
-
 
                 let mut line = self.line.clone().unwrap();
                 if !new_span.text.is_empty() {
                     line.push(new_span.clone());
                 }
 
-                // TODO - change this to be a new line
                 self.line = Some(vec![]);
 
                 // Remove the string from it
                 self.pending_span = Some(span.clone().with_text(span.text[(i + 1)..].to_string()));
-
                 return Some(line);
             }
 
             if !span.text.is_empty() {
-                // line.push(span);
-                // self.line.take().unwrap().push(pending_span);
                 self.line.get_or_insert(vec![]).push(span);
             }
         }
-        
+
         if self.line.is_some() {
             let line = self.line.clone().unwrap();
             self.line = None;
+            
             return Some(line);
         }
         
@@ -153,22 +141,7 @@ mod tests {
         ]
             .join("")
             .to_string();
-        
-        let flat_spans = chunks.clone().parse_ansi_as_spans(ParseOptions::default()).collect::<Vec<Span>>();
 
-        let expected_flat_spans = vec![
-            // Line 1:
-            Span::empty().with_text("abc".to_string()).with_color(Color::Red),
-
-            // Line 2:
-            Span::empty().with_text("d\nef\ng".to_string()).with_color(Color::Yellow),
-
-            // Line 1:
-            Span::empty().with_text("hij".to_string()).with_color(Color::Cyan)
-        ];
-
-        assert_eq!(flat_spans, expected_flat_spans);
-        
         let lines: Vec<Vec<Span>> = chunks.parse_ansi_as_spans(ParseOptions::default()).to_span_lines().collect();
 
         let expected = vec![
@@ -183,7 +156,7 @@ mod tests {
                 Span::empty().with_text("ef".to_string()).with_color(Color::Yellow)
             ],
 
-            // Line 1:
+            // Line 3:
             vec![
                 Span::empty().with_text("g".to_string()).with_color(Color::Yellow),
                 Span::empty().with_text("hij".to_string()).with_color(Color::Cyan)

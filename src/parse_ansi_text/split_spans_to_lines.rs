@@ -6,30 +6,8 @@ pub struct SplitToLines<IteratorType> {
     line: Option<Vec<Span>>,
     pending_span: Option<Span>,
 }
-
-/**
-* Same implementation as the following in TypeScript:
-* ```ts
-* function* splitToLines(chunks: Iterator<string>): Iterator<string> {
-*     let line = '';
-*     for (let chunk of chunks) {
-*         while(chunk.includes('\n')) {
-*             const i = chunk.indexOf('\n');
-*             line += chunk.slice(0, i);
-*             yield line;
-*             line = '';
-*             chunk = chunk.slice(i + 1);
-*         }
-*
-*         line += chunk;
-*     }
-*
-*     if (line) {
-*         yield line;
-*     }
-* }
-* ```
-*/
+// Better implementation for split to lines is to do it in the parse level so
+// we will avoid allocating more than needed - e.g. 1GB of lines with no style will create a span with 1GB of text and we will have it in memory
 impl<IteratorType> Iterator for SplitToLines<IteratorType>
     where
         IteratorType: Iterator<Item = Span>,

@@ -1,5 +1,7 @@
 use crate::parse_ansi_text::types::Span;
 
+
+#[derive(Clone, Debug)]
 pub struct ParseOptions {
     pub initial_span: Span,
 }

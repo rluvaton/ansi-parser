@@ -7,7 +7,7 @@ use clap::{App, Arg};
 use crate::parse_ansi_text::parse_ansi_as_spans_iterator::ParseAnsiAsSpans;
 use crate::parse_ansi_text::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLines;
 use crate::parse_ansi_text::parse_options::ParseOptions;
-use crate::parse_ansi_text::types::SpanJson;
+use crate::parse_ansi_text::types::{Span, SpanJson};
 
 mod parse_ansi_text;
 
@@ -65,17 +65,28 @@ fn main() {
             .takes_value(false)
 
             .help("Each line of output is a valid JSON, there are no comma between lines and the output is not wrapped with [ and ].\n\nobject with property type: 'new line' will be printed between lines to mark new line"))
+
+        .arg(Arg::with_name("only-style-for-start-of-line")
+            .long("only-style-for-start-of-line")
+            .takes_value(false)
+
+            .help("Only output style for the start of each line without text, this helps reading files and to know which style to apply at the beginning"))
         
         // TODO - add initial span to parse with and line/index ranges for reading the file
         .get_matches();
 
-    let split_by_lines = matches.is_present("split-lines");
+    let mut split_by_lines = matches.is_present("split-lines");
     let flat_json_line_output_format = matches.is_present("flat-json-line-output-format");
     let mut json_output_format = matches.is_present("json-output-format");
     let json_line_output_format = matches.is_present("json-line-output-format");
+    let only_style_for_start_of_line = matches.is_present("only-style-for-start-of-line");
     
     if !split_by_lines && flat_json_line_output_format {
         panic!("'flat-json-line' option is only available when 'split-lines' is enabled");
+    }
+    
+    if only_style_for_start_of_line {
+        split_by_lines = true;
     }
     
     if !flat_json_line_output_format && !json_line_output_format && !json_output_format {
@@ -93,8 +104,10 @@ fn main() {
     // println!("With text:\n{contents}");
     
     let parse_options = ParseOptions::default();
-
-    if !split_by_lines {
+    
+    if only_style_for_start_of_line {
+        print_only_start_of_line_styles(json_output_format, contents, parse_options);
+    } else if !split_by_lines {
         print_json_without_split_by_lines(json_output_format, contents, parse_options);
     } else {
         if json_output_format {
@@ -115,22 +128,6 @@ fn print_json_without_split_by_lines(json_output_format: bool, contents: String,
     if json_output_format {
         println!("[");
     }
-    // 
-    // let json_spans_iter = spans_iter
-    //     .map(|span| return SpanJson::create_from_span(&span))
-    //     .map(|span| return serde_json::to_string(&span).unwrap());
-    // 
-    // let mut print_first = true;
-    // 
-    // for span_str in json_spans_iter {
-    //     if json_output_format && !print_first {
-    //         // Print from prev object
-    //         print!(",")
-    //     }
-    // 
-    //     print_first = false;
-    //     println!("{}", span_str)
-    // }
 
     let mut print_first = true;
 
@@ -153,6 +150,44 @@ fn print_json_without_split_by_lines(json_output_format: bool, contents: String,
     }
 }
 
+// TODO - change to iterator and consume it by either printing to stdout or file
+fn print_only_start_of_line_styles(json_output_format: bool, contents: String, parse_options: ParseOptions) {
+    let lines_iter = contents.parse_ansi_as_spans_by_lines(parse_options);
+
+
+    // Start output as json
+    if json_output_format {
+        println!("[");
+    }
+
+    let mut print_first = true;
+
+    for line in lines_iter {
+        if json_output_format && !print_first {
+            // Print from prev object
+            print!(",")
+        }
+        
+        let mut start_of_line_style_span: Span;
+        
+        if line.is_empty() {
+            start_of_line_style_span = Span::empty()
+        } else {
+            start_of_line_style_span = line[0].clone().with_text("".to_string());
+        }
+
+        print_first = false;
+        let span_json = SpanJson::create_from_span(&start_of_line_style_span);
+        let span_json_str = serde_json::to_string(&span_json).unwrap();
+
+        println!("{}", span_json_str);
+    }
+
+    // Print ending array 
+    if json_output_format {
+        println!("]");
+    }
+}
 
 // TODO - change to iterator and consume it by either printing to stdout or file
 fn print_json_with_split_by_lines(contents: String, parse_options: ParseOptions) {

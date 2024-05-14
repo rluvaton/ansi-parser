@@ -24,7 +24,7 @@ impl<IteratorType> Iterator for SplitToLines<IteratorType>
 
             // If this span still contain text, than extract the 2 spans, one with the text until the new line and the other with the rest of the text
             if pending_span.text.contains("\n") {
-                return Some(self.add_span_with_new_line(pending_span));
+                return Some(self.on_span_with_new_line(pending_span));
             }
 
             if !pending_span.text.is_empty() {
@@ -36,7 +36,7 @@ impl<IteratorType> Iterator for SplitToLines<IteratorType>
 
         while let Some(span) = self.iter.next() {
             if span.text.contains("\n") {
-                return Some(self.add_span_with_new_line(span));
+                return Some(self.on_span_with_new_line(span));
             }
 
             if !span.text.is_empty() {
@@ -56,7 +56,7 @@ impl<IteratorType> Iterator for SplitToLines<IteratorType>
 }
 
 impl<IteratorType> SplitToLines<IteratorType> where IteratorType: Iterator<Item=Span> {
-    fn add_span_with_new_line(&mut self, span: Span) -> Vec<Span> {
+    fn on_span_with_new_line(&mut self, span: Span) -> Vec<Span> {
         let i = span.text.find("\n").unwrap();
 
         // Create new span with the text until the newline

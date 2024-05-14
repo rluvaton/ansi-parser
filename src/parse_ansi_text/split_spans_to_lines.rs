@@ -135,6 +135,7 @@ impl<IteratorType: Iterator<Item = Span>> SplitToLinesByIterator for IteratorTyp
 
 #[cfg(test)]
 mod tests {
+    use pretty_assertions::{assert_eq};
     use crate::parse_ansi_text::colors::*;
     use crate::parse_ansi_text::constants::RESET_CODE;
     use crate::parse_ansi_text::parse_ansi_as_spans_iterator::ParseAnsiAsSpans;

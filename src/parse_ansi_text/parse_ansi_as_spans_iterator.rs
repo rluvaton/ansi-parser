@@ -131,6 +131,7 @@ impl<'a> Iterator for ParseAnsiAsSpansIterator<'a> {
 
 #[cfg(test)]
 mod tests {
+    use pretty_assertions::{assert_eq};
     use crate::parse_ansi_text::parse_ansi_as_spans_iterator::ParseAnsiAsSpans;
     use crate::parse_ansi_text::colors::*;
     use crate::parse_ansi_text::constants::*;

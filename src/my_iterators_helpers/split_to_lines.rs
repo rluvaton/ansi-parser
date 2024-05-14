@@ -112,6 +112,7 @@ impl<IteratorType: Iterator<Item = String>> SplitToLinesByIterator for IteratorT
 
 #[cfg(test)]
 mod tests {
+    use pretty_assertions::{assert_eq};
     use super::*;
 
     #[test]

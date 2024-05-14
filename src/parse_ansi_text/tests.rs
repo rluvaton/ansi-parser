@@ -41,6 +41,7 @@ mod tests {
     // -------------
 
     // TODO - add tests for RGB and 8-bit colors
+    // TODO - add test for default color
 
     #[test_case(Color::Red, RED_FOREGROUND_CODE ; "Red foreground")]
     #[test_case(Color::Black, BLACK_FOREGROUND_CODE ; "Black foreground")]

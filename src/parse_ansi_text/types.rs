@@ -78,12 +78,22 @@ impl Span {
     }
     
     pub fn with_color(mut self, color: Color) -> Span {
-        self.color = color;
+        // Set default color as none
+        if(matches!(color, Color::Default)) {
+            self.color = Color::None;
+        } else {
+            self.color = color;
+        }
         self
     }
     
     pub fn with_bg_color(mut self, bg_color: Color) -> Span {
-        self.bg_color = bg_color;
+        // Default color is None
+        if(matches!(bg_color, Color::Default)) {
+            self.bg_color = Color::None;
+        } else {
+            self.bg_color = bg_color;
+        }
         self
     }
     
@@ -131,6 +141,7 @@ impl SpanJson {
 
     fn get_color_str_from_color(color: Color) -> Option<String> {
         match color {
+            Color::Default => None,
             Color::None => None,
             Color::Black => Some("black".to_string()),
             Color::Red => Some("red".to_string()),
@@ -145,7 +156,7 @@ impl SpanJson {
                     
                 Some(format!("rgb({}, {}, {})", r, g, b))
             },
-            Color::Rgb(r, g, b) => Some(format!("rgb({}, {}, {})", r, g, b))
+            Color::Rgb(r, g, b) => Some(format!("rgb({}, {}, {})", r, g, b)),
         }
     }
 }

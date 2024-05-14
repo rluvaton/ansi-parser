@@ -3,6 +3,7 @@ use std::iter::Iterator;
 use ansi_parser::{AnsiParseIterator, AnsiParser, Output};
 
 use crate::parse_ansi_text::ansi_sequence_helpers::{AnsiSequenceType, get_type_from_ansi_sequence};
+use crate::parse_ansi_text::colors::Color;
 use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::types::Span;
 
@@ -12,7 +13,15 @@ pub trait ParseAnsiAsSpans {
 
 impl ParseAnsiAsSpans for str {
     fn parse_ansi_as_spans(&self, options: ParseOptions) -> ParseAnsiAsSpansIterator<'_> {
-        ParseAnsiAsSpansIterator { iter: self.ansi_parse(), current_span: options.initial_span }
+        let mut initial_span = options.initial_span.clone();
+
+        if matches!(initial_span.color, Color::Default) {
+            initial_span.color = Color::None;
+        }
+        if matches!(initial_span.bg_color, Color::Default) {
+            initial_span.bg_color = Color::None;
+        }
+        ParseAnsiAsSpansIterator { iter: self.ansi_parse(), current_span: initial_span }
     }
 }
 
@@ -20,7 +29,15 @@ impl ParseAnsiAsSpans for str {
 #[cfg(any(feature = "std", test))]
 impl ParseAnsiAsSpans for String {
     fn parse_ansi_as_spans(&self, options: ParseOptions) -> ParseAnsiAsSpansIterator<'_> {
-        ParseAnsiAsSpansIterator { iter: self.ansi_parse(), current_span: options.initial_span }
+        let mut initial_span = options.initial_span.clone();
+
+        if matches!(initial_span.color, Color::Default) {
+            initial_span.color = Color::None;
+        }
+        if matches!(initial_span.bg_color, Color::Default) {
+            initial_span.bg_color = Color::None;
+        }
+        ParseAnsiAsSpansIterator { iter: self.ansi_parse(), current_span: initial_span }
     }
 }
 
@@ -60,7 +77,13 @@ impl<'a> Iterator for ParseAnsiAsSpansIterator<'a> {
 
                             self.current_span = Span::empty();
                         },
-                        AnsiSequenceType::ForegroundColor(color) => {
+                        AnsiSequenceType::ForegroundColor(mut color) => {
+                            // Default color is same as none
+                            if matches!(color, Color::Default) {
+                                color = Color::None;
+                            }
+                            
+                            // TODO - add here that if current color is default or None and new color is default or none don't treat as different
                             if self.current_span.text.len() > 0 && self.current_span.color != color {
                                 let span = self.current_span.clone();
                                 self.current_span = self.current_span.clone()
@@ -73,7 +96,12 @@ impl<'a> Iterator for ParseAnsiAsSpansIterator<'a> {
 
                             self.current_span.color = color;
                         },
-                        AnsiSequenceType::BackgroundColor(color) => {
+                        AnsiSequenceType::BackgroundColor(mut color) => {
+                            // Default color is same as none
+                            if matches!(color, Color::Default) {
+                                color = Color::None;
+                            }
+                            
                             if self.current_span.text.len() > 0 && self.current_span.bg_color != color {
                                 let span = self.current_span.clone();
                                 self.current_span = self.current_span.clone()

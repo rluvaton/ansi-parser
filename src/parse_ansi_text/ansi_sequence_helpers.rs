@@ -37,6 +37,7 @@ pub fn get_type_from_ansi_sequence(seq: &AnsiSequence) -> AnsiSequenceType {
             
             let color_type = get_color_type(vec);
             
+            // TODO - should replace here default with none color?
             match color_type {
                 ColorType::Foreground(color) => {
                     return AnsiSequenceType::ForegroundColor(color);

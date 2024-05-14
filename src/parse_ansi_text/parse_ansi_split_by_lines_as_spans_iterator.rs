@@ -3,6 +3,7 @@ use std::iter::Iterator;
 use ansi_parser::{AnsiParseIterator, AnsiParser, Output};
 
 use crate::parse_ansi_text::ansi_sequence_helpers::{AnsiSequenceType, get_type_from_ansi_sequence};
+use crate::parse_ansi_text::colors::Color;
 use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::types::Span;
 
@@ -12,7 +13,16 @@ pub trait ParseAnsiAsSpansByLines {
 
 impl ParseAnsiAsSpansByLines for str {
     fn parse_ansi_as_spans_by_lines(&self, options: ParseOptions) -> ParseAnsiAsSpansByLinesIterator<'_> {
-        ParseAnsiAsSpansByLinesIterator { iter: self.ansi_parse(), line: Some(vec![]), current_span: options.initial_span.clone(), pending_span: Some(options.clone().initial_span.clone()) }
+        let mut initial_span = options.initial_span.clone();
+
+        if matches!(initial_span.color, Color::Default) {
+            initial_span.color = Color::None;
+        }
+        if matches!(initial_span.bg_color, Color::Default) {
+            initial_span.bg_color = Color::None;
+        }
+            
+        ParseAnsiAsSpansByLinesIterator { iter: self.ansi_parse(), line: Some(vec![]), current_span: initial_span.clone(), pending_span: Some(initial_span.clone()) }
     }
 }
 
@@ -82,7 +92,13 @@ impl<'a> Iterator for ParseAnsiAsSpansByLinesIterator<'a> {
 
                             self.current_span = Span::empty();
                         },
-                        AnsiSequenceType::ForegroundColor(color) => {
+                        AnsiSequenceType::ForegroundColor(mut color) => {
+
+                            // Default color is same as none
+                            if matches!(color, Color::Default) {
+                                color = Color::None;
+                            }
+                            
                             if self.current_span.text.len() > 0 && self.current_span.color != color {
                                 let span = self.current_span.clone();
                                 self.current_span = self.current_span.clone()
@@ -96,7 +112,12 @@ impl<'a> Iterator for ParseAnsiAsSpansByLinesIterator<'a> {
 
                             self.current_span.color = color;
                         },
-                        AnsiSequenceType::BackgroundColor(color) => {
+                        AnsiSequenceType::BackgroundColor(mut color) => {
+                            // Default color is same as none
+                            if matches!(color, Color::Default) {
+                                color = Color::None;
+                            }
+                            
                             if self.current_span.text.len() > 0 && self.current_span.bg_color != color {
                                 let span = self.current_span.clone();
                                 self.current_span = self.current_span.clone()

@@ -44,6 +44,7 @@ pub enum Color {
     
     // Foreground color: \x1B[38;5;Vm
     // Background color: \x1B[48;5;Vm
+    // Also known as Palate color
     EightBit(u8),
     
     // TODO - have a value to store the rgb value
@@ -51,7 +52,7 @@ pub enum Color {
     // Background color: \x1B[48;2;R;G;Bm
     Rgb(u8, u8, u8),
     
-    // There is also any palette color, but I'm not sure what it is
+    Default,
 }
 
 
@@ -62,7 +63,7 @@ pub fn get_color_type(vec: &Vec<u8, U5>) -> ColorType {
 
     let code = vec[0];
 
-    if code < 30 || code > 48 || (code > 38 && code < 40) {
+    if code < 30 || code > 49 {
         return ColorType::None;
     }
 
@@ -115,6 +116,7 @@ pub fn get_color_type(vec: &Vec<u8, U5>) -> ColorType {
                 _ => panic!("Unknown color code {}, it should be either 2 for 8bit color or 5 for RGB color. vec is: {:?}", color_type, vec)
             }
         },
+        9 => Color::Default,
         _ => panic!("Invalid color code: {:?}", vec),
     };
 
@@ -689,6 +691,17 @@ pub const WHITE_FOREGROUND_CODE: &str = "\x1B[37m";
 pub const WHITE_BACKGROUND_CODE: &str = "\x1B[47m";
 
 #[allow(dead_code)]
+pub fn EIGHT_BIT_FOREGROUND_CODE(byte: u8) -> String {
+    // \x1B[38;2;R;G;Bm	
+    return format!("\x1B[38;5;{}m", byte)
+}
+
+#[allow(dead_code)]
+pub fn EIGHT_BIT_BACKGROUND_CODE(byte: u8) -> String {
+    return format!("\x1B[48;5;{}m", byte)
+}
+
+#[allow(dead_code)]
 pub fn RGB_FOREGROUND_CODE(r: u8, g: u8, b: u8) -> String {
     // \x1B[38;2;R;G;Bm	
     return format!("\x1B[38;2;{};{};{}m", r, g, b)
@@ -699,3 +712,7 @@ pub fn RGB_BACKGROUND_CODE(r: u8, g: u8, b: u8) -> String {
     return format!("\x1B[48;2;{};{};{}m", r, g, b)
 }
 
+#[allow(dead_code)]
+pub const DEFAULT_FOREGROUND_CODE: &str = "\x1B[39m";
+#[allow(dead_code)]
+pub const DEFAULT_BACKGROUND_CODE: &str = "\x1B[49m";

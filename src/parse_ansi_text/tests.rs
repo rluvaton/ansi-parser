@@ -40,6 +40,7 @@ mod tests {
     // Single style
     // -------------
 
+    // TODO - add tests for RGB and 8-bit colors
 
     #[test_case(Color::Red, RED_FOREGROUND_CODE ; "Red foreground")]
     #[test_case(Color::Black, BLACK_FOREGROUND_CODE ; "Black foreground")]

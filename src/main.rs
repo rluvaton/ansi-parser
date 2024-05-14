@@ -84,13 +84,13 @@ fn main() {
     }
 
     let file_path = matches.value_of("file").unwrap();
-    println!("The file passed is: {}", file_path);
+    // println!("The file passed is: {}", file_path);
 
     // TODO - don't load entire file to memory and instead iterate on it
     let contents = fs::read_to_string(file_path)
         .expect("Should have been able to read the file");
 
-    println!("With text:\n{contents}");
+    // println!("With text:\n{contents}");
     
     let parse_options = ParseOptions::default();
 

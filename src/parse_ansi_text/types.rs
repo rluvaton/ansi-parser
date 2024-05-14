@@ -1,6 +1,6 @@
 use std::ops::BitAnd;
 use serde::{Deserialize, Serialize, Serializer};
-use crate::parse_ansi_text::colors::Color;
+use crate::parse_ansi_text::colors::{Color, get_rgb_values_from_8_bit};
 use crate::parse_ansi_text::style::{Brightness, TextStyle};
 
 
@@ -140,6 +140,11 @@ impl SpanJson {
             Color::Magenta => Some("magenta".to_string()),
             Color::Cyan => Some("cyan".to_string()),
             Color::White => Some("white".to_string()),
+            Color::EightBit(eight_bit) => {
+                let (r, g, b) = get_rgb_values_from_8_bit(eight_bit);
+                    
+                Some(format!("rgb({}, {}, {})", r, g, b))
+            },
             Color::Rgb(r, g, b) => Some(format!("rgb({}, {}, {})", r, g, b))
         }
     }

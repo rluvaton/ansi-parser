@@ -42,6 +42,46 @@ pub const WHITE_FOREGROUND_CODE: &str = "\x1B[37m";
 pub const WHITE_BACKGROUND_CODE: &str = "\x1B[47m";
 
 #[allow(dead_code)]
+pub const BRIGHT_BLACK_FOREGROUND_CODE: &str = "\x1B[90m";
+#[allow(dead_code)]
+pub const BRIGHT_BLACK_BACKGROUND_CODE: &str = "\x1B[100m";
+
+#[allow(dead_code)]
+pub const BRIGHT_RED_FOREGROUND_CODE: &str = "\x1B[91m";
+#[allow(dead_code)]
+pub const BRIGHT_RED_BACKGROUND_CODE: &str = "\x1B[101m";
+
+#[allow(dead_code)]
+pub const BRIGHT_GREEN_FOREGROUND_CODE: &str = "\x1B[92m";
+#[allow(dead_code)]
+pub const BRIGHT_GREEN_BACKGROUND_CODE: &str = "\x1B[102m";
+
+#[allow(dead_code)]
+pub const BRIGHT_YELLOW_FOREGROUND_CODE: &str = "\x1B[93m";
+#[allow(dead_code)]
+pub const BRIGHT_YELLOW_BACKGROUND_CODE: &str = "\x1B[103m";
+
+#[allow(dead_code)]
+pub const BRIGHT_BLUE_FOREGROUND_CODE: &str = "\x1B[94m";
+#[allow(dead_code)]
+pub const BRIGHT_BLUE_BACKGROUND_CODE: &str = "\x1B[104m";
+
+#[allow(dead_code)]
+pub const BRIGHT_MAGENTA_FOREGROUND_CODE: &str = "\x1B[95m";
+#[allow(dead_code)]
+pub const BRIGHT_MAGENTA_BACKGROUND_CODE: &str = "\x1B[105m";
+
+#[allow(dead_code)]
+pub const BRIGHT_CYAN_FOREGROUND_CODE: &str = "\x1B[96m";
+#[allow(dead_code)]
+pub const BRIGHT_CYAN_BACKGROUND_CODE: &str = "\x1B[106m";
+
+#[allow(dead_code)]
+pub const BRIGHT_WHITE_FOREGROUND_CODE: &str = "\x1B[97m";
+#[allow(dead_code)]
+pub const BRIGHT_WHITE_BACKGROUND_CODE: &str = "\x1B[107m";
+
+#[allow(dead_code)]
 pub fn EIGHT_BIT_FOREGROUND_CODE(byte: u8) -> String {
     // \x1B[38;2;R;G;Bm	
     format!("\x1B[38;5;{}m", byte)
@@ -112,6 +152,38 @@ pub enum Color {
     // Foreground color: \x1B[37m
     // Background color: \x1B[47m
     White,
+    
+    // Foreground color: \x1B[90m
+    // Background color: \x1B[100m
+    BrightBlack,
+    
+    // Foreground color: \x1B[91m
+    // Background color: \x1B[101m
+    BrightRed,
+    
+    // Foreground color: \x1B[92m
+    // Background color: \x1B[102m
+    BrightGreen,
+    
+    // Foreground color: \x1B[93m
+    // Background color: \x1B[103m
+    BrightYellow,
+    
+    // Foreground color: \x1B[94m
+    // Background color: \x1B[104m
+    BrightBlue,
+    
+    // Foreground color: \x1B[95m
+    // Background color: \x1B[105m
+    BrightMagenta,
+    
+    // Foreground color: \x1B[96m
+    // Background color: \x1B[106m
+    BrightCyan,
+    
+    // Foreground color: \x1B[97m
+    // Background color: \x1B[107m
+    BrightWhite,
 
     // Foreground color: \x1B[38;5;Vm
     // Background color: \x1B[48;5;Vm
@@ -122,6 +194,8 @@ pub enum Color {
     // Background color: \x1B[48;2;R;G;Bm
     Rgb(u8, u8, u8),
 
+    // Foreground color: \x1B[39m
+    // Background color: \x1B[49m
     Default,
 }
 
@@ -133,72 +207,97 @@ pub fn get_color_type(vec: &Vec<u8, U5>) -> ColorType {
 
     let code = vec[0];
 
-    if code < 30 || code > 49 {
-        return ColorType::None;
+    // 3 bit color
+    if code >= 30 && code <= 49 {
+        let code_color_digit = code % 10;
+        let type_color_digit = (code / 10) % 10;
+
+        let color = match code_color_digit {
+            0 => Color::Black,
+            1 => Color::Red,
+            2 => Color::Green,
+            3 => Color::Yellow,
+            4 => Color::Blue,
+            5 => Color::Magenta,
+            6 => Color::Cyan,
+            7 => Color::White,
+            8 => {
+                if(vec.len() < 2) {
+                    panic!("Invalid Color code {:?}", vec);
+                }
+
+                let color_type = vec[1];
+
+                match color_type {
+                    // RGB
+                    2 => {
+                        let mut color: Color;
+                        if vec.len() < 5 {
+                            println!("Invalid RGB color code: {:?}", vec);
+                            color = Color::None;
+                        } else {
+                            color = Color::Rgb(vec[2], vec[3], vec[4]);
+                        }
+
+                        color
+                    },
+                    // 8-bit color
+                    5 => {
+                        let mut color: Color;
+
+                        if vec.len() < 3 {
+                            println!("Invalid 8bit color code: {:?}", vec);
+                            color = Color::None;
+                        } else {
+                            let (r, g, b) = get_rgb_values_from_8_bit(vec[2]);
+                            color = Color::Rgb(r, g, b);
+                        }
+
+                        color
+                    },
+                    _ => panic!("Unknown color code {}, it should be either 2 for 8bit color or 5 for RGB color. vec is: {:?}", color_type, vec)
+                }
+            },
+            9 => Color::Default,
+            _ => panic!("Invalid color code: {:?}", vec),
+        };
+
+        if type_color_digit == 3 {
+            return ColorType::Foreground(color);
+        }
+
+        if type_color_digit == 4 {
+            return ColorType::Background(color);
+        }
     }
 
-    let code_color_digit = code % 10;
-    let type_color_digit = (code / 10) % 10;
+    // 4 bit color
+    if code >= 90 && code <= 107 {
+        let code_color_digit = code % 10;
+        let type_color_digit = code / 10;
 
-    let color = match code_color_digit {
-        0 => Color::Black,
-        1 => Color::Red,
-        2 => Color::Green,
-        3 => Color::Yellow,
-        4 => Color::Blue,
-        5 => Color::Magenta,
-        6 => Color::Cyan,
-        7 => Color::White,
-        8 => {
-            if(vec.len() < 2) {
-                panic!("Invalid Color code {:?}", vec);
-            }
+        let color = match code_color_digit {
+            0 => Color::BrightBlack,
+            1 => Color::BrightRed,
+            2 => Color::BrightGreen,
+            3 => Color::BrightYellow,
+            4 => Color::BrightBlue,
+            5 => Color::BrightMagenta,
+            6 => Color::BrightCyan,
+            7 => Color::BrightWhite,
+            _ => panic!("Invalid color code: {:?}", vec),
+        };
 
-            let color_type = vec[1];
+        if type_color_digit == 9 {
+            return ColorType::Foreground(color);
+        }
 
-            match color_type {
-                // RGB
-                2 => {
-                    let mut color: Color;
-                    if vec.len() < 5 {
-                        println!("Invalid RGB color code: {:?}", vec);
-                        color = Color::None;
-                    } else {
-                        color = Color::Rgb(vec[2], vec[3], vec[4]);
-                    }
-
-                    color
-                },
-                // 8-bit color
-                5 => {
-                    let mut color: Color;
-
-                    if vec.len() < 3 {
-                        println!("Invalid 8bit color code: {:?}", vec);
-                        color = Color::None;
-                    } else {
-                        let (r, g, b) = get_rgb_values_from_8_bit(vec[2]);
-                        color = Color::Rgb(r, g, b);
-                    }
-
-                    color
-                },
-                _ => panic!("Unknown color code {}, it should be either 2 for 8bit color or 5 for RGB color. vec is: {:?}", color_type, vec)
-            }
-        },
-        9 => Color::Default,
-        _ => panic!("Invalid color code: {:?}", vec),
-    };
-
-    if type_color_digit == 3 {
-        return ColorType::Foreground(color);
+        if type_color_digit == 10 {
+            return ColorType::Background(color);
+        }
     }
-
-    if type_color_digit == 4 {
-        return ColorType::Background(color);
-    }
-
-    panic!("Invalid color code: {:?}", vec);
+    
+    return ColorType::None;
 }
 
 pub fn get_rgb_values_from_8_bit(eight_bit_color: u8) -> (u8, u8, u8) {
@@ -727,6 +826,7 @@ pub fn convert_color_type_to_ansi_code(color_type: ColorType) -> String {
             match color {
                 Color::None => "".to_string(),
                 Color::Default => DEFAULT_FOREGROUND_CODE.to_string(),
+                
                 Color::Black => BLACK_FOREGROUND_CODE.to_string(),
                 Color::Red => RED_FOREGROUND_CODE.to_string(),
                 Color::Green => GREEN_FOREGROUND_CODE.to_string(),
@@ -735,6 +835,16 @@ pub fn convert_color_type_to_ansi_code(color_type: ColorType) -> String {
                 Color::Magenta => MAGENTA_FOREGROUND_CODE.to_string(),
                 Color::Cyan => CYAN_FOREGROUND_CODE.to_string(),
                 Color::White => WHITE_FOREGROUND_CODE.to_string(),
+                
+                Color::BrightBlack => BRIGHT_BLACK_FOREGROUND_CODE.to_string(),
+                Color::BrightRed => BRIGHT_RED_FOREGROUND_CODE.to_string(),
+                Color::BrightGreen => BRIGHT_GREEN_FOREGROUND_CODE.to_string(),
+                Color::BrightYellow => BRIGHT_YELLOW_FOREGROUND_CODE.to_string(),
+                Color::BrightBlue => BRIGHT_BLUE_FOREGROUND_CODE.to_string(),
+                Color::BrightMagenta => BRIGHT_MAGENTA_FOREGROUND_CODE.to_string(),
+                Color::BrightCyan => BRIGHT_CYAN_FOREGROUND_CODE.to_string(),
+                Color::BrightWhite => BRIGHT_WHITE_FOREGROUND_CODE.to_string(),
+                
                 Color::EightBit(c) => EIGHT_BIT_FOREGROUND_CODE(c),
                 Color::Rgb(r, g, b) => RGB_FOREGROUND_CODE(r, g, b)
             }
@@ -743,6 +853,7 @@ pub fn convert_color_type_to_ansi_code(color_type: ColorType) -> String {
             match color {
                 Color::None => "".to_string(),
                 Color::Default => DEFAULT_BACKGROUND_CODE.to_string(),
+                
                 Color::Black => BLACK_BACKGROUND_CODE.to_string(),
                 Color::Red => RED_BACKGROUND_CODE.to_string(),
                 Color::Green => GREEN_BACKGROUND_CODE.to_string(),
@@ -751,6 +862,16 @@ pub fn convert_color_type_to_ansi_code(color_type: ColorType) -> String {
                 Color::Magenta => MAGENTA_BACKGROUND_CODE.to_string(),
                 Color::Cyan => CYAN_BACKGROUND_CODE.to_string(),
                 Color::White => WHITE_BACKGROUND_CODE.to_string(),
+
+                Color::BrightBlack => BRIGHT_BLACK_BACKGROUND_CODE.to_string(),
+                Color::BrightRed => BRIGHT_RED_BACKGROUND_CODE.to_string(),
+                Color::BrightGreen => BRIGHT_GREEN_BACKGROUND_CODE.to_string(),
+                Color::BrightYellow => BRIGHT_YELLOW_BACKGROUND_CODE.to_string(),
+                Color::BrightBlue => BRIGHT_BLUE_BACKGROUND_CODE.to_string(),
+                Color::BrightMagenta => BRIGHT_MAGENTA_BACKGROUND_CODE.to_string(),
+                Color::BrightCyan => BRIGHT_CYAN_BACKGROUND_CODE.to_string(),
+                Color::BrightWhite => BRIGHT_WHITE_BACKGROUND_CODE.to_string(),
+                
                 Color::EightBit(b) => EIGHT_BIT_BACKGROUND_CODE(b),
                 Color::Rgb(r, g, b) => RGB_BACKGROUND_CODE(r, g, b)
             }

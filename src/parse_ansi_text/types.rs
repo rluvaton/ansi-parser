@@ -186,6 +186,17 @@ impl SpanJson {
             Color::Magenta => Some("magenta".to_string()),
             Color::Cyan => Some("cyan".to_string()),
             Color::White => Some("white".to_string()),
+
+            // TODO - maybe make the bright color return RGB instead of the name?
+            Color::BrightBlack => Some("brightBlack".to_string()),
+            Color::BrightRed => Some("brightRed".to_string()),
+            Color::BrightGreen => Some("brightGreen".to_string()),
+            Color::BrightYellow => Some("brightYellow".to_string()),
+            Color::BrightBlue => Some("brightBlue".to_string()),
+            Color::BrightMagenta => Some("brightMagenta".to_string()),
+            Color::BrightCyan => Some("brightCyan".to_string()),
+            Color::BrightWhite => Some("brightWhite".to_string()),
+            
             Color::EightBit(eight_bit) => {
                 let (r, g, b) = get_rgb_values_from_8_bit(eight_bit);
                     

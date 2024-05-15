@@ -51,6 +51,14 @@ mod tests {
     #[test_case(Color::Magenta, MAGENTA_FOREGROUND_CODE ; "Magenta foreground")]
     #[test_case(Color::Cyan, CYAN_FOREGROUND_CODE ; "Cyan foreground")]
     #[test_case(Color::White, WHITE_FOREGROUND_CODE ; "White foreground")]
+    #[test_case(Color::BrightRed, BRIGHT_RED_FOREGROUND_CODE ; "Bright Red foreground")]
+    #[test_case(Color::BrightBlack, BRIGHT_BLACK_FOREGROUND_CODE ; "Bright Black foreground")]
+    #[test_case(Color::BrightGreen, BRIGHT_GREEN_FOREGROUND_CODE ; "Bright Green foreground")]
+    #[test_case(Color::BrightYellow, BRIGHT_YELLOW_FOREGROUND_CODE ; "Bright Yellow foreground")]
+    #[test_case(Color::BrightBlue, BRIGHT_BLUE_FOREGROUND_CODE ; "Bright Blue foreground")]
+    #[test_case(Color::BrightMagenta, BRIGHT_MAGENTA_FOREGROUND_CODE ; "Bright Magenta foreground")]
+    #[test_case(Color::BrightCyan, BRIGHT_CYAN_FOREGROUND_CODE ; "Bright Cyan foreground")]
+    #[test_case(Color::BrightWhite, BRIGHT_WHITE_FOREGROUND_CODE ; "Bright White foreground")]
     fn single_foreground_color_with_no_other_styles(expected_color: Color, color_code: &str) {
         let input = [
             color_code,
@@ -73,6 +81,14 @@ mod tests {
     #[test_case(Color::Magenta, MAGENTA_BACKGROUND_CODE ; "Magenta background")]
     #[test_case(Color::Cyan, CYAN_BACKGROUND_CODE ; "Cyan background")]
     #[test_case(Color::White, WHITE_BACKGROUND_CODE ; "White background")]
+    #[test_case(Color::BrightRed, BRIGHT_RED_BACKGROUND_CODE ; "Bright Red background")]
+    #[test_case(Color::BrightBlack, BRIGHT_BLACK_BACKGROUND_CODE ; "Bright Black background")]
+    #[test_case(Color::BrightGreen, BRIGHT_GREEN_BACKGROUND_CODE ; "Bright Green background")]
+    #[test_case(Color::BrightYellow, BRIGHT_YELLOW_BACKGROUND_CODE ; "Bright Yellow background")]
+    #[test_case(Color::BrightBlue, BRIGHT_BLUE_BACKGROUND_CODE ; "Bright Blue background")]
+    #[test_case(Color::BrightMagenta, BRIGHT_MAGENTA_BACKGROUND_CODE ; "Bright Magenta background")]
+    #[test_case(Color::BrightCyan, BRIGHT_CYAN_BACKGROUND_CODE ; "Bright Cyan background")]
+    #[test_case(Color::BrightWhite, BRIGHT_WHITE_BACKGROUND_CODE ; "Bright White background")]
     fn single_background_color_with_no_other_styles(expected_color: Color, color_code: &str) {
         let input = [
             color_code,

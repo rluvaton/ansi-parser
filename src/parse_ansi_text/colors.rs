@@ -1,5 +1,76 @@
 use heapless::{Vec, consts::U5};
 
+
+#[allow(dead_code)]
+pub const BLACK_FOREGROUND_CODE: &str = "\x1B[30m";
+#[allow(dead_code)]
+pub const BLACK_BACKGROUND_CODE: &str = "\x1B[40m";
+
+#[allow(dead_code)]
+pub const RED_FOREGROUND_CODE: &str = "\x1B[31m";
+#[allow(dead_code)]
+pub const RED_BACKGROUND_CODE: &str = "\x1B[41m";
+
+#[allow(dead_code)]
+pub const GREEN_FOREGROUND_CODE: &str = "\x1B[32m";
+#[allow(dead_code)]
+pub const GREEN_BACKGROUND_CODE: &str = "\x1B[42m";
+
+#[allow(dead_code)]
+pub const YELLOW_FOREGROUND_CODE: &str = "\x1B[33m";
+#[allow(dead_code)]
+pub const YELLOW_BACKGROUND_CODE: &str = "\x1B[43m";
+
+#[allow(dead_code)]
+pub const BLUE_FOREGROUND_CODE: &str = "\x1B[34m";
+#[allow(dead_code)]
+pub const BLUE_BACKGROUND_CODE: &str = "\x1B[44m";
+
+#[allow(dead_code)]
+pub const MAGENTA_FOREGROUND_CODE: &str = "\x1B[35m";
+#[allow(dead_code)]
+pub const MAGENTA_BACKGROUND_CODE: &str = "\x1B[45m";
+
+#[allow(dead_code)]
+pub const CYAN_FOREGROUND_CODE: &str = "\x1B[36m";
+#[allow(dead_code)]
+pub const CYAN_BACKGROUND_CODE: &str = "\x1B[46m";
+
+#[allow(dead_code)]
+pub const WHITE_FOREGROUND_CODE: &str = "\x1B[37m";
+#[allow(dead_code)]
+pub const WHITE_BACKGROUND_CODE: &str = "\x1B[47m";
+
+#[allow(dead_code)]
+pub fn EIGHT_BIT_FOREGROUND_CODE(byte: u8) -> String {
+    // \x1B[38;2;R;G;Bm	
+    format!("\x1B[38;5;{}m", byte)
+}
+
+#[allow(dead_code)]
+pub fn EIGHT_BIT_BACKGROUND_CODE(byte: u8) -> String {
+    format!("\x1B[48;5;{}m", byte)
+}
+
+#[allow(dead_code)]
+pub fn RGB_FOREGROUND_CODE(r: u8, g: u8, b: u8) -> String {
+    // \x1B[38;2;R;G;Bm
+    format!("\x1B[38;2;{};{};{}m", r, g, b)
+}
+
+#[allow(dead_code)]
+pub fn RGB_BACKGROUND_CODE(r: u8, g: u8, b: u8) -> String {
+    format!("\x1B[48;2;{};{};{}m", r, g, b)
+}
+
+pub const LARGEST_RGB_FOREGROUND_CODE: &str = "\x1B[38;2;255;255;255m";
+pub const LARGEST_RGB_BACKGROUND_CODE: &str = "\x1B[48;2;255;255;255m";
+
+#[allow(dead_code)]
+pub const DEFAULT_FOREGROUND_CODE: &str = "\x1B[39m";
+#[allow(dead_code)]
+pub const DEFAULT_BACKGROUND_CODE: &str = "\x1B[49m";
+
 pub enum ColorType {
     None,
     Foreground(Color),
@@ -649,69 +720,43 @@ pub fn get_rgb_values_from_8_bit(eight_bit_color: u8) -> (u8, u8, u8) {
     }
 }
 
-#[allow(dead_code)]
-pub const BLACK_FOREGROUND_CODE: &str = "\x1B[30m";
-#[allow(dead_code)]
-pub const BLACK_BACKGROUND_CODE: &str = "\x1B[40m";
+pub fn convert_color_type_to_ansi_code(color_type: ColorType) -> String {
+    let ansi_code = match color_type {
+        ColorType::None => "".to_string(),
+        ColorType::Foreground(color) => {
+            match color {
+                Color::None => "".to_string(),
+                Color::Default => DEFAULT_FOREGROUND_CODE.to_string(),
+                Color::Black => BLACK_FOREGROUND_CODE.to_string(),
+                Color::Red => RED_FOREGROUND_CODE.to_string(),
+                Color::Green => GREEN_FOREGROUND_CODE.to_string(),
+                Color::Yellow => YELLOW_FOREGROUND_CODE.to_string(),
+                Color::Blue => BLUE_FOREGROUND_CODE.to_string(),
+                Color::Magenta => MAGENTA_FOREGROUND_CODE.to_string(),
+                Color::Cyan => CYAN_FOREGROUND_CODE.to_string(),
+                Color::White => WHITE_FOREGROUND_CODE.to_string(),
+                Color::EightBit(c) => EIGHT_BIT_FOREGROUND_CODE(c),
+                Color::Rgb(r, g, b) => RGB_FOREGROUND_CODE(r, g, b)
+            }
+        }
+        ColorType::Background(color) => {
+            match color {
+                Color::None => "".to_string(),
+                Color::Default => DEFAULT_BACKGROUND_CODE.to_string(),
+                Color::Black => BLACK_BACKGROUND_CODE.to_string(),
+                Color::Red => RED_BACKGROUND_CODE.to_string(),
+                Color::Green => GREEN_BACKGROUND_CODE.to_string(),
+                Color::Yellow => YELLOW_BACKGROUND_CODE.to_string(),
+                Color::Blue => BLUE_BACKGROUND_CODE.to_string(),
+                Color::Magenta => MAGENTA_BACKGROUND_CODE.to_string(),
+                Color::Cyan => CYAN_BACKGROUND_CODE.to_string(),
+                Color::White => WHITE_BACKGROUND_CODE.to_string(),
+                Color::EightBit(b) => EIGHT_BIT_BACKGROUND_CODE(b),
+                Color::Rgb(r, g, b) => RGB_BACKGROUND_CODE(r, g, b)
+            }
+        }
+    };
 
-#[allow(dead_code)]
-pub const RED_FOREGROUND_CODE: &str = "\x1B[31m";
-#[allow(dead_code)]
-pub const RED_BACKGROUND_CODE: &str = "\x1B[41m";
-
-#[allow(dead_code)]
-pub const GREEN_FOREGROUND_CODE: &str = "\x1B[32m";
-#[allow(dead_code)]
-pub const GREEN_BACKGROUND_CODE: &str = "\x1B[42m";
-
-#[allow(dead_code)]
-pub const YELLOW_FOREGROUND_CODE: &str = "\x1B[33m";
-#[allow(dead_code)]
-pub const YELLOW_BACKGROUND_CODE: &str = "\x1B[43m";
-
-#[allow(dead_code)]
-pub const BLUE_FOREGROUND_CODE: &str = "\x1B[34m";
-#[allow(dead_code)]
-pub const BLUE_BACKGROUND_CODE: &str = "\x1B[44m";
-
-#[allow(dead_code)]
-pub const MAGENTA_FOREGROUND_CODE: &str = "\x1B[35m";
-#[allow(dead_code)]
-pub const MAGENTA_BACKGROUND_CODE: &str = "\x1B[45m";
-
-#[allow(dead_code)]
-pub const CYAN_FOREGROUND_CODE: &str = "\x1B[36m";
-#[allow(dead_code)]
-pub const CYAN_BACKGROUND_CODE: &str = "\x1B[46m";
-
-#[allow(dead_code)]
-pub const WHITE_FOREGROUND_CODE: &str = "\x1B[37m";
-#[allow(dead_code)]
-pub const WHITE_BACKGROUND_CODE: &str = "\x1B[47m";
-
-#[allow(dead_code)]
-pub fn EIGHT_BIT_FOREGROUND_CODE(byte: u8) -> String {
-    // \x1B[38;2;R;G;Bm	
-    return format!("\x1B[38;5;{}m", byte)
+    return ansi_code.to_string();
 }
 
-#[allow(dead_code)]
-pub fn EIGHT_BIT_BACKGROUND_CODE(byte: u8) -> String {
-    return format!("\x1B[48;5;{}m", byte)
-}
-
-#[allow(dead_code)]
-pub fn RGB_FOREGROUND_CODE(r: u8, g: u8, b: u8) -> String {
-    // \x1B[38;2;R;G;Bm
-    return format!("\x1B[38;2;{};{};{}m", r, g, b)
-}
-
-#[allow(dead_code)]
-pub fn RGB_BACKGROUND_CODE(r: u8, g: u8, b: u8) -> String {
-    return format!("\x1B[48;2;{};{};{}m", r, g, b)
-}
-
-#[allow(dead_code)]
-pub const DEFAULT_FOREGROUND_CODE: &str = "\x1B[39m";
-#[allow(dead_code)]
-pub const DEFAULT_BACKGROUND_CODE: &str = "\x1B[49m";

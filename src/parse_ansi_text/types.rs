@@ -1,7 +1,8 @@
 use std::ops::BitAnd;
 use serde::{Deserialize, Serialize, Serializer};
-use crate::parse_ansi_text::colors::{Color, get_rgb_values_from_8_bit};
-use crate::parse_ansi_text::style::{Brightness, TextStyle};
+use crate::parse_ansi_text::colors::{Color, convert_color_type_to_ansi_code, get_rgb_values_from_8_bit};
+use crate::parse_ansi_text::colors::ColorType::{Background, Foreground};
+use crate::parse_ansi_text::style::{BOLD_CODE, Brightness, DIM_CODE, INVERSE_CODE, ITALIC_CODE, STRIKETHROUGH_CODE, TextStyle, UNDERLINE_CODE};
 
 
 #[derive(Debug, PartialEq, Clone)]
@@ -115,6 +116,40 @@ impl Span {
             brightness: span.brightness,
             text_style: span.text_style,
         }
+    }
+    
+    pub fn serialize_to_ansi_string(self) -> String {
+        let mut ansi_string = "".to_string();
+        
+        // Brightness
+        if matches!(self.brightness, Brightness::Bold) {
+            ansi_string = ansi_string + BOLD_CODE;
+        } else if matches!(self.brightness, Brightness::Dim) {
+            ansi_string = ansi_string + DIM_CODE;
+        }
+
+        // Text style
+        if self.text_style & TextStyle::Inverse != TextStyle::empty() {
+            ansi_string = ansi_string + INVERSE_CODE;
+        }
+        if self.text_style & TextStyle::Italic != TextStyle::empty() {
+            ansi_string = ansi_string + ITALIC_CODE;
+        }
+        if self.text_style & TextStyle::Underline != TextStyle::empty() {
+            ansi_string = ansi_string + UNDERLINE_CODE;
+        }
+        if self.text_style & TextStyle::Strikethrough != TextStyle::empty() {
+            ansi_string = ansi_string + STRIKETHROUGH_CODE;
+        }
+        
+        // Color
+        ansi_string = ansi_string + convert_color_type_to_ansi_code(Foreground(self.color)).as_str();
+        ansi_string = ansi_string + convert_color_type_to_ansi_code(Background(self.bg_color)).as_str();
+        
+        // Text
+        ansi_string = ansi_string + self.text.as_str();
+
+        return ansi_string;
     }
 }
 

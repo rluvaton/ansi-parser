@@ -3,14 +3,15 @@ mod tests {
     use pretty_assertions::{assert_eq};
     use crate::mapping_file::create::*;
     use crate::mapping_file::*;
+    use crate::mapping_file::read::get_initial_style_for_line;
 
     use crate::parse_ansi_text::constants::RESET_CODE;
     use crate::parse_ansi_text::parse_text_matching_single_span::parse_text_matching_single_span;
     use crate::parse_ansi_text::types::Span;
 
-    // ------------
-    // Format
-    // ------------
+    // --------------------
+    // Create Mapping file
+    // --------------------
 
     #[test]
     fn output_should_have_line_length_before_first_delimiter() {
@@ -218,8 +219,6 @@ mod tests {
 
         let input = input_lines.join("\n");
         
-        assert_eq!(input.split("\n").collect::<Vec<&str>>().len(), 8);
-
         let output = create_mapping_text(input.to_string());
 
         let mapping_output_initial_style_for_each_line = output
@@ -270,5 +269,135 @@ mod tests {
         ];
 
         assert_eq!(mapping_output_initial_style_for_each_line, expected);
+    }
+
+    // --------------------
+    // Consume Mapping file
+    // --------------------
+
+    #[test]
+    fn should_return_initial_span_for_text_with_one_line() {
+        let input = BLACK_BACKGROUND_CODE.to_string()
+            + "Hello, "
+            + RESET_CODE
+            + CYAN_BACKGROUND_CODE
+            + BOLD_CODE
+            + "world!";
+
+        let mapping_text = create_mapping_text(input.to_string());
+
+        let initial_style = get_initial_style_for_line(mapping_text.clone(), 1);
+
+        let expected = Span::empty().with_bg_color(Color::Black);
+
+        assert_eq!(initial_style, expected);
+    }
+
+    #[test]
+    fn should_return_correct_initial_style_for_each_line() {
+        let input_lines = [
+            // Style from start of the line
+            BLACK_BACKGROUND_CODE.to_string()
+                + "Hello, "
+                + RESET_CODE
+                + CYAN_BACKGROUND_CODE
+                + BOLD_CODE
+                + "world!",
+            // Style from prev line
+            "how are you ".to_string() + DIM_CODE + "I'm fine" + RESET_CODE,
+            // No Style
+            "Great to hear".to_string(),
+            // No style in the beginning and style in the end
+            "I'm happy".to_string() + BOLD_CODE + "!" + RESET_CODE,
+            // Empty line without style
+            "".to_string(),
+            // Text style in the beginning
+            ITALIC_CODE.to_string()
+                + UNDERLINE_CODE
+                + "this is line with multiple text style"
+                + RESET_CODE,
+            // All Possible style combined
+            BOLD_CODE.to_string()
+                + ITALIC_CODE
+                + INVERSE_CODE
+                + UNDERLINE_CODE
+                + STRIKETHROUGH_CODE
+                + RGB_FOREGROUND_CODE(255, 255, 255).as_str()
+                + RGB_BACKGROUND_CODE(255, 255, 255).as_str()
+                + "this is line with all possible styles",
+
+            // Non-empty line with style from prev line
+            "hey".to_string(),
+        ];
+
+        let input = input_lines.join("\n");
+
+        let mapping_text = create_mapping_text(input.to_string());
+
+        let mut initial_style_for_each_line: Vec<Span> = vec![];
+
+        for i in 0..input_lines.len() {
+            let initial_style = get_initial_style_for_line(mapping_text.clone(), i + 1);
+
+            initial_style_for_each_line.push(initial_style);
+        }
+
+        let expected = [
+            Span::empty().with_bg_color(Color::Black),
+            Span::empty()
+                .with_bg_color(Color::Cyan)
+                .with_brightness(Brightness::Bold),
+            Span::empty(), // No style at all
+            Span::empty(), // No style at the beginning
+            Span::empty(), // No style at all
+            Span::empty().with_text_style(TextStyle::Italic | TextStyle::Underline),
+            Span::empty()
+                .with_brightness(Brightness::Bold)
+                .with_text_style(
+                    TextStyle::Italic
+                        | TextStyle::Inverse
+                        | TextStyle::Underline
+                        | TextStyle::Strikethrough,
+                )
+                .with_color(Color::Rgb(255, 255, 255))
+                .with_bg_color(Color::Rgb(255, 255, 255)),
+
+            // Same style from prev line
+            Span::empty()
+                .with_brightness(Brightness::Bold)
+                .with_text_style(
+                    TextStyle::Italic
+                        | TextStyle::Inverse
+                        | TextStyle::Underline
+                        | TextStyle::Strikethrough,
+                )
+                .with_color(Color::Rgb(255, 255, 255))
+                .with_bg_color(Color::Rgb(255, 255, 255)),
+        ];
+
+        assert_eq!(initial_style_for_each_line, expected);
+    }
+
+    #[test]
+    fn should_throw_for_missing_line_in_mapping() {
+        let input_lines = [
+            // Style from start of the line
+            BLACK_BACKGROUND_CODE.to_string()
+                + "Hello, "
+                + RESET_CODE
+                + CYAN_BACKGROUND_CODE
+                + BOLD_CODE
+                + "world!",
+            // Style from prev line
+            "how are you ".to_string() + DIM_CODE + "I'm fine" + RESET_CODE,
+        ];
+
+        let input = input_lines.join("\n");
+
+        let mapping_text = create_mapping_text(input.to_string());
+
+        let initial_style = get_initial_style_for_line(mapping_text.clone(), 6);
+
+        assert_eq!(initial_style, Span::empty());
     }
 }

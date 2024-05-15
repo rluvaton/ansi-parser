@@ -3,7 +3,7 @@ use std::fs;
 use ansi_parser;
 
 extern crate clap;
-use clap::{App, Arg};
+use clap::{Arg, ArgAction, Command, ValueHint};
 use crate::parse_ansi_text::parse_ansi_as_spans_iterator::ParseAnsiAsSpans;
 use crate::parse_ansi_text::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLines;
 use crate::parse_ansi_text::parse_options::ParseOptions;
@@ -13,74 +13,73 @@ mod parse_ansi_text;
 mod mapping_file;
 
 fn main() {
-    let matches = App::new("My Test Program")
+
+    let matches = Command::new("My Test Program")
         .version("1.0.0")
         .author("Raz Luvaton")
         .about("Parse ANSI text")
-        .arg(Arg::with_name("file")
-            .short("f")
+        .arg(Arg::new("file")
+            .short('f')
             .long("file")
             .required(true)
-            .takes_value(true)
+            .value_hint(ValueHint::FilePath)
             .help("file to read")
             // TODO - remove this default value
             .default_value("../examples/2-lines.ans"))
-        .arg(Arg::with_name("split-lines")
-            .short("s")
+        .arg(Arg::new("split-lines")
+            .short('s')
             .long("split-lines")
             .required(false)
-            .takes_value(false)
-            .help("Whether should return array of lines where each line contains spans in that line"))
-        
+            .help("Whether should return array of lines where each line contains spans in that line")
+            .action(ArgAction::SetTrue))
+
         // TODO - add support
-        // .arg(Arg::with_name("output")
-        //     .short("o")
+        // .arg(Arg::new("output")
+        //     .short('o')
         //     .long("output")
         //     .required(false)
         //     .takes_value(true)
         //     .help("Where to output")
-        //     .possible_values(&["stdout", "file"])
+        //     .possible_values(["stdout", "file"])
         //     .default_value("stdout"))
 
-        // .arg(Arg::with_name("output-path")
+        // .arg(Arg::new("output-path")
         //     .long("output-path")
-        //     .required_if("output", "file")
+        //     .required_if_eq("output", "file")
         //     .takes_value(true)
-        //     .help("Output JSON file (when output option is file")
-        // )
+        //     .help("Output JSON file (when output option is file"))
 
-        .arg(Arg::with_name("json-output-format")
+        .arg(Arg::new("json-output-format")
             .long("json")
-            .takes_value(false)
             .conflicts_with_all(&["json-line-output-format", "flat-json-line-output-format"])
-            .help("output all the span in a valid JSON format this is the default format"))
+            .help("output all the span in a valid JSON format this is the default format")
+            .action(ArgAction::SetTrue))
 
-        .arg(Arg::with_name("json-line-output-format")
+        .arg(Arg::new("json-line-output-format")
             .long("json-line")
-            .takes_value(false)
+            .help("Each line of output is a valid JSON, there are no commas between lines and the output is not wrapped with [ and ].\n\nWhen split-lines is true, each line of output will match line in the input, all spans for the same input line will be at the same line in the output")
+            .action(ArgAction::SetTrue))
 
-            .help("Each line of output is a valid JSON, there are no comma between lines and the output is not wrapped with [ and ].\n\nWhen split-lines is true, each line of output will match line in the input, all spans for the same input line will be at the same line in the output"))
-
-        .arg(Arg::with_name("flat-json-line-output-format")
+        .arg(Arg::new("flat-json-line-output-format")
             .long("flat-json-line")
-            .takes_value(false)
+            .help("Each line of output is a valid JSON, there are no commas between lines and the output is not wrapped with [ and ].\n\nObject with property type: 'new line' will be printed between lines to mark new line")
+            .action(ArgAction::SetTrue))
 
-            .help("Each line of output is a valid JSON, there are no comma between lines and the output is not wrapped with [ and ].\n\nobject with property type: 'new line' will be printed between lines to mark new line"))
-
-        .arg(Arg::with_name("only-style-for-start-of-line")
+        .arg(Arg::new("only-style-for-start-of-line")
             .long("only-style-for-start-of-line")
-            .takes_value(false)
+            .help("Only output style for the start of each line without text, this helps reading files and to know which style to apply at the beginning")
+            .action(ArgAction::SetTrue))
 
-            .help("Only output style for the start of each line without text, this helps reading files and to know which style to apply at the beginning"))
-        
+        // TODO - add create mapping file 
+
         // TODO - add initial span to parse with and line/index ranges for reading the file
         .get_matches();
 
-    let mut split_by_lines = matches.is_present("split-lines");
-    let flat_json_line_output_format = matches.is_present("flat-json-line-output-format");
-    let mut json_output_format = matches.is_present("json-output-format");
-    let json_line_output_format = matches.is_present("json-line-output-format");
-    let only_style_for_start_of_line = matches.is_present("only-style-for-start-of-line");
+    let mut split_by_lines = matches.contains_id("split-lines");
+    let flat_json_line_output_format = matches.contains_id("flat-json-line-output-format");
+    let mut json_output_format = matches.contains_id("json-output-format");
+    let json_line_output_format = matches.contains_id("json-line-output-format");
+    let only_style_for_start_of_line = matches.contains_id("only-style-for-start-of-line");
     
     if !split_by_lines && flat_json_line_output_format {
         panic!("'flat-json-line' option is only available when 'split-lines' is enabled");
@@ -95,7 +94,7 @@ fn main() {
         json_output_format = true
     }
 
-    let file_path = matches.value_of("file").unwrap();
+    let file_path = matches.get_one::<String>("file").expect("Should have been able to get the file path");
     // println!("The file passed is: {}", file_path);
 
     // TODO - don't load entire file to memory and instead iterate on it

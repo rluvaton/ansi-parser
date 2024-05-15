@@ -851,10 +851,10 @@ mod tests {
 
         let mut initial_style_for_each_line: Vec<Option<Span>> = vec![];
 
-        for i in input_lines.len()..0 {
+        for i in (0..input_lines.len()).rev() {
             let initial_style = get_initial_style_for_line_from_file_path(tmp_file_path.clone(), i + 1);
 
-            initial_style_for_each_line.push(initial_style);
+            initial_style_for_each_line.push(initial_style.clone());
         }
 
         // We read at the opposite order so we need to reverse to get the correct order of lines
@@ -1052,7 +1052,7 @@ mod tests {
 
         let (mut file, content_start_offset, line_length) = ready_data_for_reading_file.unwrap();
 
-        for i in input_lines.len()..0 {
+        for i in (0..input_lines.len()).rev() {
             let initial_style = get_initial_style_for_line_from_file(&mut file, i + 1, content_start_offset, line_length);
 
             initial_style_for_each_line.push(initial_style);

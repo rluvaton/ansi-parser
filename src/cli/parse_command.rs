@@ -60,19 +60,21 @@ pub fn run_parse_command(matches: &clap::ArgMatches) {
         return;
     }
     
-    if json_line_output_format {
-        if !split_by_lines {
-            print_strings_to_stdout(contents.parse_ansi_as_spans(parse_options).to_span_json_line());
-        } else {
-            print_strings_to_stdout(contents.parse_ansi_as_spans_by_lines(parse_options).to_json_line_string_in_span_lines());
-        }
-
-        return;
-    }
     
-    if flat_json_line_output_format {
-        print_strings_to_stdout(contents.parse_ansi_as_spans_by_lines(parse_options).to_flat_json_line_string_in_span_lines());
-    }
+    // TODO - uncomment this when fixing output
+    // if json_line_output_format {
+    //     if !split_by_lines {
+    //         print_strings_to_stdout(contents.parse_ansi_as_spans(parse_options).to_span_json_line());
+    //     } else {
+    //         print_strings_to_stdout(contents.parse_ansi_as_spans_by_lines(parse_options).to_json_line_string_in_span_lines());
+    //     }
+    // 
+    //     return;
+    // }
+    // 
+    // if flat_json_line_output_format {
+    //     print_strings_to_stdout(contents.parse_ansi_as_spans_by_lines(parse_options).to_flat_json_line_string_in_span_lines());
+    // }
 }
 
 

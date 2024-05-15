@@ -87,7 +87,8 @@ pub fn get_cli() -> Command {
 
     let mapping_command = Command::new("mapping")
         .about("Mapping file for easy access")
-        .subcommand(create_mapping_command);
+        .subcommand(create_mapping_command)
+        .subcommand_required(true);
 
     return Command::new("Ansi Parser CLI")
         .version("1.0.0")

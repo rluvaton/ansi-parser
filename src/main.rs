@@ -5,6 +5,7 @@ use std::env;
 use ansi_parser;
 
 use crate::cli::definition::get_cli;
+use crate::cli::mapping_file_command::run_create_mapping_file_command;
 use crate::cli::parse_command::run_parse_command;
 
 mod parse_ansi_text;
@@ -19,6 +20,16 @@ fn main() {
     
     if command == "parse" {
         run_parse_command(matches.subcommand_matches("parse").expect("Should have been able to get the parse subcommand"));
+    } else if(command == "mapping") {
+        let matches = matches.subcommand_matches("mapping").expect("Should have been able to get the mapping subcommand");
+        
+        let command = matches.subcommand_name().expect("Should have been able to get the mapping subcommand");
+        
+        if command == "create" {
+            run_create_mapping_file_command(matches.subcommand_matches("create").expect("Should have been able to get the create subcommand"));
+        } else {
+            panic!("Unknown mapping subcommand: {}", command);
+        }
     } else {
         panic!("Unknown command: {}", command);
     }

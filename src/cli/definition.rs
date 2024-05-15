@@ -25,7 +25,6 @@ pub fn get_cli() -> Command {
             .action(ArgAction::SetTrue))
 
         .arg(Arg::new("format")
-            .short('f')
             .long("format")
             .required(false)
             .default_value("json")
@@ -43,23 +42,32 @@ pub fn get_cli() -> Command {
                     "Object with property type: 'new line' will be printed between lines to mark new line",
                     "Only available when 'split-lines' is enabled",
                 ].join("\n")),
-            ]));
+            ]))
+        
+        // TODO - add support for reading from line to line and not the entire file + use mapping file
+        .arg(Arg::new("from-line")
+            .long("from-line")
+            .required(false)
+            .help("From which line to read (included)")
 
-    // TODO - add support
-    // .arg(Arg::new("output")
-    //     .short('o')
-    //     .long("output")
-    //     .required(false)
-    //     .takes_value(true)
-    //     .help("Where to output")
-    //     .possible_values(["stdout", "file"])
-    //     .default_value("stdout"))
-
-    // .arg(Arg::new("output-path")
-    //     .long("output-path")
-    //     .required_if_eq("output", "file")
-    //     .takes_value(true)
-    //     .help("Output JSON file (when output option is file"))
+            .allow_negative_numbers(false)
+            .value_parser(clap::value_parser!(u16).range(0..))
+            // TODO - add type number
+            .default_value("0"))
+        
+        .arg(Arg::new("to-line")
+            .long("to-line")
+            .required(false)
+            .allow_negative_numbers(false) 
+            // Must be greater than from-line
+            .value_parser(clap::value_parser!(u16))
+            .help("until which line to read (excluded)"))
+        
+        .arg(Arg::new("mapping-file")
+            .long("mapping-file")
+            .required(false)
+            .value_hint(ValueHint::FilePath)
+            .help("mapping file for faster line access, not available if not reading from line to line"));
 
     let create_mapping_command = Command::new("create")
         .about("Mapping file for easy access")

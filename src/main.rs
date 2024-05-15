@@ -15,7 +15,6 @@ mod cli;
 fn main() {
     let matches = get_cli().get_matches();
     
-    // TODO - check which command currently running
     let command = matches.subcommand_name().expect("Should have been able to get the command");
     
     if command == "parse" {

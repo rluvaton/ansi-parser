@@ -16,6 +16,7 @@ pub mod parse_ansi_as_spans_iterator;
 pub mod parse_options;
 pub mod parse_ansi_split_by_lines_as_spans_iterator;
 mod split_spans_to_lines;
+pub mod parse_text_matching_single_span;
 
 pub fn parse_ansi_text(str: &str) -> Vec<Span> {
     //Parse the first two blocks in the list

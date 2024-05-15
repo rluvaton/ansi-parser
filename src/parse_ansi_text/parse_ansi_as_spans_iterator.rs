@@ -82,7 +82,7 @@ impl<'a> Iterator for ParseAnsiAsSpansIterator<'a> {
                             if matches!(color, Color::Default) {
                                 color = Color::None;
                             }
-                            
+
                             // TODO - add here that if current color is default or None and new color is default or none don't treat as different
                             if self.current_span.text.len() > 0 && self.current_span.color != color {
                                 let span = self.current_span.clone();
@@ -101,7 +101,7 @@ impl<'a> Iterator for ParseAnsiAsSpansIterator<'a> {
                             if matches!(color, Color::Default) {
                                 color = Color::None;
                             }
-                            
+
                             if self.current_span.text.len() > 0 && self.current_span.bg_color != color {
                                 let span = self.current_span.clone();
                                 self.current_span = self.current_span.clone()

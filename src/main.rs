@@ -10,6 +10,7 @@ use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::types::{Span, SpanJson};
 
 mod parse_ansi_text;
+mod mapping_file;
 
 fn main() {
     let matches = App::new("My Test Program")

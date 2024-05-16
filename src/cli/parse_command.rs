@@ -1,8 +1,7 @@
 use crate::mapping_file::read::{
     get_initial_style_for_line_from_file, get_mapping_file_ready_to_read,
 };
-use crate::parse_ansi_text::parse_ansi_as_spans_iterator::ParseAnsiAsSpans;
-use crate::parse_ansi_text::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLines;
+use crate::parse_ansi_text::parse_ansi_as_spans_iterator::*;
 use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::types::{Span, SpanJson};
 use std::ffi::OsString;
@@ -13,6 +12,9 @@ use crate::cli::format::json_span_lines::*;
 use crate::cli::format::json_line_single_span::*;
 use crate::cli::format::json_line_span_lines::*;
 use crate::cli::format::flat_json_line_span_lines::*;
+use crate::parse_ansi_text::custom_ansi_parse_iterator::AnsiParseIterator;
+use crate::parse_ansi_text::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
+use crate::parse_ansi_text::{parse_ansi_text_split_by_lines, parse_ansi_text_with_options};
 
 // TODO - in order to save memory and not read the entire file to memory
 //        we should have a way to have an iterator over the file that yield the spans
@@ -56,6 +58,12 @@ pub fn run_parse_command(matches: &clap::ArgMatches) {
 
     let parse_options = ParseOptions::default();
 
+    // TODO - change this to iterator instead of Vec for better performance
+    // TODO - make ansi parse iterator split by line if needed for better performance instead of keeping all for 1 huge line
+    let parse_ansi_from_text_iterator = AnsiParseIterator::create_from_str(contents);
+
+    // return output;
+
     // TODO - find a more generic way to have where to output and and the format of the output instead of having multiple if statements with the same code
     //        Ideally should be like this:
     //        content
@@ -63,9 +71,15 @@ pub fn run_parse_command(matches: &clap::ArgMatches) {
     //            .compose(format_output(format))
     if json_output_format {
         if !split_by_lines {
-            print_strings_to_stdout(contents.parse_ansi_as_spans(parse_options).to_span_json());
+            let parse_ansi_as_spans_iterator = ParseAnsiAsSpansIterator {
+                iter: parse_ansi_from_text_iterator,
+                current_span: Span::empty(),
+            };
+            
+            print_strings_to_stdout(parse_ansi_as_spans_iterator.to_span_json());
         } else {
-            print_strings_to_stdout(contents.parse_ansi_as_spans_by_lines(parse_options).to_json_string_in_span_lines());
+            print_strings_to_stdout(ParseAnsiAsSpansByLinesIterator::create(parse_ansi_from_text_iterator, parse_options)
+                .to_json_string_in_span_lines());
         }
 
         return;
@@ -73,17 +87,21 @@ pub fn run_parse_command(matches: &clap::ArgMatches) {
 
     if json_line_output_format {
         if !split_by_lines {
-            let iterator = contents.parse_ansi_as_spans(parse_options);
-            print_strings_to_stdout(iterator.to_span_json_line());
+            let parse_ansi_as_spans_iterator = ParseAnsiAsSpansIterator {
+                iter: parse_ansi_from_text_iterator,
+                current_span: Span::empty(),
+            };
+
+            print_strings_to_stdout(parse_ansi_as_spans_iterator.to_span_json_line());
         } else {
-            print_strings_to_stdout(contents.parse_ansi_as_spans_by_lines(parse_options).to_json_line_string_in_span_lines());
+            print_strings_to_stdout(ParseAnsiAsSpansByLinesIterator::create(parse_ansi_from_text_iterator, parse_options).to_json_line_string_in_span_lines());
         }
 
         return;
     }
 
     if flat_json_line_output_format {
-        print_strings_to_stdout(contents.parse_ansi_as_spans_by_lines(parse_options).to_flat_json_line_string_in_span_lines());
+        print_strings_to_stdout(ParseAnsiAsSpansByLinesIterator::create(parse_ansi_from_text_iterator, parse_options).to_flat_json_line_string_in_span_lines());
     }
 }
 
@@ -108,9 +126,7 @@ fn get_spans_in_range_if_needed_from_file_path(
     if from_line.is_none() && to_line.is_none() {
         let file_content = fs::read_to_string(file_path).unwrap();
 
-        return file_content
-            .parse_ansi_as_spans_by_lines(ParseOptions::default())
-            .collect::<Vec<Vec<Span>>>();
+        return parse_ansi_text_split_by_lines(file_content.as_str(), ParseOptions::default())
     }
 
     let mut reader =
@@ -157,11 +173,8 @@ fn get_spans_in_range_if_needed_from_file_path(
         )
         .unwrap();
 
-        let line_spans = line
-            .unwrap()
-            .clone()
-            .parse_ansi_as_spans(ParseOptions::default().with_initial_span(initial_span))
-            .collect::<Vec<Span>>();
+        // TODO - change this to use the file iterator directly
+        let line_spans = parse_ansi_text_with_options(line.unwrap().clone().as_str(), ParseOptions::default().with_initial_span(initial_span));
         
         all_lines.push(line_spans);
 
@@ -205,38 +218,3 @@ mod my_reader {
     }
 }
 
-
-// TODO - change to iterator and consume it by either printing to stdout or file
-fn print_flat_json_line(contents: String, parse_options: ParseOptions) {
-    let lines_iter = contents.parse_ansi_as_spans_by_lines(parse_options);
-    let mut is_first = true;
-
-    for line in lines_iter {
-        if !is_first {
-            // If not first line, should go to next line before printing current line
-
-            // If not first line than print that starting a new line
-            // { "type": "new line" }
-            print!("\n{{ \"type\": \"new line\" }}\n");
-        }
-
-        is_first = false;
-
-        let mut is_first_in_line = true;
-
-        for span in line {
-            if !is_first_in_line {
-                // Printing on the next line so we don't have to deal with knowing when the item is the last
-                // Print from prev object
-                print!(",")
-            }
-            is_first_in_line = false;
-            let json_span = SpanJson::create_from_span(&span);
-
-            print!("{}", serde_json::to_string(&json_span).unwrap());
-        }
-
-        // End of line
-        print!("]");
-    }
-}

@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 use crate::mapping_file::constants::*;
-use crate::parse_ansi_text::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLines;
+use crate::parse_ansi_text::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
 use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::types::Span;
 
@@ -14,8 +14,7 @@ use crate::parse_ansi_text::types::Span;
 // <initial-style-for-line-n><padding until reach line-length?>
 
 pub fn create_mapping_text(contents: String) -> String {
-    let initial_span_for_each_line = contents
-        .parse_ansi_as_spans_by_lines(ParseOptions::default())
+    let initial_span_for_each_line = ParseAnsiAsSpansByLinesIterator::create_from_str(contents, ParseOptions::default())
         .map(|line| if line.is_empty() {Span::empty()} else {line[0].clone().with_text("".to_string())})
         .collect::<Vec<Span>>();
 
@@ -33,6 +32,7 @@ pub fn create_mapping_text(contents: String) -> String {
     return FULL_LINE_LENGTH.to_string() + DELIMITER + initial_style_for_each_line.join("").as_str();
 }
 
+// TODO - create a function that accept a string iterator
 pub fn create_mapping_file(file_path: PathBuf, contents: String) {
     let mut file = File::create(file_path).expect("create mapping file failed");
 
@@ -40,7 +40,7 @@ pub fn create_mapping_file(file_path: PathBuf, contents: String) {
 
     file.write(header.as_bytes()).expect("write header to file failed");
 
-    let lines_iterators = contents.parse_ansi_as_spans_by_lines(ParseOptions::default());
+    let lines_iterators = ParseAnsiAsSpansByLinesIterator::create_from_str(contents, ParseOptions::default());
 
     for line in lines_iterators {
         let initial_span_for_line = if line.is_empty() {Span::empty()} else {line[0].clone().with_text("".to_string())};

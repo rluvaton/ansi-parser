@@ -1,46 +1,19 @@
 use std::iter::Iterator;
 
-use ansi_parser::{AnsiParseIterator, AnsiParser, Output};
 
 use crate::parse_ansi_text::ansi_sequence_helpers::{AnsiSequenceType, get_type_from_ansi_sequence};
 use crate::parse_ansi_text::colors::Color;
+use crate::parse_ansi_text::custom_ansi_parse_iterator::{AnsiParseIterator, Output};
 use crate::parse_ansi_text::parse_options::ParseOptions;
+use crate::parse_ansi_text::style::{Brightness, TextStyle};
 use crate::parse_ansi_text::types::Span;
 
-pub trait ParseAnsiAsSpansByLines {
-    fn parse_ansi_as_spans_by_lines(&self, options: ParseOptions) -> ParseAnsiAsSpansByLinesIterator<'_>;
-}
 
-impl ParseAnsiAsSpansByLines for str {
-    fn parse_ansi_as_spans_by_lines(&self, options: ParseOptions) -> ParseAnsiAsSpansByLinesIterator<'_> {
-        let mut initial_span = options.initial_span.clone();
-
-        if matches!(initial_span.color, Color::Default) {
-            initial_span.color = Color::None;
-        }
-        if matches!(initial_span.bg_color, Color::Default) {
-            initial_span.bg_color = Color::None;
-        }
-            
-        ParseAnsiAsSpansByLinesIterator { iter: self.ansi_parse(), line: Some(vec![]), current_span: initial_span.clone(), pending_span: Some(initial_span.clone()) }
-    }
-}
-
-
-#[cfg(any(feature = "std", test))]
-impl ParseAnsiAsSpansByLines for String {
-    fn parse_ansi_as_spans_by_lines(&self, options: ParseOptions) -> ParseAnsiAsSpansByLinesIterator<'_> {
-        ParseAnsiAsSpansByLinesIterator { iter: self.ansi_parse(), line: Some(vec![]), current_span: options.initial_span.clone(), pending_span: Some(options.clone().initial_span.clone()) }
-    }
-}
-
-
-#[derive(Debug)]
 pub struct ParseAnsiAsSpansByLinesIterator<'a> {
-    iter: AnsiParseIterator<'a>,
-    current_span: Span,
-    line: Option<Vec<Span>>,
-    pending_span: Option<Span>,
+    pub(crate) iter: AnsiParseIterator<'a>,
+    pub(crate) current_span: Span,
+    pub(crate)line: Option<Vec<Span>>,
+    pub(crate)pending_span: Option<Span>,
 }
 
 impl<'a> Iterator for ParseAnsiAsSpansByLinesIterator<'a> {
@@ -53,7 +26,7 @@ impl<'a> Iterator for ParseAnsiAsSpansByLinesIterator<'a> {
         if self.pending_span.is_some() {
             let pending_span = self.pending_span.clone().unwrap();
 
-            // If this span still contain text, than extract the 2 spans, one with the text until the new line and the other with the rest of the text
+            // If this span still contain text, then extract the 2 spans, one with the text until the new line and the other with the rest of the text
             if pending_span.text.contains("\n") {
                 return Some(self.on_span_with_new_line(pending_span));
             }
@@ -65,8 +38,10 @@ impl<'a> Iterator for ParseAnsiAsSpansByLinesIterator<'a> {
 
         while let Some(output) = self.iter.next() {
             match output {
+                Output::IgnoreMe => {
+                },
                 Output::TextBlock(text) => {
-                    self.current_span.text.push_str(text);
+                    self.current_span.text.push_str(text.as_str());
 
                     // If have new line than get 
                     if self.current_span.text.contains("\n") {
@@ -209,6 +184,20 @@ impl<'a> ParseAnsiAsSpansByLinesIterator<'a> {
     }
 }
 
+impl<'a> ParseAnsiAsSpansByLinesIterator<'a> {
+
+    pub fn create(parse_iterator: AnsiParseIterator, options: ParseOptions) -> ParseAnsiAsSpansByLinesIterator {
+        ParseAnsiAsSpansByLinesIterator { iter: parse_iterator, line: Some(vec![]), current_span: options.initial_span.clone().replace_default_color_with_none(), pending_span: Some(options.clone().initial_span.clone().replace_default_color_with_none()) }
+    }
+
+    pub fn create_from_string_iterator(str_iterator: Box<dyn Iterator<Item=String>>, options: ParseOptions) -> ParseAnsiAsSpansByLinesIterator<'a> {
+        ParseAnsiAsSpansByLinesIterator { iter: AnsiParseIterator::create(str_iterator), line: Some(vec![]), current_span: options.initial_span.clone().replace_default_color_with_none(), pending_span: Some(options.clone().initial_span.clone().replace_default_color_with_none()) }
+    }
+
+    pub fn create_from_str(str: String, options: ParseOptions) -> ParseAnsiAsSpansByLinesIterator<'a> {
+        ParseAnsiAsSpansByLinesIterator { iter: AnsiParseIterator::create_from_str(str), line: Some(vec![]), current_span: options.initial_span.clone().replace_default_color_with_none(), pending_span: Some(options.clone().initial_span.clone().replace_default_color_with_none()) }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -216,10 +205,51 @@ mod tests {
     use crate::parse_ansi_text::colors::*;
     use crate::parse_ansi_text::constants::RESET_CODE;
     use crate::parse_ansi_text::parse_options::ParseOptions;
+    use crate::parse_ansi_text::playground_iterator::CharsIterator;
     use super::*;
 
     #[test]
-    fn split_to_lines_should_work() {
+    fn split_to_lines_should_work_for_split_by_chars() {
+        let input = "";
+
+        let input = vec![
+            RED_FOREGROUND_CODE.to_string() + "abc" + RESET_CODE,
+            YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng" + RESET_CODE,
+            CYAN_FOREGROUND_CODE.to_string() + "hij" + RESET_CODE
+        ]
+            .join("");
+        
+        let chars = CharsIterator {
+            index: 0,
+            str: input,
+        };
+
+        let lines: Vec<Vec<Span>> = ParseAnsiAsSpansByLinesIterator::create_from_string_iterator(Box::new(chars), ParseOptions::default()).collect();
+
+        let expected = vec![
+            // Line 1:
+            vec![
+                Span::empty().with_text("abc".to_string()).with_color(Color::Red),
+                Span::empty().with_text("d".to_string()).with_color(Color::Yellow)
+            ],
+
+            // Line 2:
+            vec![
+                Span::empty().with_text("ef".to_string()).with_color(Color::Yellow)
+            ],
+
+            // Line 3:
+            vec![
+                Span::empty().with_text("g".to_string()).with_color(Color::Yellow),
+                Span::empty().with_text("hij".to_string()).with_color(Color::Cyan)
+            ],
+        ];
+
+        assert_eq!(lines, expected);
+    }
+    
+    #[test]
+    fn split_to_lines_should_work_for_single_chunk() {
         let input = "";
 
         let chunks = vec![
@@ -230,7 +260,8 @@ mod tests {
             .join("")
             .to_string();
 
-        let lines: Vec<Vec<Span>> = chunks.parse_ansi_as_spans_by_lines(ParseOptions::default()).collect();
+
+        let lines: Vec<Vec<Span>> = ParseAnsiAsSpansByLinesIterator::create_from_str(chunks, ParseOptions::default()).collect();
 
         let expected = vec![
             // Line 1:

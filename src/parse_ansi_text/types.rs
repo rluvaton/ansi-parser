@@ -151,6 +151,18 @@ impl Span {
 
         return ansi_string;
     }
+    
+    pub fn replace_default_color_with_none(mut self) -> Span {
+            if matches!(self.color, Color::Default) {
+                self.color = Color::None;
+            }
+
+            if matches!(self.bg_color, Color::Default) {
+                self.bg_color = Color::None;
+            }
+
+            self
+    }
 }
 
 impl SpanJson {

@@ -14,6 +14,11 @@ use crate::cli::format::json_line_single_span::*;
 use crate::cli::format::json_line_span_lines::*;
 use crate::cli::format::flat_json_line_span_lines::*;
 
+// TODO - in order to save memory and not read the entire file to memory
+//        we should have a way to have an iterator over the file that yield the spans
+//        currently, the parse_ansi lib is not designed to work with iterators
+//        so we need to yield the current span and the next span
+
 pub fn run_parse_command(matches: &clap::ArgMatches) {
     let split_by_lines = *matches.get_one::<bool>("split-lines").unwrap();
 
@@ -26,7 +31,7 @@ pub fn run_parse_command(matches: &clap::ArgMatches) {
         .expect("Should have been able to get the file path");
 
     // get_lines_in_range_if_needed_from_file_path(&file_path, mapping_file, from_line, to_line);
-
+    
     // TODO - don't load entire file to memory and instead iterate on it
     let contents = fs::read_to_string(file_path).expect("Should have been able to read the file");
 
@@ -50,7 +55,7 @@ pub fn run_parse_command(matches: &clap::ArgMatches) {
     // println!("With text:\n{contents}");
 
     let parse_options = ParseOptions::default();
-    
+
     // TODO - find a more generic way to have where to output and and the format of the output instead of having multiple if statements with the same code
     //        Ideally should be like this:
     //        content
@@ -73,10 +78,10 @@ pub fn run_parse_command(matches: &clap::ArgMatches) {
         } else {
             print_strings_to_stdout(contents.parse_ansi_as_spans_by_lines(parse_options).to_json_line_string_in_span_lines());
         }
-    
+
         return;
     }
-    
+
     if flat_json_line_output_format {
         print_strings_to_stdout(contents.parse_ansi_as_spans_by_lines(parse_options).to_flat_json_line_string_in_span_lines());
     }

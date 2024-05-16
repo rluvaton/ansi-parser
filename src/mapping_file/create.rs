@@ -3,8 +3,8 @@ use std::io::Write;
 use std::path::PathBuf;
 use get_chunk::iterator::FileIter;
 use crate::mapping_file::constants::*;
-use crate::parse_ansi_text::custom_ansi_parse_iterator::AnsiParseIterator;
-use crate::parse_ansi_text::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
+use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::AnsiParseIterator;
+use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
 use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::types::Span;
 

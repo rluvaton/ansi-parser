@@ -7,7 +7,7 @@ use get_chunk::iterator;
 use get_chunk::iterator::FileIter;
 
 
-use crate::parse_ansi_text::custom_ansi_parse_iterator::AnsiParseIterator;
+use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::AnsiParseIterator;
 
 // TODO - change type here
 fn run() -> io::Result<u8> {

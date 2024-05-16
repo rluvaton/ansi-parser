@@ -5,8 +5,8 @@ use get_chunk::iterator::FileIter;
 
 use crate::parse_ansi_text::ansi_sequence_helpers::{AnsiSequenceType, get_type_from_ansi_sequence};
 use crate::parse_ansi_text::colors::Color;
-use crate::parse_ansi_text::custom_ansi_parse_iterator::{AnsiParseIterator, Output};
-use crate::parse_ansi_text::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
+use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::{AnsiParseIterator, Output};
+use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
 use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::types::Span;
 
@@ -24,7 +24,7 @@ impl<'a> Iterator for ParseAnsiAsSpansIterator<'a> {
         while let Some(output) = self.iter.next() {
             match output {
                 Output::IgnoreMe => {
-                    
+
                 },
                 Output::TextBlock(text) => {
                     // println!("Text block: {}", text);
@@ -140,7 +140,7 @@ impl ParseAnsiAsSpansIterator<'_> {
     pub fn create_from_str<'a>(str: String, options: ParseOptions) -> ParseAnsiAsSpansIterator<'a> {
         ParseAnsiAsSpansIterator { iter: AnsiParseIterator::create_from_str(str), current_span: options.initial_span.clone().replace_default_color_with_none() }
     }
-    
+
     pub fn create_from_file_path<'a>(input_file_path: PathBuf, options: ParseOptions) -> ParseAnsiAsSpansIterator<'a> {
         let input_file = File::open(input_file_path).expect("opening input file path failed");
 
@@ -156,8 +156,8 @@ mod tests {
     use pretty_assertions::{assert_eq};
     use crate::parse_ansi_text::colors::*;
     use crate::parse_ansi_text::constants::*;
-    use crate::parse_ansi_text::custom_ansi_parse_iterator::*;
-    use crate::parse_ansi_text::playground_iterator::CharsIterator;
+    use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::*;
+    use crate::parse_ansi_text::iterators::playground_iterator::CharsIterator;
     use crate::parse_ansi_text::types::*;
     use super::*;
 
@@ -168,24 +168,24 @@ mod tests {
             "Hello, World!".to_string(),
             RESET_CODE.to_string(),
         ].join("");
-        
+
         let chars = CharsIterator {
             index: 0,
             str: input_str,
         };
 
         let parse_ansi_from_text_iterator = AnsiParseIterator::create(Box::new(chars));
-        
+
         let parse_ansi_as_spans_iterator = ParseAnsiAsSpansIterator {
             iter: parse_ansi_from_text_iterator,
             current_span: Span::empty(),
         };
         let output: Vec<Span> = parse_ansi_as_spans_iterator.collect::<Vec<Span>>();
-        
+
         let expected = vec![Span::empty().with_text("Hello, World!".to_string()).with_bg_color(Color::Red)];
         assert_eq!(output, expected);
     }
-    
+
     #[test]
     fn should_be_available_as_iterator() {
         let input_str = [

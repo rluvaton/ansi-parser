@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter, Result as DisplayResult};
 use ansi_parser::{AnsiSequence, parse_escape};
-use crate::parse_ansi_text::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
+use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
 use crate::parse_ansi_text::parse_options::ParseOptions;
 
 pub struct AnsiParseIterator<'a> {

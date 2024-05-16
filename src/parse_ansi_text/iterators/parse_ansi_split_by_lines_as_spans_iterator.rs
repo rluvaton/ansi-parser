@@ -6,7 +6,7 @@ use get_chunk::iterator::FileIter;
 
 use crate::parse_ansi_text::ansi_sequence_helpers::{AnsiSequenceType, get_type_from_ansi_sequence};
 use crate::parse_ansi_text::colors::Color;
-use crate::parse_ansi_text::custom_ansi_parse_iterator::{AnsiParseIterator, Output};
+use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::{AnsiParseIterator, Output};
 use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::style::{Brightness, TextStyle};
 use crate::parse_ansi_text::types::Span;
@@ -15,8 +15,8 @@ use crate::parse_ansi_text::types::Span;
 pub struct ParseAnsiAsSpansByLinesIterator<'a> {
     pub(crate) iter: AnsiParseIterator<'a>,
     pub(crate) current_span: Span,
-    pub(crate)line: Option<Vec<Span>>,
-    pub(crate)pending_span: Option<Span>,
+    pub(crate) line: Option<Vec<Span>>,
+    pub(crate) pending_span: Option<Span>,
 }
 
 impl<'a> Iterator for ParseAnsiAsSpansByLinesIterator<'a> {
@@ -217,7 +217,7 @@ mod tests {
     use crate::parse_ansi_text::colors::*;
     use crate::parse_ansi_text::constants::RESET_CODE;
     use crate::parse_ansi_text::parse_options::ParseOptions;
-    use crate::parse_ansi_text::playground_iterator::CharsIterator;
+    use crate::parse_ansi_text::iterators::playground_iterator::CharsIterator;
     use super::*;
 
     #[test]

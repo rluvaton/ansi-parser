@@ -1,7 +1,7 @@
 use crate::mapping_file::read::{
     get_initial_style_for_line_from_file, get_mapping_file_ready_to_read,
 };
-use crate::parse_ansi_text::parse_ansi_as_spans_iterator::*;
+use crate::parse_ansi_text::iterators::parse_ansi_as_spans_iterator::*;
 use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::types::{Span, SpanJson};
 use std::ffi::OsString;
@@ -12,8 +12,8 @@ use crate::cli::format::json_span_lines::*;
 use crate::cli::format::json_line_single_span::*;
 use crate::cli::format::json_line_span_lines::*;
 use crate::cli::format::flat_json_line_span_lines::*;
-use crate::parse_ansi_text::custom_ansi_parse_iterator::AnsiParseIterator;
-use crate::parse_ansi_text::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
+use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::AnsiParseIterator;
+use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
 use crate::parse_ansi_text::{parse_ansi_text_split_by_lines, parse_ansi_text_with_options};
 
 // TODO - in order to save memory and not read the entire file to memory

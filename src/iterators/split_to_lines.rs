@@ -81,7 +81,7 @@ impl<IteratorType> Iterator for SplitToLines<IteratorType>
             
             return Some(line.to_string());
         }
-        
+
         // If here, then we have reached the end of the input iterator
         if(!self.pending_chunk.is_empty()) {
             let line = self.pending_chunk.to_string();

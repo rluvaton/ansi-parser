@@ -1,3 +1,4 @@
+use std::cmp::max;
 use std::ffi::OsString;
 use std::path::PathBuf;
 
@@ -9,7 +10,6 @@ use crate::cli::format::json_span_lines::*;
 use crate::iterators::file_iterator_helpers::create_file_iterator_in_range;
 use crate::mapping_file::read::get_initial_style_for_line_from_file_path;
 use crate::parse_ansi_text::ansi::types::Span;
-use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::AnsiParseIterator;
 use crate::parse_ansi_text::iterators::parse_ansi_as_spans_iterator::*;
 use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
 use crate::parse_ansi_text::parse_options::ParseOptions;
@@ -22,8 +22,8 @@ use crate::parse_ansi_text::parse_options::ParseOptions;
 pub fn run_parse_command(matches: &clap::ArgMatches) {
     let split_by_lines = *matches.get_one::<bool>("split-lines").unwrap();
 
-    let from_line = matches.get_one::<u16>("from-line");
-    let to_line = matches.get_one::<u16>("to-line");
+    let from_line = matches.get_one::<usize>("from-line");
+    let to_line = matches.get_one::<usize>("to-line");
     let mapping_file = matches.get_one::<String>("mapping-file");
 
     let file_path = matches
@@ -59,13 +59,13 @@ pub fn run_parse_command(matches: &clap::ArgMatches) {
             panic!("Invalid format")
         }
     } else {
-        let parse_ansi_as_spans_iterator = get_spans_in_range_if_needed_from_file_path(
+        let mut parse_ansi_as_spans_iterator = get_spans_in_range_if_needed_from_file_path(
             buf_file_path.clone(),
             mapping_file,
             from_line,
             to_line,
         );
-
+        
         if json_output_format {
             output_iterator = Box::new(parse_ansi_as_spans_iterator.to_json_string_in_span_lines());
         } else if json_line_output_format {
@@ -94,8 +94,8 @@ where
 fn get_spans_in_range_if_needed_from_file_path<'a>(
     file_path: PathBuf,
     mapping_file_path: Option<&String>,
-    from_line: Option<&u16>,
-    to_line: Option<&u16>,
+    from_line: Option<&usize>,
+    to_line: Option<&usize>,
 ) -> Box<dyn Iterator<Item = Vec<Span>>> {
     if from_line.is_none() && to_line.is_none() {
         return Box::new(ParseAnsiAsSpansByLinesIterator::create_from_file_path(
@@ -115,16 +115,16 @@ fn get_spans_in_range_if_needed_from_file_path<'a>(
 
     let initial_style = get_initial_style_for_line_from_file_path(
         PathBuf::from(OsString::from(mapping_file_path.unwrap().clone())),
-        from_line_value as usize,
+        from_line_value,
     );
 
     if initial_style.is_none() {
-        // TODO - avoid panicing and instead return error or empty
+        // TODO - avoid panicking and instead return error or empty
         panic!("Could not get ready mapping data for reading file");
     }
 
     let file_iterator_in_range = create_file_iterator_in_range(
-        PathBuf::from(OsString::from(mapping_file_path.unwrap().clone())),
+        PathBuf::from(OsString::from(file_path)),
         from_line,
         to_line,
     );
@@ -140,8 +140,8 @@ fn get_spans_in_range_if_needed_from_file_path<'a>(
 // TODO - return iterator instead of Vec for better performance to not wait for the entire file to be read or load it to memory
 fn get_spans_in_range_without_mapping_file<'a>(
     file_path: PathBuf,
-    from_line: Option<&u16>,
-    to_line: Option<&u16>,
+    from_line: Option<&usize>,
+    to_line: Option<&usize>,
 ) -> Box<dyn Iterator<Item = Vec<Span>>> {
     let iterator =
         ParseAnsiAsSpansByLinesIterator::create_from_file_path(file_path, ParseOptions::default());
@@ -149,8 +149,8 @@ fn get_spans_in_range_without_mapping_file<'a>(
     if from_line.is_some() && to_line.is_some() {
         return Box::new(
             iterator
-                .skip(*from_line.unwrap() as usize - 1)
-                .take(*to_line.unwrap() as usize - *from_line.unwrap() as usize),
+                .skip(max(*from_line.unwrap(), 1) - 1)
+                .take(*to_line.unwrap() - *from_line.unwrap() as usize),
         );
     }
 

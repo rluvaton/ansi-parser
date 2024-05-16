@@ -15,7 +15,7 @@ pub fn create_file_iterator(input_file_path: PathBuf) -> Box<dyn Iterator<Item=S
 
 
 // TODO - make from and to line optional and use them only if they are not None
-pub fn create_file_iterator_in_range(input_file_path: PathBuf, from_line: Option<&u16>, to_line: Option<&u16>) -> Box<dyn Iterator<Item=String>> {
+pub fn create_file_iterator_in_range(input_file_path: PathBuf, from_line: Option<&usize>, to_line: Option<&usize>) -> Box<dyn Iterator<Item=String>> {
     if from_line.is_none() && to_line.is_none() {
         return create_file_iterator(input_file_path);
     }
@@ -27,15 +27,15 @@ pub fn create_file_iterator_in_range(input_file_path: PathBuf, from_line: Option
     let mut lines_iter = reader.lines();
 
     if from_line.is_some() && to_line.is_some() {
-        return Box::new(lines_iter.skip(*from_line.unwrap() as usize - 1).take(*to_line.unwrap() as usize - *from_line.unwrap() as usize).map(|line| line.expect("Failed to get line")));
+        return Box::new(lines_iter.skip(*from_line.unwrap() - 1).take(*to_line.unwrap() - *from_line.unwrap()).map(|line| line.expect("Failed to get line")));
     }
 
     if from_line.is_some() {
-        return Box::new(lines_iter.skip(*from_line.unwrap() as usize - 1).map(|line| line.expect("Failed to get line")));
+        return Box::new(lines_iter.skip(*from_line.unwrap() - 1).map(|line| line.expect("Failed to get line")));
     }
 
     if to_line.is_some() {
-        return Box::new(lines_iter.take(*to_line.unwrap() as usize).map(|line| line.expect("Failed to get line")));
+        return Box::new(lines_iter.take(*to_line.unwrap()).map(|line| line.expect("Failed to get line")));
     }
 
     panic!("Should not reach here");

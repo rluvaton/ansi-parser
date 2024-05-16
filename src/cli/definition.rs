@@ -51,16 +51,15 @@ pub fn get_cli() -> Command {
             .help("From which line to read (included)")
 
             .allow_negative_numbers(false)
-            .value_parser(clap::value_parser!(u16).range(0..))
-            // TODO - add type number
-            .default_value("0"))
+            .value_parser(clap::value_parser!(usize))
+        )
         
         .arg(Arg::new("to-line")
             .long("to-line")
             .required(false)
             .allow_negative_numbers(false) 
             // Must be greater than from-line
-            .value_parser(clap::value_parser!(u16))
+            .value_parser(clap::value_parser!(usize))
             .help("until which line to read (excluded)"))
         
         .arg(Arg::new("mapping-file")

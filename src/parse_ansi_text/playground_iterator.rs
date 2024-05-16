@@ -1,13 +1,16 @@
 use std::fmt::{Display, Formatter, Result as DisplayResult};
+use std::io;
 use crate::parse_ansi_text::colors::{BLACK_BACKGROUND_CODE, RED_BACKGROUND_CODE};
 use crate::parse_ansi_text::constants::RESET_CODE;
 use std::iter::Iterator;
+use get_chunk::iterator;
 use get_chunk::iterator::FileIter;
 
 
 use crate::parse_ansi_text::custom_ansi_parse_iterator::AnsiParseIterator;
 
-fn run() {
+// TODO - change type here
+fn run() -> io::Result<u8> {
     // TODO - create string iterator that can be swaopped to file iterator or stdin or whatever
     // TODO - try the https://crates.io/crates/get_chunk crate
 
@@ -31,7 +34,8 @@ fn run() {
     let iterator = RandomStringsIterator { vec: input_chunks, index: 0 };
 
 
-    let file_iter = FileIter::new("file.txt").expect("Failed to open file");
+    let file_iter = FileIter::new("file.txt")?;
+    
     // or 
     // let file_iter = FileIter::try_from(File::open("file.txt")?)?;
     // ...
@@ -45,6 +49,9 @@ fn run() {
     // }
     
     let file_iterator = file_iter.into_iter().map(|item| String::from_utf8(item.expect("Failed to get file chunk")).expect("Converting file chunk to UTF-8 string failed"));
+    
+    let iterator = AnsiParseIterator::create(Box::new(file_iterator));
+    
     // 
     // let ansi_parse_iterator = AnsiParseIterator {
     //     pending_string: "".to_string(),
@@ -53,13 +60,15 @@ fn run() {
     // AnsiParseIterator {
     //     dat: iterator.into_iter()
     // }
-    // ansi_parse_iterator.for_each(|item| {
-    //     println!("{:#?}", item);
-    // });
+    iterator.for_each(|item| {
+        println!("{:#?}", item);
+    });
 
     // TODO - find a better way to create iterator from input, just a function that get the 
     // "".random_strings(input_chunks)
     // TODO - ansi parse on the iterator
+    
+    return Ok(0);
 }
 
 pub trait RandomStrings {

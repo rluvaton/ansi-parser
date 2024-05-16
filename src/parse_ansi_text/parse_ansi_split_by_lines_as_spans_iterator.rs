@@ -1,4 +1,7 @@
+use std::fs::File;
 use std::iter::Iterator;
+use std::path::PathBuf;
+use get_chunk::iterator::FileIter;
 
 
 use crate::parse_ansi_text::ansi_sequence_helpers::{AnsiSequenceType, get_type_from_ansi_sequence};
@@ -196,6 +199,15 @@ impl<'a> ParseAnsiAsSpansByLinesIterator<'a> {
 
     pub fn create_from_str(str: String, options: ParseOptions) -> ParseAnsiAsSpansByLinesIterator<'a> {
         ParseAnsiAsSpansByLinesIterator { iter: AnsiParseIterator::create_from_str(str), line: Some(vec![]), current_span: options.initial_span.clone().replace_default_color_with_none(), pending_span: Some(options.clone().initial_span.clone().replace_default_color_with_none()) }
+    }
+
+    pub fn create_from_file_path(input_file_path: PathBuf, options: ParseOptions) -> ParseAnsiAsSpansByLinesIterator<'a> {
+        let input_file = File::open(input_file_path).expect("opening input file path failed");
+
+        let file_iter = FileIter::try_from(input_file).expect("create input file iterator failed");
+        let file_string_iterator = file_iter.into_iter().map(|item| String::from_utf8(item.expect("Failed to get file chunk")).expect("Converting file chunk to UTF-8 string failed"));
+
+        ParseAnsiAsSpansByLinesIterator { iter: AnsiParseIterator::create(Box::new(file_string_iterator)), line: Some(vec![]), current_span: options.initial_span.clone().replace_default_color_with_none(), pending_span: Some(options.clone().initial_span.clone().replace_default_color_with_none()) }
     }
 }
 

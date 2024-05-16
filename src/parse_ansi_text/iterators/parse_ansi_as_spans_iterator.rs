@@ -1,12 +1,10 @@
-use std::fs::File;
 use std::iter::Iterator;
 use std::path::PathBuf;
-use get_chunk::iterator::FileIter;
 
 use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{AnsiSequenceType, get_type_from_ansi_sequence};
 use crate::parse_ansi_text::ansi::colors::Color;
 use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::{AnsiParseIterator, Output};
-use crate::parse_ansi_text::iterators::file_iterator_helpers::create_file_iterator;
+use crate::iterators::file_iterator_helpers::create_file_iterator;
 use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::ansi::types::Span;
 

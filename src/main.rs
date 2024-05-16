@@ -11,6 +11,7 @@ use crate::cli::parse_command::run_parse_command;
 mod parse_ansi_text;
 mod mapping_file;
 mod cli;
+mod iterators;
 
 fn main() {
     let matches = get_cli().get_matches();

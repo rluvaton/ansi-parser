@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter, Result as DisplayResult};
+use std::path::PathBuf;
 use ansi_parser::{AnsiSequence, parse_escape};
-use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
-use crate::parse_ansi_text::parse_options::ParseOptions;
+use crate::iterators::file_iterator_helpers::create_file_iterator;
 
 pub struct AnsiParseIterator<'a> {
     pending_string: String,
@@ -97,6 +97,14 @@ impl AnsiParseIterator<'_> {
     pub fn create_from_str<'a>(str: String) -> AnsiParseIterator<'a> {
         AnsiParseIterator {
             iterator: Box::new(vec![str].into_iter()),
+            pending_string: "".to_string(),
+        }
+    }
+
+
+    pub fn create_from_file_path<'a>(input_file_path: PathBuf) -> AnsiParseIterator<'a> {
+        AnsiParseIterator {
+            iterator: create_file_iterator(input_file_path),
             pending_string: "".to_string(),
         }
     }

@@ -8,9 +8,11 @@ use crate::parse_ansi_text::types::{Span, SpanJson};
 use std::ffi::OsString;
 use std::fs;
 use std::path::PathBuf;
-use crate::cli::format::json_line_span_lines::SpansLineJsonLineDisplayByIterator;
-use crate::cli::format::json_single_span::SpansJsonDisplayByIterator;
-use crate::cli::format::json_span_lines::SpansLineJsonDisplayByIterator;
+use crate::cli::format::json_single_span::*;
+use crate::cli::format::json_span_lines::*;
+use crate::cli::format::json_line_single_span::*;
+use crate::cli::format::json_line_span_lines::*;
+use crate::cli::format::flat_json_line_span_lines::*;
 
 pub fn run_parse_command(matches: &clap::ArgMatches) {
     let split_by_lines = *matches.get_one::<bool>("split-lines").unwrap();
@@ -48,8 +50,12 @@ pub fn run_parse_command(matches: &clap::ArgMatches) {
     // println!("With text:\n{contents}");
 
     let parse_options = ParseOptions::default();
-
-
+    
+    // TODO - find a more generic way to have where to output and and the format of the output instead of having multiple if statements with the same code
+    //        Ideally should be like this:
+    //        content
+    //            .compose(parse_ansi_as_spans(parse_options))
+    //            .compose(format_output(format))
     if json_output_format {
         if !split_by_lines {
             print_strings_to_stdout(contents.parse_ansi_as_spans(parse_options).to_span_json());
@@ -59,22 +65,21 @@ pub fn run_parse_command(matches: &clap::ArgMatches) {
 
         return;
     }
+
+    if json_line_output_format {
+        if !split_by_lines {
+            let iterator = contents.parse_ansi_as_spans(parse_options);
+            print_strings_to_stdout(iterator.to_span_json_line());
+        } else {
+            print_strings_to_stdout(contents.parse_ansi_as_spans_by_lines(parse_options).to_json_line_string_in_span_lines());
+        }
     
+        return;
+    }
     
-    // TODO - uncomment this when fixing output
-    // if json_line_output_format {
-    //     if !split_by_lines {
-    //         print_strings_to_stdout(contents.parse_ansi_as_spans(parse_options).to_span_json_line());
-    //     } else {
-    //         print_strings_to_stdout(contents.parse_ansi_as_spans_by_lines(parse_options).to_json_line_string_in_span_lines());
-    //     }
-    // 
-    //     return;
-    // }
-    // 
-    // if flat_json_line_output_format {
-    //     print_strings_to_stdout(contents.parse_ansi_as_spans_by_lines(parse_options).to_flat_json_line_string_in_span_lines());
-    // }
+    if flat_json_line_output_format {
+        print_strings_to_stdout(contents.parse_ansi_as_spans_by_lines(parse_options).to_flat_json_line_string_in_span_lines());
+    }
 }
 
 

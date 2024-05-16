@@ -18,7 +18,7 @@ impl<IteratorType> Iterator for SpansJsonLineDisplay<IteratorType>
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(span) = self.iter.next() {
             let mut str: &str = "";
-            
+
             if self.yielded_first_item {
                 // Print from prev object
                 str = ",";

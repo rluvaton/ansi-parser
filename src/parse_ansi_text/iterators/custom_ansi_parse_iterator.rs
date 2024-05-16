@@ -1,15 +1,16 @@
 use std::fmt::{Display, Formatter, Result as DisplayResult};
 use std::path::PathBuf;
+
 use ansi_parser::{AnsiSequence, parse_escape};
 use crate::iterators::file_iterator_helpers::create_file_iterator;
 
-pub struct AnsiParseIterator<'a> {
-    pending_string: String,
-    pub(crate) iterator: Box<dyn Iterator<Item = String> + 'a>,
-}
 
+pub struct AnsiParseIterator<'a> {
+    pending_string: &'a str,
+    pub(crate) iterator: Box<dyn Iterator<Item = String>>,
+}
 impl<'a> Iterator for AnsiParseIterator<'a> {
-    type Item = Output;
+    type Item = Output<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         // TODO - if string contain the escape code than split to before the escape code and return it and then the escape code
@@ -23,61 +24,58 @@ impl<'a> Iterator for AnsiParseIterator<'a> {
                 return None;
             }
 
-            self.pending_string = next.unwrap().to_string();
+            // TODO - should use different way to ensure the lifetime of the string
+            let next: &'a mut str = next.unwrap().leak();
+            self.pending_string = next;
         }
 
         let pos = self.pending_string.find('\u{1b}');
         if let Some(loc) = pos {
             if loc == 0 { // If the beginning of the string is the key for escape code
-                let from_loc = self.pending_string[loc..].to_string();
-                let res = parse_escape(from_loc.as_str());
+                let res = parse_escape(&self.pending_string[loc..]);
 
                 if let Ok(ret) = res { // If there is escape code after the escape key
-                    self.pending_string = ret.0.to_string();
+                    self.pending_string = ret.0;
                     return Some(Output::Escape(ret.1))
                 } else { // If no escape code after the escape key
-
-                    let from_loc = self.pending_string[(loc + 1)..].to_string().clone();
-                    let pos = from_loc.find('\u{1b}');
+                    let pos = self.pending_string[(loc + 1)..].find('\u{1b}');
                     if let Some(loc) = pos { // If there is escape key also exists in the middle of the string then split to before the escape code and from it to the end of the string
                         //Added to because it's based one character ahead
                         let loc = loc + 1;
 
-                        let temp = self.pending_string[..loc].to_string();
-                        self.pending_string = self.pending_string[loc..].to_string();
+                        let temp = &self.pending_string[..loc];
+                        self.pending_string = &self.pending_string[loc..];
 
                         return Some(Output::TextBlock(temp))
-                    } else { // If no other escape key exists in the string, do nothing as the next string might will
-                        // let temp = self.pending_string.clone();
-                        // self.pending_string = "".to_string();
-                        // 
-                        // 
-                        // return Some(Output::TextBlock(temp))
                     }
+                    
+                    // If no other escape key exists in the string, do nothing as the next string might will
                 }
-
-
             } else { // If in the middle than split to before the escape code and after and keep the after for the next iteration
-                let temp = self.pending_string[..loc].to_string();
-                self.pending_string = self.pending_string[loc..].to_string();
+                let temp = &self.pending_string[..loc];
+                self.pending_string = &self.pending_string[loc..];
 
                 return Some(Output::TextBlock(temp))
             }
         } else {
-            let temp = self.pending_string.clone();
-            self.pending_string = "".to_string();
+            let temp = self.pending_string;
+            self.pending_string = "";
             return Some(Output::TextBlock(temp))
         }
 
         let next = self.iterator.next();
 
         if next.is_none() {
-            let temp = self.pending_string.clone();
-            self.pending_string = "".to_string();
+            let temp = self.pending_string;
+            self.pending_string = "";
             return Some(Output::TextBlock(temp))
         }
 
-        self.pending_string = self.pending_string.clone() + next.unwrap().as_str();
+        let mut tmp = self.pending_string.to_string();
+        tmp.push_str(next.unwrap().as_str());
+        // TODO - should use different way to ensure the lifetime of the string
+        let tmp: &'a mut str = tmp.leak();
+        self.pending_string = tmp;
 
         // Return empty
         Some(Output::IgnoreMe)
@@ -90,14 +88,14 @@ impl AnsiParseIterator<'_> {
     pub fn create<'a>(str_iterator: Box<dyn Iterator<Item=String>>) -> AnsiParseIterator<'a> {
         AnsiParseIterator {
             iterator: str_iterator,
-            pending_string: "".to_string(),
+            pending_string: "",
         }
     }
 
     pub fn create_from_str<'a>(str: String) -> AnsiParseIterator<'a> {
         AnsiParseIterator {
             iterator: Box::new(vec![str].into_iter()),
-            pending_string: "".to_string(),
+            pending_string: "",
         }
     }
 
@@ -105,7 +103,7 @@ impl AnsiParseIterator<'_> {
     pub fn create_from_file_path<'a>(input_file_path: PathBuf) -> AnsiParseIterator<'a> {
         AnsiParseIterator {
             iterator: create_file_iterator(input_file_path),
-            pending_string: "".to_string(),
+            pending_string: "",
         }
     }
 }
@@ -115,13 +113,13 @@ impl AnsiParseIterator<'_> {
 ///Each block contains either straight-up text, or simply
 ///an ANSI escape sequence.
 #[derive(Debug, Clone, PartialEq)]
-pub enum Output {
+pub enum Output<'a> {
     IgnoreMe,
-    TextBlock(String),
+    TextBlock(&'a str),
     Escape(AnsiSequence),
 }
 
-impl Display for Output {
+impl<'a> Display for Output<'a> {
     fn fmt(&self, formatter: &mut Formatter) -> DisplayResult {
         use Output::*;
         match self {

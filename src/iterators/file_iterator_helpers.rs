@@ -19,24 +19,24 @@ pub fn create_file_iterator_in_range(input_file_path: PathBuf, from_line: Option
     if from_line.is_none() && to_line.is_none() {
         return create_file_iterator(input_file_path);
     }
-    
+
     let input_file = File::open(input_file_path).expect("opening input file path failed");
 
     let reader = BufReader::new(input_file);
 
     let mut lines_iter = reader.lines();
-    
+
     if from_line.is_some() && to_line.is_some() {
         return Box::new(lines_iter.skip(*from_line.unwrap() as usize - 1).take(*to_line.unwrap() as usize - *from_line.unwrap() as usize).map(|line| line.expect("Failed to get line")));
     }
-    
+
     if from_line.is_some() {
         return Box::new(lines_iter.skip(*from_line.unwrap() as usize - 1).map(|line| line.expect("Failed to get line")));
     }
-    
+
     if to_line.is_some() {
         return Box::new(lines_iter.take(*to_line.unwrap() as usize).map(|line| line.expect("Failed to get line")));
     }
-    
+
     panic!("Should not reach here");
 }

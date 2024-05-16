@@ -26,7 +26,7 @@ impl<'a> Iterator for ParseAnsiAsSpansIterator<'a> {
                 },
                 Output::TextBlock(text) => {
                     // println!("Text block: {}", text);
-                    self.current_span.text.push_str(text.as_str());
+                    self.current_span.text.push_str(text);
                 },
                 Output::Escape(seq) => {
                     let sequence_type = get_type_from_ansi_sequence(&seq);
@@ -140,7 +140,7 @@ impl ParseAnsiAsSpansIterator<'_> {
     }
 
     pub fn create_from_file_path<'a>(input_file_path: PathBuf, options: ParseOptions) -> ParseAnsiAsSpansIterator<'a> {
-        ParseAnsiAsSpansIterator { iter: AnsiParseIterator::create(create_file_iterator(input_file_path)), current_span: options.initial_span.clone().replace_default_color_with_none() }
+        ParseAnsiAsSpansIterator { iter: AnsiParseIterator::create_from_file_path(input_file_path), current_span: options.initial_span.clone().replace_default_color_with_none() }
     }
 }
 

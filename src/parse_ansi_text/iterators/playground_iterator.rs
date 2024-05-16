@@ -34,24 +34,24 @@ fn run() -> io::Result<u8> {
 
 
     let file_iter = FileIter::new("file.txt")?;
-    
-    // or 
+
+    // or
     // let file_iter = FileIter::try_from(File::open("file.txt")?)?;
     // ...
     // for chunk in file_iter {
     //     match chunk {
     //         Ok(data) => {
-    //             
+    //
     //         }
     //         Err(_) => break,
     //     }
     // }
-    
-    let file_iterator = file_iter.into_iter().map(|item| String::from_utf8(item.expect("Failed to get file chunk")).expect("Converting file chunk to UTF-8 string failed"));
-    
-    let iterator = AnsiParseIterator::create(Box::new(file_iterator));
-    
+
+    // let file_iterator = file_iter.into_iter().map(|item| item.expect("Failed to get file chunk")).expect("Converting file chunk to UTF-8 string failed"));
     // 
+    // let iterator = AnsiParseIterator::create(Box::new(file_iterator));
+
+    //
     // let ansi_parse_iterator = AnsiParseIterator {
     //     pending_string: "".to_string(),
     //     iterator: Box::new(file_iterator),
@@ -59,14 +59,14 @@ fn run() -> io::Result<u8> {
     // AnsiParseIterator {
     //     dat: iterator.into_iter()
     // }
-    iterator.for_each(|item| {
-        println!("{:#?}", item);
-    });
+    // iterator.for_each(|item| {
+    //     println!("{:#?}", item);
+    // });
 
-    // TODO - find a better way to create iterator from input, just a function that get the 
+    // TODO - find a better way to create iterator from input, just a function that get the
     // "".random_strings(input_chunks)
     // TODO - ansi parse on the iterator
-    
+
     return Ok(0);
 }
 

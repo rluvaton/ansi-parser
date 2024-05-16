@@ -1,10 +1,11 @@
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
+
 use crate::mapping_file::constants::*;
+use crate::parse_ansi_text::ansi::types::Span;
 use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
 use crate::parse_ansi_text::parse_options::ParseOptions;
-use crate::parse_ansi_text::ansi::types::Span;
 
 // The format for the mapping is
 // <line-length>
@@ -32,7 +33,6 @@ pub fn create_mapping_text(contents: String) -> String {
     return FULL_LINE_LENGTH.to_string() + DELIMITER + initial_style_for_each_line.join("").as_str();
 }
 
-// TODO - create a function that accept a string iterator
 pub fn create_mapping_file(file_path: PathBuf, contents: String) {
     let mut file = File::create(file_path).expect("create mapping file failed");
 

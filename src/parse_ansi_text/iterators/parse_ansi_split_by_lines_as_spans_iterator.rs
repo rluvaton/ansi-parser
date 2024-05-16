@@ -40,7 +40,7 @@ impl<'a> Iterator for ParseAnsiAsSpansByLinesIterator<'a> {
                 Output::IgnoreMe => {
                 },
                 Output::TextBlock(text) => {
-                    self.current_span.text.push_str(text.as_str());
+                    self.current_span.text.push_str(text);
 
                     // If have new line than get 
                     if self.current_span.text.contains("\n") {
@@ -198,7 +198,7 @@ impl<'a> ParseAnsiAsSpansByLinesIterator<'a> {
     }
 
     pub fn create_from_file_path(input_file_path: PathBuf, options: ParseOptions) -> ParseAnsiAsSpansByLinesIterator<'a> {
-        ParseAnsiAsSpansByLinesIterator { iter: AnsiParseIterator::create(create_file_iterator(input_file_path)), line: Some(vec![]), current_span: options.initial_span.clone().replace_default_color_with_none(), pending_span: Some(options.clone().initial_span.clone().replace_default_color_with_none()) }
+        ParseAnsiAsSpansByLinesIterator { iter: AnsiParseIterator::create_from_file_path(input_file_path), line: Some(vec![]), current_span: options.initial_span.clone().replace_default_color_with_none(), pending_span: Some(options.clone().initial_span.clone().replace_default_color_with_none()) }
     }
 }
 

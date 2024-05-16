@@ -7,9 +7,9 @@ mod tests {
     use crate::mapping_file::*;
     use pretty_assertions::assert_eq;
 
-    use crate::parse_ansi_text::constants::RESET_CODE;
+    use crate::parse_ansi_text::ansi::constants::RESET_CODE;
     use crate::parse_ansi_text::parse_text_matching_single_span::parse_text_matching_single_span;
-    use crate::parse_ansi_text::types::Span;
+    use crate::parse_ansi_text::ansi::types::Span;
 
     fn get_tmp_file_path() -> PathBuf {
         return NamedTempFile::new().expect("create temp file").into_temp_path().to_path_buf();

@@ -1,6 +1,6 @@
 use ansi_parser::AnsiSequence;
-use crate::parse_ansi_text::colors::*;
-use crate::parse_ansi_text::style::*;
+use crate::parse_ansi_text::ansi::colors::*;
+use crate::parse_ansi_text::ansi::style::*;
 
 pub enum AnsiSequenceType {
     Unsupported,

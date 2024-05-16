@@ -1,21 +1,17 @@
 use ansi_parser::AnsiParser;
 
-use types::Span;
+use ansi::types::Span;
 use crate::parse_ansi_text::iterators::parse_ansi_as_spans_iterator::ParseAnsiAsSpansIterator;
 use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
 use crate::parse_ansi_text::iterators::playground_iterator::CharsIterator;
 
 use crate::parse_ansi_text::parse_options::ParseOptions;
 
-pub mod types;
-pub mod colors;
-pub mod constants;
-pub mod style;
-mod ansi_sequence_helpers;
 mod tests;
 pub mod parse_options;
 pub mod parse_text_matching_single_span;
 pub mod iterators;
+pub mod ansi;
 
 // TODO - remove convert string to iterator - done this to test that the iterator works
 

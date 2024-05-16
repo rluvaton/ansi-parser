@@ -1,4 +1,4 @@
-use crate::parse_ansi_text::types::Span;
+use crate::parse_ansi_text::ansi::types::Span;
 
 
 #[derive(Clone, Debug)]

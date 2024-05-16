@@ -1,11 +1,11 @@
+use std::fs::File;
+use std::io::{Read, Seek, SeekFrom};
+use std::path::PathBuf;
 use std::str;
 
-use std::fs::File;
-use std::io::{BufReader, Read, Seek, SeekFrom};
-use std::path::PathBuf;
 use crate::mapping_file::constants::*;
+use crate::parse_ansi_text::ansi::types::Span;
 use crate::parse_ansi_text::parse_text_matching_single_span::parse_text_matching_single_span;
-use crate::parse_ansi_text::types::Span;
 
 pub fn get_initial_style_for_line(mapping_text: String, line_number: usize) -> Option<Span> {
     if(line_number < 1) {

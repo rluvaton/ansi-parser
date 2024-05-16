@@ -1,12 +1,11 @@
-use std::fmt::{Display, Formatter, Result as DisplayResult};
+use std::fmt::Display;
 use std::io;
-use crate::parse_ansi_text::colors::{BLACK_BACKGROUND_CODE, RED_BACKGROUND_CODE};
-use crate::parse_ansi_text::constants::RESET_CODE;
 use std::iter::Iterator;
-use get_chunk::iterator;
+
 use get_chunk::iterator::FileIter;
 
-
+use crate::parse_ansi_text::ansi::colors::{BLACK_BACKGROUND_CODE, RED_BACKGROUND_CODE};
+use crate::parse_ansi_text::ansi::constants::RESET_CODE;
 use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::AnsiParseIterator;
 
 // TODO - change type here

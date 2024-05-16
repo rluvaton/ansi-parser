@@ -1,5 +1,5 @@
 use std::iter::Iterator;
-use crate::parse_ansi_text::types::{Span, SpanJson};
+use crate::parse_ansi_text::ansi::types::{Span, SpanJson};
 
 pub struct SpansJsonLineDisplay<IteratorType> {
     iter: IteratorType,

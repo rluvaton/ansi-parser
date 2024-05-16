@@ -3,7 +3,7 @@ use crate::mapping_file::read::{
 };
 use crate::parse_ansi_text::iterators::parse_ansi_as_spans_iterator::*;
 use crate::parse_ansi_text::parse_options::ParseOptions;
-use crate::parse_ansi_text::types::{Span, SpanJson};
+use crate::parse_ansi_text::ansi::types::{Span, SpanJson};
 use std::ffi::OsString;
 use std::fs;
 use std::path::PathBuf;

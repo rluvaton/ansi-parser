@@ -3,7 +3,7 @@
 // this means that should support both Vec<Span> and Vec<Vec<Span>>
 
 use std::iter::Iterator;
-use crate::parse_ansi_text::types::{Span, SpanJson};
+use crate::parse_ansi_text::ansi::types::{Span, SpanJson};
 
 pub struct SpansJsonDisplay<IteratorType> {
     iter: IteratorType,

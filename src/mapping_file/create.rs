@@ -1,12 +1,10 @@
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
-use get_chunk::iterator::FileIter;
 use crate::mapping_file::constants::*;
-use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::AnsiParseIterator;
 use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
 use crate::parse_ansi_text::parse_options::ParseOptions;
-use crate::parse_ansi_text::types::Span;
+use crate::parse_ansi_text::ansi::types::Span;
 
 // The format for the mapping is
 // <line-length>
@@ -38,44 +36,27 @@ pub fn create_mapping_text(contents: String) -> String {
 pub fn create_mapping_file(file_path: PathBuf, contents: String) {
     let mut file = File::create(file_path).expect("create mapping file failed");
 
-    let header = FULL_LINE_LENGTH.to_string() + DELIMITER;
-
-    file.write(header.as_bytes()).expect("write header to file failed");
-
     let lines_iterators = ParseAnsiAsSpansByLinesIterator::create_from_str(contents, ParseOptions::default());
-
-    for line in lines_iterators {
-        let initial_span_for_line = if line.is_empty() {Span::empty()} else {line[0].clone().with_text("".to_string())};
-
-        let initial_style_for_line_ansi_string = initial_span_for_line.serialize_to_ansi_string();
-
-        let ansi_len = initial_style_for_line_ansi_string.len();
-
-        let padding = " ".repeat(LINE_LENGTH - ansi_len);
-
-        let line_text = initial_style_for_line_ansi_string + padding.as_str() + DELIMITER;
-
-        // append line to file
-        file.write(line_text.as_bytes()).expect("write line to file failed");
-    }
+    
+    write_mapping_file_from_iterator(&mut file, lines_iterators);
 }
 
 
 pub fn create_mapping_file_from_input_path(output_mapping_file_path: PathBuf, input_file_path: PathBuf) {
     let mut file = File::create(output_mapping_file_path).expect("create mapping file failed");
-    let input_file = File::open(input_file_path).expect("opening input file path failed");
 
-    let file_iter = FileIter::try_from(input_file).expect("creating input file iterator failed");
-    let file_string_iterator = file_iter.into_iter().map(|item| String::from_utf8(item.expect("Failed to get file chunk")).expect("Converting file chunk to UTF-8 string failed"));
+    let iterator = ParseAnsiAsSpansByLinesIterator::create_from_file_path(input_file_path, ParseOptions::default());
 
-    let iterator = ParseAnsiAsSpansByLinesIterator::create_from_string_iterator(Box::new(file_string_iterator), ParseOptions::default());
+    write_mapping_file_from_iterator(&mut file, iterator);
+}
 
+fn write_mapping_file_from_iterator(file: &mut File, iterator: ParseAnsiAsSpansByLinesIterator) {
     let header = FULL_LINE_LENGTH.to_string() + DELIMITER;
-
+    
     file.write(header.as_bytes()).expect("write header to file failed");
 
     for line in iterator {
-        let initial_span_for_line = if line.is_empty() {Span::empty()} else {line[0].clone().with_text("".to_string())};
+        let initial_span_for_line = if line.is_empty() { Span::empty() } else { line[0].clone().with_text("".to_string()) };
 
         let initial_style_for_line_ansi_string = initial_span_for_line.serialize_to_ansi_string();
 

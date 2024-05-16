@@ -1,6 +1,6 @@
 use std::clone::Clone;
-use crate::parse_ansi_text::colors::*;
-use crate::parse_ansi_text::style::*;
+use crate::parse_ansi_text::ansi::colors::*;
+use crate::parse_ansi_text::ansi::style::*;
 
 pub const DELIMITER: &str = "\n";
 

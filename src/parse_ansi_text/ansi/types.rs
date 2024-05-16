@@ -1,8 +1,8 @@
 use std::ops::BitAnd;
 use serde::{Deserialize, Serialize, Serializer};
-use crate::parse_ansi_text::colors::{Color, convert_color_type_to_ansi_code, get_rgb_values_from_8_bit};
-use crate::parse_ansi_text::colors::ColorType::{Background, Foreground};
-use crate::parse_ansi_text::style::{BOLD_CODE, Brightness, DIM_CODE, INVERSE_CODE, ITALIC_CODE, STRIKETHROUGH_CODE, TextStyle, UNDERLINE_CODE};
+use crate::parse_ansi_text::ansi::colors::{Color, convert_color_type_to_ansi_code, get_rgb_values_from_8_bit};
+use crate::parse_ansi_text::ansi::colors::ColorType::{Background, Foreground};
+use crate::parse_ansi_text::ansi::style::{BOLD_CODE, Brightness, DIM_CODE, INVERSE_CODE, ITALIC_CODE, STRIKETHROUGH_CODE, TextStyle, UNDERLINE_CODE};
 
 
 #[derive(Debug, PartialEq, Clone)]

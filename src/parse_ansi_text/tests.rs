@@ -4,10 +4,10 @@ mod tests {
     use test_case::{test_case, test_matrix};
     use pretty_assertions::{assert_eq};
     
-    use crate::parse_ansi_text::colors::*;
-    use crate::parse_ansi_text::constants::*;
-    use crate::parse_ansi_text::style::*;
-    use crate::parse_ansi_text::types::*;
+    use crate::parse_ansi_text::ansi::colors::*;
+    use crate::parse_ansi_text::ansi::constants::*;
+    use crate::parse_ansi_text::ansi::style::*;
+    use crate::parse_ansi_text::ansi::types::*;
     use crate::parse_ansi_text::*;
     use crate::parse_ansi_text::parse_options::ParseOptions;
 

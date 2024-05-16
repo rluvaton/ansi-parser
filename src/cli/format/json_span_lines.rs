@@ -4,7 +4,7 @@
 
 use std::iter::Iterator;
 use crate::cli::format::json_single_span::{SpansJsonDisplay, SpansJsonDisplayByIterator};
-use crate::parse_ansi_text::types::{Span, SpanJson};
+use crate::parse_ansi_text::ansi::types::{Span, SpanJson};
 
 pub struct SpansLineJsonDisplay<'a, IteratorType> {
     iter: IteratorType,

@@ -3,12 +3,12 @@ use std::iter::Iterator;
 use std::path::PathBuf;
 use get_chunk::iterator::FileIter;
 
-use crate::parse_ansi_text::ansi_sequence_helpers::{AnsiSequenceType, get_type_from_ansi_sequence};
-use crate::parse_ansi_text::colors::Color;
+use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{AnsiSequenceType, get_type_from_ansi_sequence};
+use crate::parse_ansi_text::ansi::colors::Color;
 use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::{AnsiParseIterator, Output};
-use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
+use crate::parse_ansi_text::iterators::file_iterator_helpers::create_file_iterator;
 use crate::parse_ansi_text::parse_options::ParseOptions;
-use crate::parse_ansi_text::types::Span;
+use crate::parse_ansi_text::ansi::types::Span;
 
 pub struct ParseAnsiAsSpansIterator<'a> {
     pub(crate) iter: AnsiParseIterator<'a>,
@@ -142,23 +142,18 @@ impl ParseAnsiAsSpansIterator<'_> {
     }
 
     pub fn create_from_file_path<'a>(input_file_path: PathBuf, options: ParseOptions) -> ParseAnsiAsSpansIterator<'a> {
-        let input_file = File::open(input_file_path).expect("opening input file path failed");
-
-        let file_iter = FileIter::try_from(input_file).expect("create input file iterator failed");
-        let file_string_iterator = file_iter.into_iter().map(|item| String::from_utf8(item.expect("Failed to get file chunk")).expect("Converting file chunk to UTF-8 string failed"));
-
-        ParseAnsiAsSpansIterator { iter: AnsiParseIterator::create(Box::new(file_string_iterator)), current_span: options.initial_span.clone().replace_default_color_with_none() }
+        ParseAnsiAsSpansIterator { iter: AnsiParseIterator::create(create_file_iterator(input_file_path)), current_span: options.initial_span.clone().replace_default_color_with_none() }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use pretty_assertions::{assert_eq};
-    use crate::parse_ansi_text::colors::*;
-    use crate::parse_ansi_text::constants::*;
+    use crate::parse_ansi_text::ansi::colors::*;
+    use crate::parse_ansi_text::ansi::constants::*;
     use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::*;
     use crate::parse_ansi_text::iterators::playground_iterator::CharsIterator;
-    use crate::parse_ansi_text::types::*;
+    use crate::parse_ansi_text::ansi::types::*;
     use super::*;
 
     #[test]

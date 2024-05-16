@@ -2,11 +2,11 @@ use std::iter::Iterator;
 
 use ansi_parser::{AnsiParser, Output};
 
-use crate::parse_ansi_text::ansi_sequence_helpers::{
+use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{
     get_type_from_ansi_sequence, AnsiSequenceType,
 };
-use crate::parse_ansi_text::colors::Color;
-use crate::parse_ansi_text::types::Span;
+use crate::parse_ansi_text::ansi::colors::Color;
+use crate::parse_ansi_text::ansi::types::Span;
 
 // The text here MUST correspond to a single span.
 // Span with empty text is valid here
@@ -65,10 +65,10 @@ pub fn parse_text_matching_single_span(text: &str) -> Span {
 mod tests {
     use pretty_assertions::assert_eq;
 
-    use crate::parse_ansi_text::colors::*;
+    use crate::parse_ansi_text::ansi::colors::*;
     use crate::parse_ansi_text::parse_text_matching_single_span::*;
-    use crate::parse_ansi_text::style::*;
-    use crate::parse_ansi_text::types::*;
+    use crate::parse_ansi_text::ansi::style::*;
+    use crate::parse_ansi_text::ansi::types::*;
 
     #[test]
     fn should_return_empty_span_for_empty_input() {

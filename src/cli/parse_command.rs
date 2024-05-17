@@ -8,7 +8,7 @@ use crate::cli::format::json_line_span_lines::*;
 use crate::cli::format::json_single_span::*;
 use crate::cli::format::json_span_lines::*;
 use crate::iterators::file_iterator_helpers::create_file_iterator_in_range;
-use crate::mapping_file::read::get_initial_style_for_line_from_file_path;
+use crate::mapping_file::read::get_line_metadata_from_file_path;
 use crate::parse_ansi_text::iterators::parse_ansi_as_spans_iterator::*;
 use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::{Line, ParseAnsiAsSpansByLinesIterator};
 use crate::parse_ansi_text::parse_options::ParseOptions;
@@ -112,12 +112,12 @@ fn get_spans_in_range_if_needed_from_file_path<'a>(
 
     mapping_file_path.expect("Mapping file is required when using from-line or to-line");
 
-    let initial_style = get_initial_style_for_line_from_file_path(
+    let line_metadata = get_line_metadata_from_file_path(
         PathBuf::from(OsString::from(mapping_file_path.unwrap().clone())),
         from_line_value,
     );
 
-    if initial_style.is_none() {
+    if line_metadata.is_none() {
         // TODO - avoid panicking and instead return error or empty
         panic!("Could not get ready mapping data for reading file");
     }
@@ -132,7 +132,7 @@ fn get_spans_in_range_if_needed_from_file_path<'a>(
         ParseAnsiAsSpansByLinesIterator::create_from_string_iterator(
             file_iterator_in_range,
             // TODO - change this to use the location in file
-            ParseOptions::default().with_initial_span(initial_style.unwrap().initial_span),
+            ParseOptions::default().with_initial_span(line_metadata.unwrap().initial_span),
         ),
     );
 }

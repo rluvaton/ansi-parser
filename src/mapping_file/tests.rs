@@ -15,14 +15,14 @@ mod tests {
     fn get_tmp_file_path() -> PathBuf {
         return NamedTempFile::new().expect("create temp file").into_temp_path().to_path_buf();
     }
-    
+
     fn calculate_chars_until_line(lines: Vec<String>, line_number: usize) -> usize {
         let mut count = 0;
-        
+
         for i in 0..line_number {
             count += lines[i].chars().count() + 1; // +1 for the newline
         }
-        
+
         return count;
     }
 
@@ -107,7 +107,7 @@ mod tests {
         let mapping_file_content = std::fs::read(tmp_file_path.clone()).unwrap();
         let number_of_lines_in_mapping =
             (mapping_file_content.len() - mapping_file_content.iter().position(|item| *item == b'\n').unwrap()) / FULL_LINE_LENGTH;
-        
+
         assert_eq!(number_of_lines_in_mapping, input_lines.len());
     }
 
@@ -627,11 +627,11 @@ mod tests {
 
         create_mapping_file(tmp_file_path.clone(), input.to_string());
 
-        let initial_style = get_initial_style_for_line_from_file_path(tmp_file_path.clone(), 1);
+        let line_metadata = get_line_metadata_from_file_path(tmp_file_path.clone(), 1);
 
         let expected = Span::empty().with_bg_color(Color::Black);
 
-        assert_eq!(initial_style, Some(MappingItem {initial_span: expected, location_in_original_file: 0}));
+        assert_eq!(line_metadata, Some(MappingItem {initial_span: expected, location_in_original_file: 0}));
     }
     
     #[test]
@@ -654,11 +654,11 @@ mod tests {
 
         create_mapping_file(tmp_file_path.clone(), input.to_string());
 
-        let initial_style = get_initial_style_for_line_from_file_path(tmp_file_path.clone(), 2);
+        let line_metadata = get_line_metadata_from_file_path(tmp_file_path.clone(), 2);
 
         let expected = Span::empty().with_bg_color(Color::Cyan).with_brightness(Brightness::Bold);
 
-        assert_eq!(initial_style, Some(MappingItem {
+        assert_eq!(line_metadata, Some(MappingItem {
             initial_span: expected,
             location_in_original_file: input.find("\n").unwrap() + 1
         }));
@@ -706,12 +706,12 @@ mod tests {
 
         create_mapping_file(tmp_file_path.clone(), input.to_string());
 
-        let mut initial_style_for_each_line: Vec<Option<MappingItem>> = vec![];
+        let mut all_lines_metadata: Vec<Option<MappingItem>> = vec![];
 
         for i in 0..input_lines.len() {
-            let initial_style = get_initial_style_for_line_from_file_path(tmp_file_path.clone(), i + 1);
+            let line_metadata = get_line_metadata_from_file_path(tmp_file_path.clone(), i + 1);
 
-            initial_style_for_each_line.push(initial_style);
+            all_lines_metadata.push(line_metadata);
         }
 
         let expected = [
@@ -771,7 +771,7 @@ mod tests {
             }),
         ];
 
-        assert_eq!(initial_style_for_each_line, expected);
+        assert_eq!(all_lines_metadata, expected);
     }
 
     #[test]
@@ -816,16 +816,16 @@ mod tests {
 
         create_mapping_file(tmp_file_path.clone(), input.to_string());
 
-        let mut initial_style_for_each_line: Vec<Option<MappingItem>> = vec![];
+        let mut all_lines_metadata: Vec<Option<MappingItem>> = vec![];
 
         for i in (0..input_lines.len()).rev() {
-            let initial_style = get_initial_style_for_line_from_file_path(tmp_file_path.clone(), i + 1);
+            let line_metadata = get_line_metadata_from_file_path(tmp_file_path.clone(), i + 1);
 
-            initial_style_for_each_line.push(initial_style.clone());
+            all_lines_metadata.push(line_metadata.clone());
         }
 
         // We read at the opposite order so we need to reverse to get the correct order of lines
-        initial_style_for_each_line.reverse();
+        all_lines_metadata.reverse();
 
         let expected = [
             Some(MappingItem {
@@ -884,7 +884,7 @@ mod tests {
             }),
         ];
         
-        assert_eq!(initial_style_for_each_line, expected);
+        assert_eq!(all_lines_metadata, expected);
     }
 
     // -----------------------------------
@@ -942,7 +942,7 @@ mod tests {
         let (mut file, content_start_offset, line_length) = ready_data_for_reading_file.unwrap();
 
         for i in 0..input_lines.len() {
-            let initial_style = get_initial_style_for_line_from_file(&mut file, i + 1, content_start_offset, line_length);
+            let initial_style = get_line_metadata_from_file(&mut file, i + 1, content_start_offset, line_length);
 
             initial_style_for_each_line.push(initial_style);
         }
@@ -1058,7 +1058,7 @@ mod tests {
         let (mut file, content_start_offset, line_length) = ready_data_for_reading_file.unwrap();
 
         for i in (0..input_lines.len()).rev() {
-            let initial_style = get_initial_style_for_line_from_file(&mut file, i + 1, content_start_offset, line_length);
+            let initial_style = get_line_metadata_from_file(&mut file, i + 1, content_start_offset, line_length);
 
             initial_style_for_each_line.push(initial_style);
         }

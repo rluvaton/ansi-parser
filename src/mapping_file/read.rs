@@ -61,18 +61,18 @@ pub fn get_initial_style_for_line(mapping_text: String, line_number: usize) -> O
 }
 
 
-pub fn get_initial_style_for_line_from_file_path(file_path: PathBuf, line_number: usize) -> Option<MappingItem> {
+pub fn get_line_metadata_from_file_path(file_path: PathBuf, line_number: usize) -> Option<MappingItem> {
     if(line_number < 1) {
         panic!("Line number must be at least 1");
     }
 
     get_mapping_file_ready_to_read(file_path).and_then(|(mut file, content_start_offset, line_length)| {
-        return get_initial_style_for_line_from_file(&mut file, line_number, content_start_offset, line_length);
+        return get_line_metadata_from_file(&mut file, line_number, content_start_offset, line_length);
     })
 }
 
 // This is useful when wanting to avoid opening the file multiple times - like reading block of lines
-pub fn get_initial_style_for_line_from_file(file: &mut File, line_number: usize, content_start_offset: usize, line_length: usize) -> Option<MappingItem> {
+pub fn get_line_metadata_from_file(file: &mut File, line_number: usize, content_start_offset: usize, line_length: usize) -> Option<MappingItem> {
     if(line_number < 1) {
         panic!("Line number must be at least 1");
     }

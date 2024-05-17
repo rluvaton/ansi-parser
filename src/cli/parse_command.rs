@@ -7,8 +7,8 @@ use crate::cli::format::json_line_single_span::*;
 use crate::cli::format::json_line_span_lines::*;
 use crate::cli::format::json_single_span::*;
 use crate::cli::format::json_span_lines::*;
-use crate::iterators::file_iterator_helpers::create_file_iterator_in_range;
-use crate::mapping_file::read::get_line_metadata_from_file_path;
+use crate::iterators::file_iterator_helpers::{create_file_iterator_from_to_locations};
+use crate::mapping_file::read::{get_line_metadata_from_file, get_mapping_file_ready_to_read};
 use crate::parse_ansi_text::iterators::parse_ansi_as_spans_iterator::*;
 use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::{Line, ParseAnsiAsSpansByLinesIterator};
 use crate::parse_ansi_text::parse_options::ParseOptions;
@@ -112,27 +112,46 @@ fn get_spans_in_range_if_needed_from_file_path<'a>(
 
     mapping_file_path.expect("Mapping file is required when using from-line or to-line");
 
-    let line_metadata = get_line_metadata_from_file_path(
-        PathBuf::from(OsString::from(mapping_file_path.unwrap().clone())),
-        from_line_value,
-    );
+    let ready_data_for_reading_file= get_mapping_file_ready_to_read(PathBuf::from(OsString::from(mapping_file_path.unwrap().clone())));
 
-    if line_metadata.is_none() {
+    let (mut file, content_start_offset, line_length) = ready_data_for_reading_file.unwrap();
+
+    let from_line_metadata = get_line_metadata_from_file(&mut file, from_line_value, content_start_offset, line_length);
+
+    if from_line_metadata.is_none() {
         // TODO - avoid panicking and instead return error or empty
         panic!("Could not get ready mapping data for reading file");
     }
+    
+    if to_line.is_some() && to_line.unwrap() < &from_line_value {
+        panic!("to-line must be greater than from-line");
+    }
+    
+    let from_line_index_in_file = Some(from_line_metadata.clone().unwrap().location_in_original_file);
+    let mut to_line_index_in_file = None;
+    
+    if to_line.is_some() {
+        let to_line_metadata = get_line_metadata_from_file(&mut file, *to_line.unwrap(), content_start_offset, line_length);
+        
+        // TODO - What if the last, should not panic
+        if to_line_metadata.is_none() {
+            // TODO - avoid panicking and instead return error or empty
+            panic!("Could not get ready mapping data for reading file");
+        }
+        
+        to_line_index_in_file = Some(to_line_metadata.unwrap().location_in_original_file);
+    }
 
-    let file_iterator_in_range = create_file_iterator_in_range(
+    let file_iterator_in_range = create_file_iterator_from_to_locations(
         PathBuf::from(OsString::from(file_path)),
-        from_line,
-        to_line,
+        from_line_index_in_file,
+        to_line_index_in_file,
     );
 
     return Box::new(
         ParseAnsiAsSpansByLinesIterator::create_from_string_iterator(
             file_iterator_in_range,
-            // TODO - change this to use the location in file
-            ParseOptions::default().with_initial_span(line_metadata.unwrap().initial_span),
+            ParseOptions::default().with_initial_span(from_line_metadata.unwrap().initial_span),
         ),
     );
 }

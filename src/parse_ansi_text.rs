@@ -2,7 +2,7 @@ use ansi_parser::AnsiParser;
 
 use ansi::types::Span;
 use crate::parse_ansi_text::iterators::parse_ansi_as_spans_iterator::ParseAnsiAsSpansIterator;
-use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
+use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::{Line, ParseAnsiAsSpansByLinesIterator};
 use crate::parse_ansi_text::iterators::playground_iterator::CharsIterator;
 
 use crate::parse_ansi_text::parse_options::ParseOptions;
@@ -41,7 +41,7 @@ pub fn parse_ansi_text_with_options(str: &str, options: ParseOptions) -> Vec<Spa
     return output;
 }
 
-pub fn parse_ansi_text_split_by_lines(str: &str, options: ParseOptions) -> Vec<Vec<Span>> {
+pub fn parse_ansi_text_split_by_lines(str: &str, options: ParseOptions) -> Vec<Line> {
     return ParseAnsiAsSpansByLinesIterator::create_from_string_iterator(Box::new(CharsIterator {
         index: 0,
         str: str.to_string(),

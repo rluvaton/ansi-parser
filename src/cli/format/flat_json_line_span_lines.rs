@@ -5,7 +5,7 @@
 use std::iter::Iterator;
 
 use crate::cli::format::json_single_span::SpansJsonDisplay;
-use crate::parse_ansi_text::ansi::types::Span;
+use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::Line;
 
 pub struct SpansLineFlatJsonLineDisplay<'a, IteratorType> {
     iter: IteratorType,
@@ -15,7 +15,7 @@ pub struct SpansLineFlatJsonLineDisplay<'a, IteratorType> {
 
 impl<'a, IteratorType> Iterator for SpansLineFlatJsonLineDisplay<'a, IteratorType>
     where
-        IteratorType: Iterator<Item = Vec<Span>>,
+        IteratorType: Iterator<Item = Line>,
 {
     // Output item
     type Item = String;
@@ -44,7 +44,7 @@ impl<'a, IteratorType> Iterator for SpansLineFlatJsonLineDisplay<'a, IteratorTyp
             }
 
             self.yielded_first_item = true;
-            self.line_iter = Some(Box::new(SpansJsonDisplay::new(line.into_iter())));
+            self.line_iter = Some(Box::new(SpansJsonDisplay::new(line.spans.into_iter())));
 
             let line_iter = self.line_iter.as_mut().unwrap().next();
             
@@ -67,10 +67,10 @@ impl<'a, IteratorType> SpansLineFlatJsonLineDisplay<'a, IteratorType> {
     }
 }
 
-pub trait SpansLineFlatJsonLineDisplayByIterator: Iterator<Item = Vec<Span>> + Sized {
+pub trait SpansLineFlatJsonLineDisplayByIterator: Iterator<Item = Line> + Sized {
     fn to_flat_json_line_string_in_span_lines<'a>(self) -> SpansLineFlatJsonLineDisplay<'a, Self> {
         SpansLineFlatJsonLineDisplay::new(self)
     }
 }
 
-impl<IteratorType: Iterator<Item = Vec<Span>>> SpansLineFlatJsonLineDisplayByIterator for IteratorType {}
+impl<IteratorType: Iterator<Item = Line>> SpansLineFlatJsonLineDisplayByIterator for IteratorType {}

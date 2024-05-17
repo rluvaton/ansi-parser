@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    use std::io::BufRead;
     use std::path::PathBuf;
     use tempfile::*;
     use crate::mapping_file::create::*;
@@ -14,264 +15,15 @@ mod tests {
     fn get_tmp_file_path() -> PathBuf {
         return NamedTempFile::new().expect("create temp file").into_temp_path().to_path_buf();
     }
-
-    // --------------------------------
-    // Create Mapping text from string
-    // --------------------------------
-
-    #[test]
-    fn in_memory_output_should_have_line_length_before_first_delimiter() {
-        let input = [
-            // Style from start of the line
-            BLACK_BACKGROUND_CODE.to_string()
-                + "Hello, "
-                + RESET_CODE
-                + CYAN_BACKGROUND_CODE
-                + BOLD_CODE
-                + "world!",
-            // Style from prev line
-            "how are you ".to_string() + DIM_CODE + "I'm fine" + RESET_CODE,
-            // No Style
-            "Great to hear".to_string(),
-        ]
-        .join("\n");
-
-        let output = create_mapping_text(input.to_string());
-        let first_line = output
-            .splitn(
-                // 2 and not 1 as splitn return in the last element the rest of the string
-                2, DELIMITER,
-            )
-            .collect::<Vec<&str>>()[0];
-
-        let expected = FULL_LINE_LENGTH.to_string();
-
-        assert_eq!(first_line, expected);
-    }
-
-    #[test]
-    fn in_memory_output_should_have_same_number_of_lines_when_calculated_by_line_length() {
-        let input_lines = [
-            // Style from start of the line
-            BLACK_BACKGROUND_CODE.to_string()
-                + "Hello, "
-                + RESET_CODE
-                + CYAN_BACKGROUND_CODE
-                + BOLD_CODE
-                + "world!",
-            // Style from prev line
-            "how are you ".to_string() + DIM_CODE + "I'm fine" + RESET_CODE,
-            // No Style
-            "Great to hear".to_string(),
-            // No style in the beginning and style in the end
-            "I'm happy".to_string() + BOLD_CODE + "!" + RESET_CODE,
-            // Empty line
-            "".to_string(),
-            // Text style in the beginning
-            ITALIC_CODE.to_string()
-                + UNDERLINE_CODE
-                + "this is line with multiple text style"
-                + RESET_CODE,
-            // All Possible style combined
-            BOLD_CODE.to_string()
-                + ITALIC_CODE
-                + INVERSE_CODE
-                + UNDERLINE_CODE
-                + STRIKETHROUGH_CODE
-                + RGB_FOREGROUND_CODE(255, 255, 255).as_str()
-                + RGB_BACKGROUND_CODE(255, 255, 255).as_str()
-                + "this is line with all possible styles",
-            // Empty line with style from prev line
-            "".to_string(),
-        ];
-
-        let input = input_lines.join("\n");
-
-        let output = create_mapping_text(input.to_string());
-
-        let number_of_lines_in_mapping =
-            (output.len() - output.find(DELIMITER).unwrap()) / FULL_LINE_LENGTH;
-
-        assert_eq!(number_of_lines_in_mapping, input_lines.len());
-    }
-
-    #[test]
-    fn in_memory_output_should_have_same_number_of_lines_when_calculated_by_line_numbers() {
-        let input_lines = [
-            // Style from start of the line
-            BLACK_BACKGROUND_CODE.to_string()
-                + "Hello, "
-                + RESET_CODE
-                + CYAN_BACKGROUND_CODE
-                + BOLD_CODE
-                + "world!",
-            // Style from prev line
-            "how are you ".to_string() + DIM_CODE + "I'm fine" + RESET_CODE,
-            // No Style
-            "Great to hear".to_string(),
-            // No style in the beginning and style in the end
-            "I'm happy".to_string() + BOLD_CODE + "!" + RESET_CODE,
-            // Empty line
-            "".to_string(),
-            // Text style in the beginning
-            ITALIC_CODE.to_string()
-                + UNDERLINE_CODE
-                + "this is line with multiple text style"
-                + RESET_CODE,
-            // All Possible style combined
-            BOLD_CODE.to_string()
-                + ITALIC_CODE
-                + INVERSE_CODE
-                + UNDERLINE_CODE
-                + STRIKETHROUGH_CODE
-                + RGB_FOREGROUND_CODE(255, 255, 255).as_str()
-                + RGB_BACKGROUND_CODE(255, 255, 255).as_str()
-                + "this is line with all possible styles",
-            // Empty line with style from prev line
-            "".to_string(),
-        ];
-
-        let input = input_lines.join("\n");
-
-        let output = create_mapping_text(input.to_string());
-
-        let number_of_lines_in_mapping = output.lines().count() - 1; // -1 to remove the header
-
-        assert_eq!(number_of_lines_in_mapping, input_lines.len());
-    }
-
-    #[test]
-    fn in_memory_output_should_have_correct_length() {
-        let input_lines = [
-            // Style from start of the line
-            BLACK_BACKGROUND_CODE.to_string()
-                + "Hello, "
-                + RESET_CODE
-                + CYAN_BACKGROUND_CODE
-                + BOLD_CODE
-                + "world!",
-            // Style from prev line
-            "how are you ".to_string() + DIM_CODE + "I'm fine" + RESET_CODE,
-            // No Style
-            "Great to hear".to_string(),
-            // No style in the beginning and style in the end
-            "I'm happy".to_string() + BOLD_CODE + "!" + RESET_CODE,
-            // Empty line
-            "".to_string(),
-            // Text style in the beginning
-            ITALIC_CODE.to_string()
-                + UNDERLINE_CODE
-                + "this is line with multiple text style"
-                + RESET_CODE,
-            // All Possible style combined
-            BOLD_CODE.to_string()
-                + ITALIC_CODE
-                + INVERSE_CODE
-                + UNDERLINE_CODE
-                + STRIKETHROUGH_CODE
-                + RGB_FOREGROUND_CODE(255, 255, 255).as_str()
-                + RGB_BACKGROUND_CODE(255, 255, 255).as_str()
-                + "this is line with all possible styles",
-            // Empty line with style from prev line
-            "".to_string(),
-        ];
-
-        let input = input_lines.join("\n");
-
-        let output = create_mapping_text(input.to_string());
-
-        assert_eq!(
-            output.len(),
-            LINE_LENGTH.to_string().len() + DELIMITER.len() + input_lines.len() * FULL_LINE_LENGTH
-        );
-    }
-
-    #[test]
-    fn in_memory_mapping_should_include_initial_style_for_each_line() {
-        let input_lines = [
-            // Style from start of the line
-            BLACK_BACKGROUND_CODE.to_string()
-                + "Hello, "
-                + RESET_CODE
-                + CYAN_BACKGROUND_CODE
-                + BOLD_CODE
-                + "world!",
-            // Style from prev line
-            "how are you ".to_string() + DIM_CODE + "I'm fine" + RESET_CODE,
-            // No Style
-            "Great to hear".to_string(),
-            // No style in the beginning and style in the end
-            "I'm happy".to_string() + BOLD_CODE + "!" + RESET_CODE,
-            // Empty line without style
-            "".to_string(),
-            // Text style in the beginning
-            ITALIC_CODE.to_string()
-                + UNDERLINE_CODE
-                + "this is line with multiple text style"
-                + RESET_CODE,
-            // All Possible style combined
-            BOLD_CODE.to_string()
-                + ITALIC_CODE
-                + INVERSE_CODE
-                + UNDERLINE_CODE
-                + STRIKETHROUGH_CODE
-                + RGB_FOREGROUND_CODE(255, 255, 255).as_str()
-                + RGB_BACKGROUND_CODE(255, 255, 255).as_str()
-                + "this is line with all possible styles",
-            // Non-empty line with style from prev line
-            "hey".to_string(),
-        ];
-
-        let input = input_lines.join("\n");
-
-        let output = create_mapping_text(input.to_string());
-
-        let mapping_output_initial_style_for_each_line = output
-            // split_inclusive So last line won't be treated as empty
-            .split_inclusive(DELIMITER)
-            .into_iter()
-            // Skip the header
-            .skip(1)
-            .map(|line| {
-                parse_text_matching_single_span(line)
-                    // Reset string as it's not irrelevant here
-                    .with_text("".to_string())
-            })
-            .collect::<Vec<Span>>();
-
-        let expected = [
-            Span::empty().with_bg_color(Color::Black),
-            Span::empty()
-                .with_bg_color(Color::Cyan)
-                .with_brightness(Brightness::Bold),
-            Span::empty(), // No style at all
-            Span::empty(), // No style at the beginning
-            Span::empty(), // No style at all
-            Span::empty().with_text_style(TextStyle::Italic | TextStyle::Underline),
-            Span::empty()
-                .with_brightness(Brightness::Bold)
-                .with_text_style(
-                    TextStyle::Italic
-                        | TextStyle::Inverse
-                        | TextStyle::Underline
-                        | TextStyle::Strikethrough,
-                )
-                .with_color(Color::Rgb(255, 255, 255))
-                .with_bg_color(Color::Rgb(255, 255, 255)),
-            // Same style from prev line
-            Span::empty()
-                .with_brightness(Brightness::Bold)
-                .with_text_style(
-                    TextStyle::Italic
-                        | TextStyle::Inverse
-                        | TextStyle::Underline
-                        | TextStyle::Strikethrough,
-                )
-                .with_color(Color::Rgb(255, 255, 255))
-                .with_bg_color(Color::Rgb(255, 255, 255)),
-        ];
-
-        assert_eq!(mapping_output_initial_style_for_each_line, expected);
+    
+    fn calculate_chars_until_line(lines: Vec<String>, line_number: usize) -> usize {
+        let mut count = 0;
+        
+        for i in 0..line_number {
+            count += lines[i].chars().count() + 1; // +1 for the newline
+        }
+        
+        return count;
     }
 
     // -------------------------------------
@@ -299,14 +51,11 @@ mod tests {
 
         create_mapping_file(tmp_file_path.clone(), input.to_string());
 
-        let mapping_file_content = std::fs::read_to_string(tmp_file_path.clone()).unwrap();
+        let mapping_file_content = std::fs::read(tmp_file_path.clone()).unwrap();
 
-        let first_line = mapping_file_content
-            .splitn(
-                // 2 and not 1 as splitn return in the last element the rest of the string
-                2, DELIMITER,
-            )
-            .collect::<Vec<&str>>()[0];
+        let lines = mapping_file_content.split(|item| *item == b'\n').collect::<Vec<&[u8]>>();
+
+        let first_line = String::from_utf8(lines[0].to_vec()).expect("First line should be valid utf8");
 
         let expected = FULL_LINE_LENGTH.to_string();
 
@@ -355,11 +104,10 @@ mod tests {
 
         create_mapping_file(tmp_file_path.clone(), input.to_string());
 
-        let mapping_file_content = std::fs::read_to_string(tmp_file_path.clone()).unwrap();
-
+        let mapping_file_content = std::fs::read(tmp_file_path.clone()).unwrap();
         let number_of_lines_in_mapping =
-            (mapping_file_content.len() - mapping_file_content.find(DELIMITER).unwrap()) / FULL_LINE_LENGTH;
-
+            (mapping_file_content.len() - mapping_file_content.iter().position(|item| *item == b'\n').unwrap()) / FULL_LINE_LENGTH;
+        
         assert_eq!(number_of_lines_in_mapping, input_lines.len());
     }
 
@@ -405,9 +153,13 @@ mod tests {
 
         create_mapping_file(tmp_file_path.clone(), input.to_string());
 
-        let mapping_file_content = std::fs::read_to_string(tmp_file_path.clone()).unwrap();
+        let mapping_file_content = std::fs::read(tmp_file_path.clone()).unwrap();
 
-        let number_of_lines_in_mapping = mapping_file_content.lines().count() - 1; // -1 to remove the header
+        let number_of_lines_in_mapping = mapping_file_content
+            // split_inclusive So last line won't be treated as empty
+            .split_inclusive(|item| *item == b'\n')
+            // -1 to remove the header
+            .count() - 1;
 
         assert_eq!(number_of_lines_in_mapping, input_lines.len());
     }
@@ -454,11 +206,11 @@ mod tests {
 
         create_mapping_file(tmp_file_path.clone(), input.to_string());
 
-        let mapping_file_content = std::fs::read_to_string(tmp_file_path.clone()).unwrap();
+        let mapping_file_content = std::fs::read(tmp_file_path.clone()).unwrap();
 
         assert_eq!(
             mapping_file_content.len(),
-            LINE_LENGTH.to_string().len() + DELIMITER.len() + input_lines.len() * FULL_LINE_LENGTH
+            FIRST_PART_LINE_LENGTH.to_string().len() + DELIMITER.len() + input_lines.len() * FULL_LINE_LENGTH
         );
     }
 
@@ -504,16 +256,17 @@ mod tests {
 
         create_mapping_file(tmp_file_path.clone(), input.to_string());
 
-        let mapping_file_content = std::fs::read_to_string(tmp_file_path.clone()).unwrap();
+        let mapping_file_content = std::fs::read(tmp_file_path.clone()).unwrap();
 
         let mapping_output_initial_style_for_each_line = mapping_file_content
             // split_inclusive So last line won't be treated as empty
-            .split_inclusive(DELIMITER)
+            .split_inclusive(|item| *item == DELIMITER.as_bytes()[0])
             .into_iter()
             // Skip the header
             .skip(1)
+            .map(|line| String::from_utf8(line[0..FIRST_PART_LINE_LENGTH].to_owned()).expect("convert to string"))
             .map(|line| {
-                parse_text_matching_single_span(line)
+                parse_text_matching_single_span(line.as_str())
                     // Reset string as it's not irrelevant here
                     .with_text("".to_string())
             })
@@ -642,10 +395,9 @@ mod tests {
 
         create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
 
-        let mapping_file_content = std::fs::read_to_string(tmp_mapping_file_path.clone()).unwrap();
-
+        let mapping_file_content = std::fs::read(tmp_mapping_file_path.clone()).unwrap();
         let number_of_lines_in_mapping =
-            (mapping_file_content.len() - mapping_file_content.find(DELIMITER).unwrap()) / FULL_LINE_LENGTH;
+            (mapping_file_content.len() - mapping_file_content.iter().position(|item| *item == b'\n').unwrap()) / FULL_LINE_LENGTH;
 
         assert_eq!(number_of_lines_in_mapping, input_lines.len());
     }
@@ -696,7 +448,8 @@ mod tests {
 
         create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
 
-        let mapping_file_content = std::fs::read_to_string(tmp_mapping_file_path.clone()).unwrap();
+
+        let mapping_file_content = std::fs::read(tmp_mapping_file_path.clone()).unwrap();
 
         let number_of_lines_in_mapping = mapping_file_content.lines().count() - 1; // -1 to remove the header
 
@@ -749,11 +502,12 @@ mod tests {
 
         create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
 
-        let mapping_file_content = std::fs::read_to_string(tmp_mapping_file_path.clone()).unwrap();
+
+        let mapping_file_content = std::fs::read(tmp_mapping_file_path.clone()).unwrap();
 
         assert_eq!(
             mapping_file_content.len(),
-            LINE_LENGTH.to_string().len() + DELIMITER.len() + input_lines.len() * FULL_LINE_LENGTH
+            FIRST_PART_LINE_LENGTH.to_string().len() + DELIMITER.len() + input_lines.len() * FULL_LINE_LENGTH
         );
     }
 
@@ -803,16 +557,18 @@ mod tests {
 
         create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
 
-        let mapping_file_content = std::fs::read_to_string(tmp_mapping_file_path.clone()).unwrap();
+        let mapping_file_content = std::fs::read(tmp_mapping_file_path.clone()).unwrap();
 
         let mapping_output_initial_style_for_each_line = mapping_file_content
             // split_inclusive So last line won't be treated as empty
-            .split_inclusive(DELIMITER)
+            .split_inclusive(|item| *item == DELIMITER.as_bytes()[0])
             .into_iter()
             // Skip the header
             .skip(1)
+            .map(|line| String::from_utf8(line[0..FIRST_PART_LINE_LENGTH].to_owned()).expect("convert to string"))
             .map(|line| {
-                parse_text_matching_single_span(line)
+
+                parse_text_matching_single_span(line.as_str())
                     // Reset string as it's not irrelevant here
                     .with_text("".to_string())
             })
@@ -853,116 +609,6 @@ mod tests {
         assert_eq!(mapping_output_initial_style_for_each_line, expected);
     }
 
-    // ---------------------
-    // Consume Mapping text
-    // ---------------------
-
-    #[test]
-    fn in_memory_should_return_initial_span_for_text_with_one_line() {
-        let input = BLACK_BACKGROUND_CODE.to_string()
-            + "Hello, "
-            + RESET_CODE
-            + CYAN_BACKGROUND_CODE
-            + BOLD_CODE
-            + "world!";
-
-        let mapping_text = create_mapping_text(input.to_string());
-
-        let initial_style = get_initial_style_for_line(mapping_text.clone(), 1);
-
-        let expected = Span::empty().with_bg_color(Color::Black);
-
-        assert_eq!(initial_style, Some(expected));
-    }
-
-    #[test]
-    fn in_memory_should_return_correct_initial_style_for_each_line() {
-        let input_lines = [
-            // Style from start of the line
-            BLACK_BACKGROUND_CODE.to_string()
-                + "Hello, "
-                + RESET_CODE
-                + CYAN_BACKGROUND_CODE
-                + BOLD_CODE
-                + "world!",
-            // Style from prev line
-            "how are you ".to_string() + DIM_CODE + "I'm fine" + RESET_CODE,
-            // No Style
-            "Great to hear".to_string(),
-            // No style in the beginning and style in the end
-            "I'm happy".to_string() + BOLD_CODE + "!" + RESET_CODE,
-            // Empty line without style
-            "".to_string(),
-            // Text style in the beginning
-            ITALIC_CODE.to_string()
-                + UNDERLINE_CODE
-                + "this is line with multiple text style"
-                + RESET_CODE,
-            // All Possible style combined
-            BOLD_CODE.to_string()
-                + ITALIC_CODE
-                + INVERSE_CODE
-                + UNDERLINE_CODE
-                + STRIKETHROUGH_CODE
-                + RGB_FOREGROUND_CODE(255, 255, 255).as_str()
-                + RGB_BACKGROUND_CODE(255, 255, 255).as_str()
-                + "this is line with all possible styles",
-            // Non-empty line with style from prev line
-            "hey".to_string(),
-        ];
-
-        let input = input_lines.join("\n");
-
-        let mapping_text = create_mapping_text(input.to_string());
-
-        let mut initial_style_for_each_line: Vec<Option<Span>> = vec![];
-
-        for i in 0..input_lines.len() {
-            let initial_style = get_initial_style_for_line(mapping_text.clone(), i + 1);
-
-            initial_style_for_each_line.push(initial_style);
-        }
-
-        let expected = [
-            Some(Span::empty().with_bg_color(Color::Black)),
-            Some(
-                Span::empty()
-                    .with_bg_color(Color::Cyan)
-                    .with_brightness(Brightness::Bold),
-            ),
-            Some(Span::empty()), // No style at all
-            Some(Span::empty()), // No style at the beginning
-            Some(Span::empty()), // No style at all
-            Some(Span::empty().with_text_style(TextStyle::Italic | TextStyle::Underline)),
-            Some(
-                Span::empty()
-                    .with_brightness(Brightness::Bold)
-                    .with_text_style(
-                        TextStyle::Italic
-                            | TextStyle::Inverse
-                            | TextStyle::Underline
-                            | TextStyle::Strikethrough,
-                    )
-                    .with_color(Color::Rgb(255, 255, 255))
-                    .with_bg_color(Color::Rgb(255, 255, 255)),
-            ),
-            // Same style from prev line
-            Some(
-                Span::empty()
-                    .with_brightness(Brightness::Bold)
-                    .with_text_style(
-                        TextStyle::Italic
-                            | TextStyle::Inverse
-                            | TextStyle::Underline
-                            | TextStyle::Strikethrough,
-                    )
-                    .with_color(Color::Rgb(255, 255, 255))
-                    .with_bg_color(Color::Rgb(255, 255, 255)),
-            ),
-        ];
-
-        assert_eq!(initial_style_for_each_line, expected);
-    }
 
     // ---------------------
     // Consume Mapping file
@@ -985,7 +631,7 @@ mod tests {
 
         let expected = Span::empty().with_bg_color(Color::Black);
 
-        assert_eq!(initial_style, Some(expected));
+        assert_eq!(initial_style, Some(MappingItem {initial_span: expected, location_in_original_file: 0}));
     }
     
     #[test]
@@ -1012,7 +658,10 @@ mod tests {
 
         let expected = Span::empty().with_bg_color(Color::Cyan).with_brightness(Brightness::Bold);
 
-        assert_eq!(initial_style, Some(expected));
+        assert_eq!(initial_style, Some(MappingItem {
+            initial_span: expected,
+            location_in_original_file: input.find("\n").unwrap() + 1
+        }));
     }
 
     #[test]
@@ -1057,7 +706,7 @@ mod tests {
 
         create_mapping_file(tmp_file_path.clone(), input.to_string());
 
-        let mut initial_style_for_each_line: Vec<Option<Span>> = vec![];
+        let mut initial_style_for_each_line: Vec<Option<MappingItem>> = vec![];
 
         for i in 0..input_lines.len() {
             let initial_style = get_initial_style_for_line_from_file_path(tmp_file_path.clone(), i + 1);
@@ -1066,18 +715,34 @@ mod tests {
         }
 
         let expected = [
-            Some(Span::empty().with_bg_color(Color::Black)),
-            Some(
-                Span::empty()
+            Some(MappingItem {
+                initial_span: Span::empty().with_bg_color(Color::Black),
+                location_in_original_file: 0
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty()
                     .with_bg_color(Color::Cyan)
                     .with_brightness(Brightness::Bold),
-            ),
-            Some(Span::empty()), // No style at all
-            Some(Span::empty()), // No style at the beginning
-            Some(Span::empty()), // No style at all
-            Some(Span::empty().with_text_style(TextStyle::Italic | TextStyle::Underline)),
-            Some(
-                Span::empty()
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 1)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty(),// No style at all
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 2)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty(),// No style at the beginning
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 3)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty(),// No style at all
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 4)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty().with_text_style(TextStyle::Italic | TextStyle::Underline),
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 5)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty()
                     .with_brightness(Brightness::Bold)
                     .with_text_style(
                         TextStyle::Italic
@@ -1087,10 +752,12 @@ mod tests {
                     )
                     .with_color(Color::Rgb(255, 255, 255))
                     .with_bg_color(Color::Rgb(255, 255, 255)),
-            ),
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 6)
+            }),
             // Same style from prev line
-            Some(
-                Span::empty()
+
+            Some(MappingItem {
+                initial_span: Span::empty()
                     .with_brightness(Brightness::Bold)
                     .with_text_style(
                         TextStyle::Italic
@@ -1100,7 +767,8 @@ mod tests {
                     )
                     .with_color(Color::Rgb(255, 255, 255))
                     .with_bg_color(Color::Rgb(255, 255, 255)),
-            ),
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 7)
+            }),
         ];
 
         assert_eq!(initial_style_for_each_line, expected);
@@ -1148,7 +816,7 @@ mod tests {
 
         create_mapping_file(tmp_file_path.clone(), input.to_string());
 
-        let mut initial_style_for_each_line: Vec<Option<Span>> = vec![];
+        let mut initial_style_for_each_line: Vec<Option<MappingItem>> = vec![];
 
         for i in (0..input_lines.len()).rev() {
             let initial_style = get_initial_style_for_line_from_file_path(tmp_file_path.clone(), i + 1);
@@ -1160,18 +828,34 @@ mod tests {
         initial_style_for_each_line.reverse();
 
         let expected = [
-            Some(Span::empty().with_bg_color(Color::Black)),
-            Some(
-                Span::empty()
+            Some(MappingItem {
+                initial_span: Span::empty().with_bg_color(Color::Black),
+                location_in_original_file: 0
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty()
                     .with_bg_color(Color::Cyan)
                     .with_brightness(Brightness::Bold),
-            ),
-            Some(Span::empty()), // No style at all
-            Some(Span::empty()), // No style at the beginning
-            Some(Span::empty()), // No style at all
-            Some(Span::empty().with_text_style(TextStyle::Italic | TextStyle::Underline)),
-            Some(
-                Span::empty()
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 1)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty(),// No style at all
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 2)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty(),// No style at the beginning
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 3)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty(),// No style at all
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 4)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty().with_text_style(TextStyle::Italic | TextStyle::Underline),
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 5)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty()
                     .with_brightness(Brightness::Bold)
                     .with_text_style(
                         TextStyle::Italic
@@ -1181,10 +865,12 @@ mod tests {
                     )
                     .with_color(Color::Rgb(255, 255, 255))
                     .with_bg_color(Color::Rgb(255, 255, 255)),
-            ),
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 6)
+            }),
             // Same style from prev line
-            Some(
-                Span::empty()
+
+            Some(MappingItem {
+                initial_span: Span::empty()
                     .with_brightness(Brightness::Bold)
                     .with_text_style(
                         TextStyle::Italic
@@ -1194,9 +880,10 @@ mod tests {
                     )
                     .with_color(Color::Rgb(255, 255, 255))
                     .with_bg_color(Color::Rgb(255, 255, 255)),
-            ),
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 7)
+            }),
         ];
-
+        
         assert_eq!(initial_style_for_each_line, expected);
     }
 
@@ -1246,7 +933,7 @@ mod tests {
 
         create_mapping_file(tmp_file_path.clone(), input.to_string());
 
-        let mut initial_style_for_each_line: Vec<Option<Span>> = vec![];
+        let mut initial_style_for_each_line: Vec<Option<MappingItem>> = vec![];
 
         let ready_data_for_reading_file= get_mapping_file_ready_to_read(tmp_file_path.clone());
 
@@ -1261,18 +948,34 @@ mod tests {
         }
 
         let expected = [
-            Some(Span::empty().with_bg_color(Color::Black)),
-            Some(
-                Span::empty()
+            Some(MappingItem {
+                initial_span: Span::empty().with_bg_color(Color::Black),
+                location_in_original_file: 0
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty()
                     .with_bg_color(Color::Cyan)
                     .with_brightness(Brightness::Bold),
-            ),
-            Some(Span::empty()), // No style at all
-            Some(Span::empty()), // No style at the beginning
-            Some(Span::empty()), // No style at all
-            Some(Span::empty().with_text_style(TextStyle::Italic | TextStyle::Underline)),
-            Some(
-                Span::empty()
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 1)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty(),// No style at all
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 2)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty(),// No style at the beginning
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 3)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty(),// No style at all
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 4)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty().with_text_style(TextStyle::Italic | TextStyle::Underline),
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 5)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty()
                     .with_brightness(Brightness::Bold)
                     .with_text_style(
                         TextStyle::Italic
@@ -1282,10 +985,12 @@ mod tests {
                     )
                     .with_color(Color::Rgb(255, 255, 255))
                     .with_bg_color(Color::Rgb(255, 255, 255)),
-            ),
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 6)
+            }),
             // Same style from prev line
-            Some(
-                Span::empty()
+
+            Some(MappingItem {
+                initial_span: Span::empty()
                     .with_brightness(Brightness::Bold)
                     .with_text_style(
                         TextStyle::Italic
@@ -1295,7 +1000,8 @@ mod tests {
                     )
                     .with_color(Color::Rgb(255, 255, 255))
                     .with_bg_color(Color::Rgb(255, 255, 255)),
-            ),
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 7)
+            }),
         ];
 
         assert_eq!(initial_style_for_each_line, expected);
@@ -1343,7 +1049,7 @@ mod tests {
 
         create_mapping_file(tmp_file_path.clone(), input.to_string());
 
-        let mut initial_style_for_each_line: Vec<Option<Span>> = vec![];
+        let mut initial_style_for_each_line: Vec<Option<MappingItem>> = vec![];
 
         let ready_data_for_reading_file= get_mapping_file_ready_to_read(tmp_file_path.clone());
 
@@ -1361,18 +1067,34 @@ mod tests {
         initial_style_for_each_line.reverse();
 
         let expected = [
-            Some(Span::empty().with_bg_color(Color::Black)),
-            Some(
-                Span::empty()
+            Some(MappingItem {
+                initial_span: Span::empty().with_bg_color(Color::Black),
+                location_in_original_file: 0
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty()
                     .with_bg_color(Color::Cyan)
                     .with_brightness(Brightness::Bold),
-            ),
-            Some(Span::empty()), // No style at all
-            Some(Span::empty()), // No style at the beginning
-            Some(Span::empty()), // No style at all
-            Some(Span::empty().with_text_style(TextStyle::Italic | TextStyle::Underline)),
-            Some(
-                Span::empty()
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 1)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty(),// No style at all
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 2)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty(),// No style at the beginning
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 3)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty(),// No style at all
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 4)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty().with_text_style(TextStyle::Italic | TextStyle::Underline),
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 5)
+            }),
+            Some(MappingItem {
+                initial_span: Span::empty()
                     .with_brightness(Brightness::Bold)
                     .with_text_style(
                         TextStyle::Italic
@@ -1382,10 +1104,12 @@ mod tests {
                     )
                     .with_color(Color::Rgb(255, 255, 255))
                     .with_bg_color(Color::Rgb(255, 255, 255)),
-            ),
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 6)
+            }),
             // Same style from prev line
-            Some(
-                Span::empty()
+
+            Some(MappingItem {
+                initial_span: Span::empty()
                     .with_brightness(Brightness::Bold)
                     .with_text_style(
                         TextStyle::Italic
@@ -1395,7 +1119,8 @@ mod tests {
                     )
                     .with_color(Color::Rgb(255, 255, 255))
                     .with_bg_color(Color::Rgb(255, 255, 255)),
-            ),
+                location_in_original_file: calculate_chars_until_line(input_lines.to_vec(), 7)
+            }),
         ];
 
         assert_eq!(initial_style_for_each_line, expected);

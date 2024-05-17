@@ -1,14 +1,13 @@
-
 #[cfg(test)]
 mod tests {
-    use test_case::{test_case, test_matrix};
-    use pretty_assertions::{assert_eq};
-    
+    use pretty_assertions::assert_eq;
+    use test_case::test_case;
+
+    use crate::parse_ansi_text::*;
     use crate::parse_ansi_text::ansi::colors::*;
     use crate::parse_ansi_text::ansi::constants::*;
     use crate::parse_ansi_text::ansi::style::*;
     use crate::parse_ansi_text::ansi::types::*;
-    use crate::parse_ansi_text::*;
     use crate::parse_ansi_text::parse_options::ParseOptions;
 
     #[test]
@@ -60,16 +59,10 @@ mod tests {
     #[test_case(Color::BrightCyan, BRIGHT_CYAN_FOREGROUND_CODE ; "Bright Cyan foreground")]
     #[test_case(Color::BrightWhite, BRIGHT_WHITE_FOREGROUND_CODE ; "Bright White foreground")]
     fn single_foreground_color_with_no_other_styles(expected_color: Color, color_code: &str) {
-        let input = [
-            color_code,
-            "Hello, world!",
-            RESET_CODE,
-        ].join("");
-        let expected = vec![
-            Span::empty()
-                .with_color(expected_color)
-                .with_text("Hello, world!".to_string())
-        ];
+        let input = [color_code, "Hello, world!", RESET_CODE].join("");
+        let expected = vec![Span::empty()
+            .with_color(expected_color)
+            .with_text("Hello, world!".to_string())];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
@@ -90,16 +83,10 @@ mod tests {
     #[test_case(Color::BrightCyan, BRIGHT_CYAN_BACKGROUND_CODE ; "Bright Cyan background")]
     #[test_case(Color::BrightWhite, BRIGHT_WHITE_BACKGROUND_CODE ; "Bright White background")]
     fn single_background_color_with_no_other_styles(expected_color: Color, color_code: &str) {
-        let input = [
-            color_code,
-            "Hello, world!",
-            RESET_CODE,
-        ].join("");
-        let expected = vec![
-            Span::empty()
-                .with_bg_color(expected_color)
-                .with_text("Hello, world!".to_string())
-        ];
+        let input = [color_code, "Hello, world!", RESET_CODE].join("");
+        let expected = vec![Span::empty()
+            .with_bg_color(expected_color)
+            .with_text("Hello, world!".to_string())];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
@@ -107,34 +94,27 @@ mod tests {
     #[test_case(TextStyle::Underline, UNDERLINE_CODE ; "Underline text")]
     #[test_case(TextStyle::Inverse, INVERSE_CODE ; "Inverse text")]
     #[test_case(TextStyle::Strikethrough, STRIKETHROUGH_CODE ; "Strikethrough text")]
-    fn single_text_style_with_no_other_styles(expected_text_style: TextStyle, text_style_code: &str) {
-        let input = [
-            text_style_code,
-            "Hello, world!",
-            RESET_CODE,
-        ].join("");
-        let expected = vec![
-
-            Span::empty()
-                .with_text_style(expected_text_style)
-                .with_text("Hello, world!".to_string())
-        ];
+    fn single_text_style_with_no_other_styles(
+        expected_text_style: TextStyle,
+        text_style_code: &str,
+    ) {
+        let input = [text_style_code, "Hello, world!", RESET_CODE].join("");
+        let expected = vec![Span::empty()
+            .with_text_style(expected_text_style)
+            .with_text("Hello, world!".to_string())];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
     #[test_case(Brightness::Bold, BOLD_CODE ; "Bold text")]
     #[test_case(Brightness::Dim, DIM_CODE ; "Dim text")]
-    fn single_brightness_with_no_other_styles(expected_brightness: Brightness, brightness_code: &str) {
-        let input = [
-            brightness_code,
-            "Hello, world!",
-            RESET_CODE,
-        ].join("");
-        let expected = vec![
-            Span::empty()
-                .with_brightness(expected_brightness)
-                .with_text("Hello, world!".to_string())
-        ];
+    fn single_brightness_with_no_other_styles(
+        expected_brightness: Brightness,
+        brightness_code: &str,
+    ) {
+        let input = [brightness_code, "Hello, world!", RESET_CODE].join("");
+        let expected = vec![Span::empty()
+            .with_brightness(expected_brightness)
+            .with_text("Hello, world!".to_string())];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
@@ -149,7 +129,8 @@ mod tests {
             RED_FOREGROUND_CODE,
             "Hello, world!",
             RESET_CODE,
-        ].join("");
+        ]
+        .join("");
         let expected = vec![Span {
             color: Color::Red,
 
@@ -168,7 +149,8 @@ mod tests {
             RED_BACKGROUND_CODE,
             "Hello, world!",
             RESET_CODE,
-        ].join("");
+        ]
+        .join("");
         let expected = vec![Span {
             bg_color: Color::Red,
 
@@ -182,12 +164,7 @@ mod tests {
 
     #[test]
     fn brightness_should_replace_prev_brightness_when_no_text_in_between() {
-        let input = [
-            BOLD_CODE,
-            DIM_CODE,
-            "Hello, world!",
-            RESET_CODE,
-        ].join("");
+        let input = [BOLD_CODE, DIM_CODE, "Hello, world!", RESET_CODE].join("");
         let expected = vec![Span {
             brightness: Brightness::Dim,
 
@@ -211,7 +188,8 @@ mod tests {
             RED_FOREGROUND_CODE,
             "Hello, world!",
             RESET_CODE,
-        ].join("");
+        ]
+        .join("");
         let expected = vec![Span {
             color: Color::Red,
 
@@ -231,7 +209,8 @@ mod tests {
             RED_BACKGROUND_CODE,
             "Hello, world!",
             RESET_CODE,
-        ].join("");
+        ]
+        .join("");
         let expected = vec![Span {
             bg_color: Color::Red,
 
@@ -245,13 +224,7 @@ mod tests {
 
     #[test]
     fn brightness_should_replace_prev_brightness_after_reset_when_no_text_in_between() {
-        let input = [
-            BOLD_CODE,
-            RESET_CODE,
-            DIM_CODE,
-            "Hello, world!",
-            RESET_CODE,
-        ].join("");
+        let input = [BOLD_CODE, RESET_CODE, DIM_CODE, "Hello, world!", RESET_CODE].join("");
         let expected = vec![Span {
             brightness: Brightness::Dim,
 
@@ -271,7 +244,8 @@ mod tests {
             UNDERLINE_CODE,
             "Hello, world!",
             RESET_CODE,
-        ].join("");
+        ]
+        .join("");
         let expected = vec![Span {
             text_style: TextStyle::Underline,
 
@@ -288,164 +262,194 @@ mod tests {
     // ---------------------------------------------------------------------------------------
 
     #[test]
-    fn when_foreground_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_foreground_color() {
+    fn when_foreground_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_foreground_color(
+    ) {
         let input = [
             BLACK_FOREGROUND_CODE,
             "Hello, world!",
             RED_FOREGROUND_CODE,
             "How are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            color: Color::Black,
+        ]
+        .join("");
+        let expected = vec![
+            Span {
+                color: Color::Black,
 
-            text: "Hello, world!".to_string(),
-            bg_color: Color::None,
-            brightness: Brightness::None,
-            text_style: TextStyle::None,
-        }, Span {
-            color: Color::Red,
+                text: "Hello, world!".to_string(),
+                bg_color: Color::None,
+                brightness: Brightness::None,
+                text_style: TextStyle::None,
+            },
+            Span {
+                color: Color::Red,
 
-            text: "How are you?".to_string(),
-            bg_color: Color::None,
-            brightness: Brightness::None,
-            text_style: TextStyle::None,
-        }];
+                text: "How are you?".to_string(),
+                bg_color: Color::None,
+                brightness: Brightness::None,
+                text_style: TextStyle::None,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
     #[test]
-    fn when_rgb_values_in_foreground_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_foreground_color() {
+    fn when_rgb_values_in_foreground_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_foreground_color(
+    ) {
         let input = [
             RGB_FOREGROUND_CODE(188, 29, 68).as_str(),
             "Hello, world!",
             RGB_FOREGROUND_CODE(255, 19, 94).as_str(),
             "How are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            color: Color::Rgb(188, 29, 68),
+        ]
+        .join("");
+        let expected = vec![
+            Span {
+                color: Color::Rgb(188, 29, 68),
 
-            text: "Hello, world!".to_string(),
-            bg_color: Color::None,
-            brightness: Brightness::None,
-            text_style: TextStyle::None,
-        }, Span {
-            color: Color::Rgb(255, 19, 94),
+                text: "Hello, world!".to_string(),
+                bg_color: Color::None,
+                brightness: Brightness::None,
+                text_style: TextStyle::None,
+            },
+            Span {
+                color: Color::Rgb(255, 19, 94),
 
-            text: "How are you?".to_string(),
-            bg_color: Color::None,
-            brightness: Brightness::None,
-            text_style: TextStyle::None,
-        }];
+                text: "How are you?".to_string(),
+                bg_color: Color::None,
+                brightness: Brightness::None,
+                text_style: TextStyle::None,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
     #[test]
-    fn when_background_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_background_color() {
+    fn when_background_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_background_color(
+    ) {
         let input = [
             BLACK_BACKGROUND_CODE,
             "Hello, world!",
             RED_BACKGROUND_CODE,
             "How are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            bg_color: Color::Black,
+        ]
+        .join("");
+        let expected = vec![
+            Span {
+                bg_color: Color::Black,
 
-            text: "Hello, world!".to_string(),
-            color: Color::None,
-            brightness: Brightness::None,
-            text_style: TextStyle::None,
-        }, Span {
-            bg_color: Color::Red,
+                text: "Hello, world!".to_string(),
+                color: Color::None,
+                brightness: Brightness::None,
+                text_style: TextStyle::None,
+            },
+            Span {
+                bg_color: Color::Red,
 
-            text: "How are you?".to_string(),
-            color: Color::None,
-            brightness: Brightness::None,
-            text_style: TextStyle::None,
-        }];
+                text: "How are you?".to_string(),
+                color: Color::None,
+                brightness: Brightness::None,
+                text_style: TextStyle::None,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
     #[test]
-    fn when_rgb_background_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_background_color() {
+    fn when_rgb_background_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_background_color(
+    ) {
         let input = [
             RGB_BACKGROUND_CODE(188, 29, 68).as_str(),
             "Hello, world!",
             RGB_BACKGROUND_CODE(255, 19, 94).as_str(),
             "How are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            bg_color: Color::Rgb(188, 29, 68),
+        ]
+        .join("");
+        let expected = vec![
+            Span {
+                bg_color: Color::Rgb(188, 29, 68),
 
-            text: "Hello, world!".to_string(),
-            color: Color::None,
-            brightness: Brightness::None,
-            text_style: TextStyle::None,
-        }, Span {
-            bg_color: Color::Rgb(255, 19, 94),
+                text: "Hello, world!".to_string(),
+                color: Color::None,
+                brightness: Brightness::None,
+                text_style: TextStyle::None,
+            },
+            Span {
+                bg_color: Color::Rgb(255, 19, 94),
 
-            text: "How are you?".to_string(),
-            color: Color::None,
-            brightness: Brightness::None,
-            text_style: TextStyle::None,
-        }];
+                text: "How are you?".to_string(),
+                color: Color::None,
+                brightness: Brightness::None,
+                text_style: TextStyle::None,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
     #[test]
-    fn when_brightness_change_after_some_text_without_reset_should_create_a_new_span_with_new_brightness() {
+    fn when_brightness_change_after_some_text_without_reset_should_create_a_new_span_with_new_brightness(
+    ) {
         let input = [
             BOLD_CODE,
             "Hello, world!",
             DIM_CODE,
             "How are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            brightness: Brightness::Bold,
+        ]
+        .join("");
+        let expected = vec![
+            Span {
+                brightness: Brightness::Bold,
 
-            text: "Hello, world!".to_string(),
-            color: Color::None,
-            bg_color: Color::None,
-            text_style: TextStyle::None,
-        }, Span {
-            brightness: Brightness::Dim,
+                text: "Hello, world!".to_string(),
+                color: Color::None,
+                bg_color: Color::None,
+                text_style: TextStyle::None,
+            },
+            Span {
+                brightness: Brightness::Dim,
 
-            text: "How are you?".to_string(),
-            color: Color::None,
-            bg_color: Color::None,
-            text_style: TextStyle::None,
-        }];
+                text: "How are you?".to_string(),
+                color: Color::None,
+                bg_color: Color::None,
+                text_style: TextStyle::None,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
     #[test]
-    fn when_text_style_change_after_some_text_without_reset_should_create_a_new_span_with_merged_text_style() {
+    fn when_text_style_change_after_some_text_without_reset_should_create_a_new_span_with_merged_text_style(
+    ) {
         let input = [
             ITALIC_CODE,
             "Hello, world!",
             UNDERLINE_CODE,
             "How are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            text_style: TextStyle::Italic,
+        ]
+        .join("");
+        let expected = vec![
+            Span {
+                text_style: TextStyle::Italic,
 
-            text: "Hello, world!".to_string(),
-            bg_color: Color::None,
-            brightness: Brightness::None,
-            color: Color::None,
-        }, Span {
-            text_style: TextStyle::Italic | TextStyle::Underline,
+                text: "Hello, world!".to_string(),
+                bg_color: Color::None,
+                brightness: Brightness::None,
+                color: Color::None,
+            },
+            Span {
+                text_style: TextStyle::Italic | TextStyle::Underline,
 
-            text: "How are you?".to_string(),
-            bg_color: Color::None,
-            brightness: Brightness::None,
-            color: Color::None,
-        }];
+                text: "How are you?".to_string(),
+                bg_color: Color::None,
+                brightness: Brightness::None,
+                color: Color::None,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
@@ -454,7 +458,8 @@ mod tests {
     // ----------------------------------------------------------------------------------------------
 
     #[test]
-    fn when_foreground_color_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_foreground_color() {
+    fn when_foreground_color_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_foreground_color(
+    ) {
         let input = [
             ITALIC_CODE,
             BOLD_CODE,
@@ -464,27 +469,32 @@ mod tests {
             RED_FOREGROUND_CODE,
             "How are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            color: Color::Black,
+        ]
+        .join("");
+        let expected = vec![
+            Span {
+                color: Color::Black,
 
-            text: "Hello, world!".to_string(),
-            bg_color: Color::White,
-            brightness: Brightness::Bold,
-            text_style: TextStyle::Italic,
-        }, Span {
-            color: Color::Red,
+                text: "Hello, world!".to_string(),
+                bg_color: Color::White,
+                brightness: Brightness::Bold,
+                text_style: TextStyle::Italic,
+            },
+            Span {
+                color: Color::Red,
 
-            text: "How are you?".to_string(),
-            bg_color: Color::White,
-            brightness: Brightness::Bold,
-            text_style: TextStyle::Italic,
-        }];
+                text: "How are you?".to_string(),
+                bg_color: Color::White,
+                brightness: Brightness::Bold,
+                text_style: TextStyle::Italic,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
     #[test]
-    fn when_background_color_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_background_color() {
+    fn when_background_color_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_background_color(
+    ) {
         let input = [
             ITALIC_CODE,
             BOLD_CODE,
@@ -494,27 +504,32 @@ mod tests {
             RED_BACKGROUND_CODE,
             "How are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            bg_color: Color::Black,
+        ]
+        .join("");
+        let expected = vec![
+            Span {
+                bg_color: Color::Black,
 
-            text: "Hello, world!".to_string(),
-            color: Color::White,
-            brightness: Brightness::Bold,
-            text_style: TextStyle::Italic,
-        }, Span {
-            bg_color: Color::Red,
+                text: "Hello, world!".to_string(),
+                color: Color::White,
+                brightness: Brightness::Bold,
+                text_style: TextStyle::Italic,
+            },
+            Span {
+                bg_color: Color::Red,
 
-            text: "How are you?".to_string(),
-            color: Color::White,
-            brightness: Brightness::Bold,
-            text_style: TextStyle::Italic,
-        }];
+                text: "How are you?".to_string(),
+                color: Color::White,
+                brightness: Brightness::Bold,
+                text_style: TextStyle::Italic,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
     #[test]
-    fn when_brightness_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_brightness() {
+    fn when_brightness_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_brightness(
+    ) {
         let input = [
             ITALIC_CODE,
             WHITE_FOREGROUND_CODE,
@@ -524,27 +539,32 @@ mod tests {
             DIM_CODE,
             "How are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            brightness: Brightness::Bold,
+        ]
+        .join("");
+        let expected = vec![
+            Span {
+                brightness: Brightness::Bold,
 
-            text: "Hello, world!".to_string(),
-            color: Color::White,
-            bg_color: Color::Black,
-            text_style: TextStyle::Italic,
-        }, Span {
-            brightness: Brightness::Dim,
+                text: "Hello, world!".to_string(),
+                color: Color::White,
+                bg_color: Color::Black,
+                text_style: TextStyle::Italic,
+            },
+            Span {
+                brightness: Brightness::Dim,
 
-            text: "How are you?".to_string(),
-            color: Color::White,
-            bg_color: Color::Black,
-            text_style: TextStyle::Italic,
-        }];
+                text: "How are you?".to_string(),
+                color: Color::White,
+                bg_color: Color::Black,
+                text_style: TextStyle::Italic,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
     #[test]
-    fn when_text_style_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_merged_text_style() {
+    fn when_text_style_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_merged_text_style(
+    ) {
         let input = [
             WHITE_FOREGROUND_CODE,
             BLACK_BACKGROUND_CODE,
@@ -554,22 +574,26 @@ mod tests {
             UNDERLINE_CODE,
             "How are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            text_style: TextStyle::Italic,
+        ]
+        .join("");
+        let expected = vec![
+            Span {
+                text_style: TextStyle::Italic,
 
-            text: "Hello, world!".to_string(),
-            color: Color::White,
-            bg_color: Color::Black,
-            brightness: Brightness::Bold,
-        }, Span {
-            text_style: TextStyle::Italic | TextStyle::Underline,
+                text: "Hello, world!".to_string(),
+                color: Color::White,
+                bg_color: Color::Black,
+                brightness: Brightness::Bold,
+            },
+            Span {
+                text_style: TextStyle::Italic | TextStyle::Underline,
 
-            text: "How are you?".to_string(),
-            color: Color::White,
-            bg_color: Color::Black,
-            brightness: Brightness::Bold,
-        }];
+                text: "How are you?".to_string(),
+                color: Color::White,
+                bg_color: Color::Black,
+                brightness: Brightness::Bold,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
@@ -578,106 +602,114 @@ mod tests {
     // ------------------------------------------------------------------------------------------
 
     #[test]
-    fn when_foreground_color_added_after_some_text_without_reset_should_create_a_new_span_with_new_foreground_color() {
+    fn when_foreground_color_added_after_some_text_without_reset_should_create_a_new_span_with_new_foreground_color(
+    ) {
         let input = [
             "Hello, world!",
             RED_FOREGROUND_CODE,
             "How are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            color: Color::None,
+        ]
+        .join("");
+        let expected = vec![
+            Span {
+                color: Color::None,
 
-            text: "Hello, world!".to_string(),
-            bg_color: Color::None,
-            brightness: Brightness::None,
-            text_style: TextStyle::None,
-        }, Span {
-            color: Color::Red,
+                text: "Hello, world!".to_string(),
+                bg_color: Color::None,
+                brightness: Brightness::None,
+                text_style: TextStyle::None,
+            },
+            Span {
+                color: Color::Red,
 
-            text: "How are you?".to_string(),
-            bg_color: Color::None,
-            brightness: Brightness::None,
-            text_style: TextStyle::None,
-        }];
+                text: "How are you?".to_string(),
+                bg_color: Color::None,
+                brightness: Brightness::None,
+                text_style: TextStyle::None,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
     #[test]
-    fn when_background_color_added_after_some_text_without_reset_should_create_a_new_span_with_new_background_color() {
+    fn when_background_color_added_after_some_text_without_reset_should_create_a_new_span_with_new_background_color(
+    ) {
         let input = [
             "Hello, world!",
             RED_BACKGROUND_CODE,
             "How are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            bg_color: Color::None,
+        ]
+        .join("");
+        let expected = vec![
+            Span {
+                bg_color: Color::None,
 
-            text: "Hello, world!".to_string(),
-            color: Color::None,
-            brightness: Brightness::None,
-            text_style: TextStyle::None,
-        }, Span {
-            bg_color: Color::Red,
+                text: "Hello, world!".to_string(),
+                color: Color::None,
+                brightness: Brightness::None,
+                text_style: TextStyle::None,
+            },
+            Span {
+                bg_color: Color::Red,
 
-            text: "How are you?".to_string(),
-            color: Color::None,
-            brightness: Brightness::None,
-            text_style: TextStyle::None,
-        }];
+                text: "How are you?".to_string(),
+                color: Color::None,
+                brightness: Brightness::None,
+                text_style: TextStyle::None,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
     #[test]
-    fn when_brightness_added_after_some_text_without_reset_should_create_a_new_span_with_new_brightness() {
-        let input = [
-            "Hello, world!",
-            DIM_CODE,
-            "How are you?",
-            RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            brightness: Brightness::None,
+    fn when_brightness_added_after_some_text_without_reset_should_create_a_new_span_with_new_brightness(
+    ) {
+        let input = ["Hello, world!", DIM_CODE, "How are you?", RESET_CODE].join("");
+        let expected = vec![
+            Span {
+                brightness: Brightness::None,
 
-            text: "Hello, world!".to_string(),
-            color: Color::None,
-            bg_color: Color::None,
-            text_style: TextStyle::None,
-        }, Span {
-            brightness: Brightness::Dim,
+                text: "Hello, world!".to_string(),
+                color: Color::None,
+                bg_color: Color::None,
+                text_style: TextStyle::None,
+            },
+            Span {
+                brightness: Brightness::Dim,
 
-            text: "How are you?".to_string(),
-            color: Color::None,
-            bg_color: Color::None,
-            text_style: TextStyle::None,
-        }];
+                text: "How are you?".to_string(),
+                color: Color::None,
+                bg_color: Color::None,
+                text_style: TextStyle::None,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
     #[test]
-    fn when_text_style_added_after_some_text_without_reset_should_create_a_new_span_with_new_text_style() {
-        let input = [
-            "Hello, world!",
-            UNDERLINE_CODE,
-            "How are you?",
-            RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            text_style: TextStyle::None,
+    fn when_text_style_added_after_some_text_without_reset_should_create_a_new_span_with_new_text_style(
+    ) {
+        let input = ["Hello, world!", UNDERLINE_CODE, "How are you?", RESET_CODE].join("");
+        let expected = vec![
+            Span {
+                text_style: TextStyle::None,
 
-            text: "Hello, world!".to_string(),
-            bg_color: Color::None,
-            brightness: Brightness::None,
-            color: Color::None,
-        }, Span {
-            text_style: TextStyle::Underline,
+                text: "Hello, world!".to_string(),
+                bg_color: Color::None,
+                brightness: Brightness::None,
+                color: Color::None,
+            },
+            Span {
+                text_style: TextStyle::Underline,
 
-            text: "How are you?".to_string(),
-            bg_color: Color::None,
-            brightness: Brightness::None,
-            color: Color::None,
-        }];
+                text: "How are you?".to_string(),
+                bg_color: Color::None,
+                brightness: Brightness::None,
+                color: Color::None,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
@@ -686,7 +718,8 @@ mod tests {
     // ------------------------------------------------------------------------------------------------
 
     #[test]
-    fn when_foreground_color_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_foreground_color() {
+    fn when_foreground_color_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_foreground_color(
+    ) {
         let input = [
             ITALIC_CODE,
             BOLD_CODE,
@@ -695,27 +728,32 @@ mod tests {
             RED_FOREGROUND_CODE,
             "How are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            color: Color::None,
+        ]
+        .join("");
+        let expected = vec![
+            Span {
+                color: Color::None,
 
-            text: "Hello, world!".to_string(),
-            bg_color: Color::Black,
-            brightness: Brightness::Bold,
-            text_style: TextStyle::Italic,
-        }, Span {
-            color: Color::Red,
+                text: "Hello, world!".to_string(),
+                bg_color: Color::Black,
+                brightness: Brightness::Bold,
+                text_style: TextStyle::Italic,
+            },
+            Span {
+                color: Color::Red,
 
-            text: "How are you?".to_string(),
-            bg_color: Color::Black,
-            brightness: Brightness::Bold,
-            text_style: TextStyle::Italic,
-        }];
+                text: "How are you?".to_string(),
+                bg_color: Color::Black,
+                brightness: Brightness::Bold,
+                text_style: TextStyle::Italic,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
     #[test]
-    fn when_background_color_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_background_color() {
+    fn when_background_color_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_background_color(
+    ) {
         let input = [
             ITALIC_CODE,
             BOLD_CODE,
@@ -724,27 +762,32 @@ mod tests {
             RED_BACKGROUND_CODE,
             "How are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            bg_color: Color::None,
+        ]
+        .join("");
+        let expected = vec![
+            Span {
+                bg_color: Color::None,
 
-            text: "Hello, world!".to_string(),
-            color: Color::Red,
-            brightness: Brightness::Bold,
-            text_style: TextStyle::Italic,
-        }, Span {
-            bg_color: Color::Red,
+                text: "Hello, world!".to_string(),
+                color: Color::Red,
+                brightness: Brightness::Bold,
+                text_style: TextStyle::Italic,
+            },
+            Span {
+                bg_color: Color::Red,
 
-            text: "How are you?".to_string(),
-            color: Color::Red,
-            brightness: Brightness::Bold,
-            text_style: TextStyle::Italic,
-        }];
+                text: "How are you?".to_string(),
+                color: Color::Red,
+                brightness: Brightness::Bold,
+                text_style: TextStyle::Italic,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
     #[test]
-    fn when_brightness_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_brightness() {
+    fn when_brightness_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_brightness(
+    ) {
         let input = [
             ITALIC_CODE,
             RED_FOREGROUND_CODE,
@@ -753,27 +796,32 @@ mod tests {
             DIM_CODE,
             "How are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            brightness: Brightness::None,
+        ]
+        .join("");
+        let expected = vec![
+            Span {
+                brightness: Brightness::None,
 
-            text: "Hello, world!".to_string(),
-            color: Color::Red,
-            bg_color: Color::Black,
-            text_style: TextStyle::Italic,
-        }, Span {
-            brightness: Brightness::Dim,
+                text: "Hello, world!".to_string(),
+                color: Color::Red,
+                bg_color: Color::Black,
+                text_style: TextStyle::Italic,
+            },
+            Span {
+                brightness: Brightness::Dim,
 
-            text: "How are you?".to_string(),
-            color: Color::Red,
-            bg_color: Color::Black,
-            text_style: TextStyle::Italic,
-        }];
+                text: "How are you?".to_string(),
+                color: Color::Red,
+                bg_color: Color::Black,
+                text_style: TextStyle::Italic,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
     #[test]
-    fn when_text_style_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_text_style() {
+    fn when_text_style_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_text_style(
+    ) {
         let input = [
             DIM_CODE,
             RED_FOREGROUND_CODE,
@@ -782,22 +830,26 @@ mod tests {
             UNDERLINE_CODE,
             "How are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![Span {
-            text_style: TextStyle::None,
+        ]
+        .join("");
+        let expected = vec![
+            Span {
+                text_style: TextStyle::None,
 
-            text: "Hello, world!".to_string(),
-            color: Color::Red,
-            bg_color: Color::Black,
-            brightness: Brightness::Dim,
-        }, Span {
-            text_style: TextStyle::Underline,
+                text: "Hello, world!".to_string(),
+                color: Color::Red,
+                bg_color: Color::Black,
+                brightness: Brightness::Dim,
+            },
+            Span {
+                text_style: TextStyle::Underline,
 
-            text: "How are you?".to_string(),
-            color: Color::Red,
-            bg_color: Color::Black,
-            brightness: Brightness::Dim,
-        }];
+                text: "How are you?".to_string(),
+                color: Color::Red,
+                bg_color: Color::Black,
+                brightness: Brightness::Dim,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
@@ -806,11 +858,9 @@ mod tests {
     // --------------------------------------------------------------------------------------------
 
     #[test]
-    fn when_foreground_color_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span() {
-        let input = [
-            "Hello, world!",
-            RED_FOREGROUND_CODE,
-        ].join("");
+    fn when_foreground_color_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span(
+    ) {
+        let input = ["Hello, world!", RED_FOREGROUND_CODE].join("");
         let expected = vec![Span {
             color: Color::None,
 
@@ -823,11 +873,9 @@ mod tests {
     }
 
     #[test]
-    fn when_background_color_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span() {
-        let input = [
-            "Hello, world!",
-            RED_BACKGROUND_CODE,
-        ].join("");
+    fn when_background_color_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span(
+    ) {
+        let input = ["Hello, world!", RED_BACKGROUND_CODE].join("");
         let expected = vec![Span {
             bg_color: Color::None,
 
@@ -840,11 +888,9 @@ mod tests {
     }
 
     #[test]
-    fn when_brightness_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span() {
-        let input = [
-            "Hello, world!",
-            DIM_CODE,
-        ].join("");
+    fn when_brightness_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span(
+    ) {
+        let input = ["Hello, world!", DIM_CODE].join("");
         let expected = vec![Span {
             brightness: Brightness::None,
 
@@ -857,11 +903,9 @@ mod tests {
     }
 
     #[test]
-    fn when_text_style_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span() {
-        let input = [
-            "Hello, world!",
-            UNDERLINE_CODE,
-        ].join("");
+    fn when_text_style_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span(
+    ) {
+        let input = ["Hello, world!", UNDERLINE_CODE].join("");
         let expected = vec![Span {
             text_style: TextStyle::None,
 
@@ -872,7 +916,6 @@ mod tests {
         }];
         assert_eq!(parse_ansi_text(&input), expected);
     }
-
 
     // ------------------------------------------------------------
     // Style combination
@@ -887,9 +930,13 @@ mod tests {
             STRIKETHROUGH_CODE,
             "Hello, world!",
             RESET_CODE,
-        ].join("");
+        ]
+        .join("");
         let expected = vec![Span {
-            text_style: TextStyle::Italic | TextStyle::Underline | TextStyle::Inverse | TextStyle::Strikethrough,
+            text_style: TextStyle::Italic
+                | TextStyle::Underline
+                | TextStyle::Inverse
+                | TextStyle::Strikethrough,
 
             text: "Hello, world!".to_string(),
             bg_color: Color::None,
@@ -898,7 +945,6 @@ mod tests {
         }];
         assert_eq!(parse_ansi_text(&input), expected);
     }
-
 
     // -----------------------------------------------------------------------------------------------------
     // Style added after text should create a new span with the same color/brightness and merged text style
@@ -913,23 +959,27 @@ mod tests {
             INVERSE_CODE,
             "How are you?",
             RESET_CODE,
-        ].join("");
+        ]
+        .join("");
 
-        let expected = vec![Span {
-            text_style: TextStyle::Italic | TextStyle::Underline,
+        let expected = vec![
+            Span {
+                text_style: TextStyle::Italic | TextStyle::Underline,
 
-            text: "Hello, world!".to_string(),
-            color: Color::None,
-            bg_color: Color::None,
-            brightness: Brightness::None,
-        }, Span {
-            text_style: TextStyle::Italic | TextStyle::Underline | TextStyle::Inverse,
+                text: "Hello, world!".to_string(),
+                color: Color::None,
+                bg_color: Color::None,
+                brightness: Brightness::None,
+            },
+            Span {
+                text_style: TextStyle::Italic | TextStyle::Underline | TextStyle::Inverse,
 
-            text: "How are you?".to_string(),
-            color: Color::None,
-            bg_color: Color::None,
-            brightness: Brightness::None,
-        }];
+                text: "How are you?".to_string(),
+                color: Color::None,
+                bg_color: Color::None,
+                brightness: Brightness::None,
+            },
+        ];
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
@@ -947,7 +997,8 @@ mod tests {
             same_style_code,
             "How are you?",
             RESET_CODE,
-        ].join("");
+        ]
+        .join("");
 
         let expected = vec![Span {
             text_style: TextStyle::Italic,
@@ -966,10 +1017,7 @@ mod tests {
 
     #[test]
     fn span_should_have_the_same_style_as_the_initial_span() {
-        let input = [
-            "Hello, world!",
-            RESET_CODE,
-        ].join("");
+        let input = ["Hello, world!", RESET_CODE].join("");
         let expected = vec![Span {
             color: Color::Red,
 
@@ -979,47 +1027,45 @@ mod tests {
             text_style: TextStyle::None,
         }];
 
-        let parse_options = ParseOptions::default()
-            .with_initial_span(
-                Span::empty()
-                    .with_color(Color::Red)
-            );
+        let parse_options =
+            ParseOptions::default().with_initial_span(Span::empty().with_color(Color::Red));
 
-        assert_eq!(parse_ansi_text_with_options(&input, parse_options), expected);
+        assert_eq!(
+            parse_ansi_text_with_options(&input, parse_options),
+            expected
+        );
     }
 
     #[test]
     fn non_first_spans_should_not_have_the_same_style_as_the_initial_span() {
-        let input = [
-            "Hello, world!",
-            RESET_CODE,
-            "How are you?",
-        ].join("");
-        let expected = vec![Span {
-            color: Color::Red,
+        let input = ["Hello, world!", RESET_CODE, "How are you?"].join("");
+        let expected = vec![
+            Span {
+                color: Color::Red,
 
-            text: "Hello, world!".to_string(),
-            bg_color: Color::None,
-            brightness: Brightness::None,
-            text_style: TextStyle::None,
-        }, Span {
-            color: Color::None,
+                text: "Hello, world!".to_string(),
+                bg_color: Color::None,
+                brightness: Brightness::None,
+                text_style: TextStyle::None,
+            },
+            Span {
+                color: Color::None,
 
-            text: "How are you?".to_string(),
-            bg_color: Color::None,
-            brightness: Brightness::None,
-            text_style: TextStyle::None,
-        }];
+                text: "How are you?".to_string(),
+                bg_color: Color::None,
+                brightness: Brightness::None,
+                text_style: TextStyle::None,
+            },
+        ];
 
-        let parse_options = ParseOptions::default()
-            .with_initial_span(
-                Span::empty()
-                    .with_color(Color::Red)
-            );
+        let parse_options =
+            ParseOptions::default().with_initial_span(Span::empty().with_color(Color::Red));
 
-        assert_eq!(parse_ansi_text_with_options(&input, parse_options), expected);
+        assert_eq!(
+            parse_ansi_text_with_options(&input, parse_options),
+            expected
+        );
     }
-
 
     // ----------------------------------
     // Parse options with split by lines
@@ -1035,30 +1081,39 @@ mod tests {
             BOLD_CODE,
             "Hello, world!\nHow are you?",
             RESET_CODE,
-        ].join("");
-        let expected = vec![vec![Span {
-            text: "Hello, world!".to_string(),
-            color: Color::Rgb(255, 19, 94),
-            bg_color: Color::Rgb(188, 29, 68),
-            brightness: Brightness::Bold,
-            text_style: TextStyle::Italic | TextStyle::Underline,
-        }], vec![Span {
-            text: "How are you?".to_string(),
-            color: Color::Rgb(255, 19, 94),
-            bg_color: Color::Rgb(188, 29, 68),
-            brightness: Brightness::Bold,
-            text_style: TextStyle::Italic | TextStyle::Underline,
-        }]];
+        ]
+        .join("");
+        let expected = vec![
+            Line {
+                spans: vec![Span {
+                    text: "Hello, world!".to_string(),
+                    color: Color::Rgb(255, 19, 94),
+                    bg_color: Color::Rgb(188, 29, 68),
+                    brightness: Brightness::Bold,
+                    text_style: TextStyle::Italic | TextStyle::Underline,
+                }],
+                location_in_file: 0,
+            },
+            Line {
+                spans: vec![Span {
+                    text: "How are you?".to_string(),
+                    color: Color::Rgb(255, 19, 94),
+                    bg_color: Color::Rgb(188, 29, 68),
+                    brightness: Brightness::Bold,
+                    text_style: TextStyle::Italic | TextStyle::Underline,
+                }],
+                location_in_file: input.find("How are you?").unwrap(),
+            },
+        ];
 
-        let parse_options = ParseOptions::default()
-            .with_initial_span(
-                Span::empty()
-                    .with_color(Color::Red)
-            );
+        let parse_options =
+            ParseOptions::default().with_initial_span(Span::empty().with_color(Color::Red));
 
-        assert_eq!(parse_ansi_text_split_by_lines(&input, parse_options), expected);
+        assert_eq!(
+            parse_ansi_text_split_by_lines(&input, parse_options),
+            expected
+        );
     }
-
 
     #[test]
     fn multiple_styles() {
@@ -1070,7 +1125,8 @@ mod tests {
             BOLD_CODE,
             "Hello, world!",
             RESET_CODE,
-        ].join("");
+        ]
+        .join("");
         let expected = vec![Span {
             text: "Hello, world!".to_string(),
             color: Color::Rgb(255, 19, 94),
@@ -1080,5 +1136,4 @@ mod tests {
         }];
         assert_eq!(parse_ansi_text(&input), expected);
     }
-
 }

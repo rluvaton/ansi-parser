@@ -1,13 +1,18 @@
 use std::fs::File;
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{BufRead, Read, Seek, SeekFrom};
 use std::path::PathBuf;
-use std::str;
 
 use crate::mapping_file::constants::*;
 use crate::parse_ansi_text::ansi::types::Span;
 use crate::parse_ansi_text::parse_text_matching_single_span::parse_text_matching_single_span;
 
-pub fn get_initial_style_for_line(mapping_text: String, line_number: usize) -> Option<Span> {
+#[derive(PartialEq, Debug, Clone)]
+pub struct MappingItem {
+    pub initial_span: Span,
+    pub location_in_original_file: usize
+}
+
+pub fn get_initial_style_for_line(mapping_text: String, line_number: usize) -> Option<MappingItem> {
     if(line_number < 1) {
         panic!("Line number must be at least 1");
     }
@@ -40,16 +45,23 @@ pub fn get_initial_style_for_line(mapping_text: String, line_number: usize) -> O
         return None;
     }
 
-    let line_style = mapping_text[offset_in_text..offset_in_text + line_length].to_string();
+    let line_style = mapping_text[offset_in_text..offset_in_text + line_length - SECOND_PART_LINE_LENGTH].to_string();
+
+    let location_in_original_file = mapping_text[offset_in_text + line_length - SECOND_PART_LINE_LENGTH..offset_in_text + line_length].as_bytes();
+
+    let reading_of_number = u64::from_ne_bytes(location_in_original_file.try_into().unwrap()); //convert the array to a variable of type usize
 
     // To make sure there is no empty span
     let span = parse_text_matching_single_span(&line_style);
 
-    return Some(span.with_text("".to_string()));
+    return Some(MappingItem {
+        initial_span: span.with_text("".to_string()),
+        location_in_original_file: reading_of_number as usize
+    });
 }
 
 
-pub fn get_initial_style_for_line_from_file_path(file_path: PathBuf, line_number: usize) -> Option<Span> {
+pub fn get_initial_style_for_line_from_file_path(file_path: PathBuf, line_number: usize) -> Option<MappingItem> {
     if(line_number < 1) {
         panic!("Line number must be at least 1");
     }
@@ -60,13 +72,14 @@ pub fn get_initial_style_for_line_from_file_path(file_path: PathBuf, line_number
 }
 
 // This is useful when wanting to avoid opening the file multiple times - like reading block of lines
-pub fn get_initial_style_for_line_from_file(file: &mut File, line_number: usize, content_start_offset: usize, line_length: usize) -> Option<Span> {
+pub fn get_initial_style_for_line_from_file(file: &mut File, line_number: usize, content_start_offset: usize, line_length: usize) -> Option<MappingItem> {
     if(line_number < 1) {
         panic!("Line number must be at least 1");
     }
 
     // Create a buffer to read the line style with the expected length of the line
-    let mut requested_line_initial_style = vec![0u8; line_length];
+    let mut requested_line_initial_style = vec![0u8; line_length - SECOND_PART_LINE_LENGTH];
+    let mut requested_line_original_location = vec![0u8; SECOND_PART_LINE_LENGTH];
 
 
     let offset_in_text = content_start_offset + ((line_number - 1) * line_length);
@@ -77,9 +90,18 @@ pub fn get_initial_style_for_line_from_file(file: &mut File, line_number: usize,
 
     file.read_exact(&mut requested_line_initial_style).expect("Read matching line failed");
 
+    // Go to the matching line position
+    // TODO - should differentiate between seek problem or index out of bounds
+    file.seek(SeekFrom::Start((offset_in_text + line_length - SECOND_PART_LINE_LENGTH) as u64)).expect("Go to matching line failed");
+    
+    file.read_exact(&mut requested_line_original_location).expect("Read matching line failed");
+
     let line_style = String::from_utf8(requested_line_initial_style).expect("Converting requested line to UTF-8 string failed");
 
-    return Some(parse_text_matching_single_span(&line_style).clone().with_text("".to_string()));
+    return Some(MappingItem {
+        initial_span: parse_text_matching_single_span(&line_style).clone().with_text("".to_string()),
+        location_in_original_file: u64::from_ne_bytes(requested_line_original_location.try_into().unwrap()) as usize
+    });
 }
 
 pub fn get_mapping_file_ready_to_read(file_path: PathBuf) -> Option<(File, usize, usize)> {
@@ -106,33 +128,21 @@ fn get_mapping_file_metadata(f: &mut File) -> Option<(usize, usize)> {
 
     // TODO - make sure that the buffer is read completely and not partially
     f.read(&mut buf).expect("Try read mapping header failed");
+    
+    let header = buf.lines().next().expect("No lines in mapping file").expect("No content in mapping file");
 
-    let s = match str::from_utf8(&buf) {
-        Ok(v) => v,
-        Err(e) => {
-            println!("Invalid UTF-8 sequence: {}", e);
-            return None;
-        }
-    };
-
-    return get_mapping_metadata(s.to_string());
+    return get_mapping_metadata(header);
 }
 
 // First item in returned tuple is the content_start_offset and the second is the line_length
-fn get_mapping_metadata(header_and_more: String) -> Option<(usize, usize)> {
-    let header_end_index = header_and_more.find(DELIMITER);
-
-    if header_end_index.is_none() {
+fn get_mapping_metadata(header: String) -> Option<(usize, usize)> {
+    
+    if header.len() < 1 {
         println!("Invalid mapping file, should have at least one line");
         return None;
     }
 
-    let header_end_index = header_end_index.unwrap();
-
-    let content_start_offset = header_end_index + DELIMITER.len();
-
-    let line_length_str = &header_and_more[0..header_end_index];
-    let line_length_result = line_length_str.parse::<usize>();
+    let line_length_result = header.parse::<usize>();
 
     if line_length_result.is_err() {
         panic!("Invalid mapping file, first line should be a number");
@@ -140,5 +150,5 @@ fn get_mapping_metadata(header_and_more: String) -> Option<(usize, usize)> {
 
     let line_length = line_length_result.unwrap();
 
-    return Some((content_start_offset, line_length));
+    return Some((header.len(), line_length));
 }

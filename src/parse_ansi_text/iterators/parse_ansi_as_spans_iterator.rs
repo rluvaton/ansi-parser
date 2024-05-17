@@ -25,8 +25,7 @@ impl<'a> Iterator for ParseAnsiAsSpansIterator<'a> {
 
                 },
                 Output::TextBlock(text) => {
-                    // println!("Text block: {}", text);
-                    self.current_span.text.push_str(text);
+                    self.current_span.text.push_str(text.text);
                 },
                 Output::Escape(seq) => {
                     let sequence_type = get_type_from_ansi_sequence(&seq);

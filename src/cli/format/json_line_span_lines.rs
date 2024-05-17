@@ -3,8 +3,9 @@
 // this means that should support both Vec<Span> and Vec<Vec<Span>>
 
 use std::iter::Iterator;
-use crate::cli::format::json_single_span::{SpansJsonDisplay, SpansJsonDisplayByIterator};
-use crate::parse_ansi_text::ansi::types::{Span, SpanJson};
+
+use crate::cli::format::json_single_span::SpansJsonDisplay;
+use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::Line;
 
 pub struct SpansLineJsonLineDisplay<'a, IteratorType> {
     iter: IteratorType,
@@ -14,7 +15,7 @@ pub struct SpansLineJsonLineDisplay<'a, IteratorType> {
 
 impl<'a, IteratorType> Iterator for SpansLineJsonLineDisplay<'a, IteratorType>
     where
-        IteratorType: Iterator<Item = Vec<Span>>,
+        IteratorType: Iterator<Item = Line>,
 {
     // Output item
     type Item = String;
@@ -43,7 +44,7 @@ impl<'a, IteratorType> Iterator for SpansLineJsonLineDisplay<'a, IteratorType>
             }
 
             self.yielded_first_item = true;
-            self.line_iter = Some(Box::new(SpansJsonDisplay::new(line.into_iter())));
+            self.line_iter = Some(Box::new(SpansJsonDisplay::new(line.spans.into_iter())));
 
             let line_iter = self.line_iter.as_mut().unwrap().next();
             
@@ -66,10 +67,10 @@ impl<'a, IteratorType> SpansLineJsonLineDisplay<'a, IteratorType> {
     }
 }
 
-pub trait SpansLineJsonLineDisplayByIterator: Iterator<Item = Vec<Span>> + Sized {
+pub trait SpansLineJsonLineDisplayByIterator: Iterator<Item = Line> + Sized {
     fn to_json_line_string_in_span_lines<'a>(self) -> SpansLineJsonLineDisplay<'a, Self> {
         SpansLineJsonLineDisplay::new(self)
     }
 }
 
-impl<IteratorType: Iterator<Item = Vec<Span>>> SpansLineJsonLineDisplayByIterator for IteratorType {}
+impl<IteratorType: Iterator<Item = Line>> SpansLineJsonLineDisplayByIterator for IteratorType {}

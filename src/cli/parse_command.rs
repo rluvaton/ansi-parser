@@ -9,9 +9,8 @@ use crate::cli::format::json_single_span::*;
 use crate::cli::format::json_span_lines::*;
 use crate::iterators::file_iterator_helpers::create_file_iterator_in_range;
 use crate::mapping_file::read::get_initial_style_for_line_from_file_path;
-use crate::parse_ansi_text::ansi::types::Span;
 use crate::parse_ansi_text::iterators::parse_ansi_as_spans_iterator::*;
-use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::ParseAnsiAsSpansByLinesIterator;
+use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::{Line, ParseAnsiAsSpansByLinesIterator};
 use crate::parse_ansi_text::parse_options::ParseOptions;
 
 // TODO - in order to save memory and not read the entire file to memory
@@ -96,7 +95,7 @@ fn get_spans_in_range_if_needed_from_file_path<'a>(
     mapping_file_path: Option<&String>,
     from_line: Option<&usize>,
     to_line: Option<&usize>,
-) -> Box<dyn Iterator<Item = Vec<Span>>> {
+) -> Box<dyn Iterator<Item = Line>> {
     if from_line.is_none() && to_line.is_none() {
         return Box::new(ParseAnsiAsSpansByLinesIterator::create_from_file_path(
             file_path,
@@ -132,7 +131,8 @@ fn get_spans_in_range_if_needed_from_file_path<'a>(
     return Box::new(
         ParseAnsiAsSpansByLinesIterator::create_from_string_iterator(
             file_iterator_in_range,
-            ParseOptions::default().with_initial_span(initial_style.unwrap()),
+            // TODO - change this to use the location in file
+            ParseOptions::default().with_initial_span(initial_style.unwrap().initial_span),
         ),
     );
 }
@@ -142,7 +142,7 @@ fn get_spans_in_range_without_mapping_file<'a>(
     file_path: PathBuf,
     from_line: Option<&usize>,
     to_line: Option<&usize>,
-) -> Box<dyn Iterator<Item = Vec<Span>>> {
+) -> Box<dyn Iterator<Item = Line>> {
     let iterator =
         ParseAnsiAsSpansByLinesIterator::create_from_file_path(file_path, ParseOptions::default());
 

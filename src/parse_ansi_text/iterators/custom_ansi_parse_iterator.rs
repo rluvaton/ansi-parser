@@ -2,12 +2,13 @@ use std::fmt::{Display, Formatter, Result as DisplayResult};
 use std::path::PathBuf;
 
 use ansi_parser::{AnsiSequence, parse_escape};
-use crate::iterators::file_iterator_helpers::create_file_iterator;
 
+use crate::iterators::file_iterator_helpers::create_file_iterator;
 
 pub struct AnsiParseIterator<'a> {
     pending_string: &'a str,
     pub(crate) iterator: Box<dyn Iterator<Item = String>>,
+    current_location_until_pending_string: usize,
 }
 impl<'a> Iterator for AnsiParseIterator<'a> {
     type Item = Output<'a>;
@@ -32,49 +33,65 @@ impl<'a> Iterator for AnsiParseIterator<'a> {
         let pos = self.pending_string.find('\u{1b}');
         if let Some(loc) = pos {
             if loc == 0 { // If the beginning of the string is the key for escape code
+                let pending_text_size_before = self.pending_string.len();
                 let res = parse_escape(&self.pending_string[loc..]);
 
                 if let Ok(ret) = res { // If there is escape code after the escape key
                     self.pending_string = ret.0;
+                    self.current_location_until_pending_string += pending_text_size_before - self.pending_string.len();
                     return Some(Output::Escape(ret.1))
                 } else { // If no escape code after the escape key
+                    let old_loc = loc;
                     let pos = self.pending_string[(loc + 1)..].find('\u{1b}');
                     if let Some(loc) = pos { // If there is escape key also exists in the middle of the string then split to before the escape code and from it to the end of the string
                         //Added to because it's based one character ahead
                         let loc = loc + 1;
+                        let text_location = self.current_location_until_pending_string;
 
                         let temp = &self.pending_string[..loc];
+                        self.current_location_until_pending_string += old_loc + loc;
                         self.pending_string = &self.pending_string[loc..];
 
-                        return Some(Output::TextBlock(temp))
+                        return Some(Output::TextBlock(Text {
+                            text: temp,
+                            location_in_text: text_location,
+                        }))
                     }
                     
                     // If no other escape key exists in the string, do nothing as the next string might will
                 }
             } else { // If in the middle than split to before the escape code and after and keep the after for the next iteration
                 let temp = &self.pending_string[..loc];
+                let text_location = self.current_location_until_pending_string;
+                
+                self.current_location_until_pending_string += loc;
                 self.pending_string = &self.pending_string[loc..];
 
-                return Some(Output::TextBlock(temp))
+                return Some(Output::TextBlock(Text {
+                    text: temp,
+                    location_in_text: text_location
+                }))
             }
-        } else {
-            let temp = self.pending_string;
-            self.pending_string = "";
-            return Some(Output::TextBlock(temp))
         }
 
         let next = self.iterator.next();
 
         if next.is_none() {
+            let text_location = self.current_location_until_pending_string;
             let temp = self.pending_string;
+            self.current_location_until_pending_string += temp.len();
             self.pending_string = "";
-            return Some(Output::TextBlock(temp))
+            return Some(Output::TextBlock(Text {
+                text: temp,
+                location_in_text: text_location,
+            }))
         }
 
         let mut tmp = self.pending_string.to_string();
         tmp.push_str(next.unwrap().as_str());
         // TODO - should use different way to ensure the lifetime of the string
         let tmp: &'a mut str = tmp.leak();
+        
         self.pending_string = tmp;
 
         // Return empty
@@ -87,6 +104,7 @@ impl AnsiParseIterator<'_> {
 
     pub fn create<'a>(str_iterator: Box<dyn Iterator<Item=String>>) -> AnsiParseIterator<'a> {
         AnsiParseIterator {
+            current_location_until_pending_string: 0,
             iterator: str_iterator,
             pending_string: "",
         }
@@ -94,6 +112,7 @@ impl AnsiParseIterator<'_> {
 
     pub fn create_from_str<'a>(str: String) -> AnsiParseIterator<'a> {
         AnsiParseIterator {
+            current_location_until_pending_string: 0,
             iterator: Box::new(vec![str].into_iter()),
             pending_string: "",
         }
@@ -102,12 +121,18 @@ impl AnsiParseIterator<'_> {
 
     pub fn create_from_file_path<'a>(input_file_path: PathBuf) -> AnsiParseIterator<'a> {
         AnsiParseIterator {
+            current_location_until_pending_string: 0,
             iterator: create_file_iterator(input_file_path),
             pending_string: "",
         }
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct Text<'a> {
+    pub(crate) text: &'a str,
+    pub(crate) location_in_text: usize,
+}
 
 ///This is what is outputted by the parsing iterator.
 ///Each block contains either straight-up text, or simply
@@ -115,7 +140,7 @@ impl AnsiParseIterator<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Output<'a> {
     IgnoreMe,
-    TextBlock(&'a str),
+    TextBlock(Text<'a>),
     Escape(AnsiSequence),
 }
 
@@ -124,8 +149,103 @@ impl<'a> Display for Output<'a> {
         use Output::*;
         match self {
             IgnoreMe => write!(formatter, "IgnoreMe"),
-            Output::TextBlock(txt) => write!(formatter, "{}", txt),
+            Output::TextBlock(txt) => write!(formatter, "{}", txt.text),
             Output::Escape(seq) => write!(formatter, "{}", seq),
         }
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use pretty_assertions::assert_eq;
+
+    use crate::parse_ansi_text::ansi::colors::*;
+    use crate::parse_ansi_text::ansi::constants::RESET_CODE;
+    use crate::parse_ansi_text::iterators::playground_iterator::CharsIterator;
+
+    use super::*;
+
+    #[test]
+    fn split_to_lines_should_work_for_split_by_chars() {
+        let input = "";
+
+        let input = vec![
+            RED_FOREGROUND_CODE.to_string() + "abc" + RESET_CODE,
+            YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng" + RESET_CODE,
+            CYAN_FOREGROUND_CODE.to_string() + "hij" + RESET_CODE
+        ]
+            .join("");
+
+        let chars = CharsIterator {
+            index: 0,
+            str: input.clone(),
+        };
+
+        let lines: Vec<Output> = AnsiParseIterator::create(Box::new(chars)).filter(|item| { 
+            match item {
+                Output::TextBlock(_) => true,
+                (_) => false
+            }
+        }).collect();
+
+        let expected = vec![
+            Output::TextBlock(Text {
+                text: "abc",
+                location_in_text: input.find("abc").unwrap()
+            }),
+
+            Output::TextBlock(Text {
+                text: "d\nef\ng",
+                location_in_text: input.find("d\nef\ng").unwrap()
+            }),
+
+            Output::TextBlock(Text {
+                text: "hij",
+                location_in_text: input.find("hij").unwrap()
+            })
+        ];
+
+        assert_eq!(lines, expected);
+    }
+
+    #[test]
+    fn split_to_lines_should_work_for_single_chunk() {
+
+        let chunks = vec![
+            RED_FOREGROUND_CODE.to_string() + "abc" + RESET_CODE,
+            YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng" + RESET_CODE,
+            CYAN_FOREGROUND_CODE.to_string() + "hij" + RESET_CODE
+        ]
+            .join("")
+            .to_string();
+
+
+        let lines: Vec<Output> = AnsiParseIterator::create_from_str(chunks.clone()).filter(|item| {
+            match item {
+                Output::TextBlock(_) => true,
+                (_) => false
+            }
+        }).collect();
+
+        let expected = vec![
+            Output::TextBlock(Text {
+                text: "abc",
+                location_in_text: chunks.find("abc").unwrap()
+            }),
+
+            Output::TextBlock(Text {
+                text: "d\nef\ng",
+                location_in_text: chunks.find("d\nef\ng").unwrap()
+            }),
+
+            Output::TextBlock(Text {
+                text: "hij",
+                location_in_text: chunks.find("hij").unwrap()
+            })
+        ];
+
+        assert_eq!(lines, expected);
+    }
+}
+

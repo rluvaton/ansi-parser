@@ -37,7 +37,7 @@ fn parse_def_cursor_int(input: &str) -> IResult<&str, u32> {
 fn cursor_pos(input: &str) -> IResult<&str, AnsiSequence> {
     map(
         tuple((
-            tag("["),
+            tag("\u{1b}["),
             parse_def_cursor_int,
             opt(tag(";")),
             parse_def_cursor_int,

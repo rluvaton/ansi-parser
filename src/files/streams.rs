@@ -1,19 +1,16 @@
+use std::char::decode_utf16;
 use tokio::fs::File;
 use tokio::io::{self, AsyncReadExt, AsyncSeekExt};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tokio_stream::Stream;
 
-macro_rules! send_string_buffer_chunk {
-    // match rule which matches multiple expressions in an argument
-    ($buffer:ident, $size:expr, $tx:ident) => {
-        let s = String::from_utf8($buffer[..$size].to_vec())
-            .expect("Failed to convert buffer to string");
-        
-        if $tx.send(Ok(s)).await.is_err() {
-            break;
-        }
-    };
+pub fn read_string(slice: &[u8], size: usize) -> Option<String> {
+    assert!(2*size <= slice.len());
+    let iter = (0..size)
+        .map(|i| u16::from_be_bytes([slice[2*i], slice[2*i+1]]));
+
+    decode_utf16(iter).collect::<Result<String, _>>().ok()
 }
 
 pub async fn read_file_by_chunks(
@@ -29,8 +26,11 @@ pub async fn read_file_by_chunks(
             match file.read(&mut buffer).await {
                 Ok(0) => break, // EOF reached
                 Ok(n) => {
-                    send_string_buffer_chunk!(buffer, n, tx);
+                    let s = read_string(&buffer[..n], n / 2).expect("Failed to convert buffer to string");
 
+                    if tx.send(Ok(s)).await.is_err() {
+                        break;
+                    }
                 }
                 Err(e) => {
                     let _ = tx.send(Err(e)).await;
@@ -67,12 +67,20 @@ pub async fn read_file_by_chunks_from_to_locations(
                 Ok(0) => break, // EOF reached
                 Ok(n) => {
                     if to_line.is_some() && *size_read + n > to_line.unwrap() {
-                        send_string_buffer_chunk!(buffer, to_line.unwrap() - *size_read, tx);
+                        let s = read_string(&buffer[..n], n / 2).expect("Failed to convert buffer to string");
+
+                        if tx.send(Ok(s)).await.is_err() {
+                            break;
+                        }
                         break;
                     }
                     *size_read += n;
+                    
+                    let s = read_string(&buffer[..n], n / 2).expect("Failed to convert buffer to string");
 
-                    send_string_buffer_chunk!(buffer, n, tx);
+                    if tx.send(Ok(s)).await.is_err() {
+                        break;
+                    }
                 }
                 Err(e) => {
                     let _ = tx.send(Err(e)).await;

@@ -67,11 +67,11 @@ while let Some(value) = s.next().await {
 }
 
 
-pub async fn unwrap_items<I>(input: io::Result<impl Stream<Item = io::Result<I>>>)
+pub async fn unwrap_items<I>(input: impl Stream<Item = io::Result<I>>)
                          -> impl Stream<Item=I>
 {
     stream! {
-        for await value in input.unwrap() {
+        for await value in input {
             yield value.unwrap();
         }
     }

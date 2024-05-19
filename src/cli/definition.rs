@@ -24,6 +24,16 @@ pub fn get_cli() -> Command {
             .help("Whether should have no span that contain multiple lines")
             .action(ArgAction::SetTrue))
 
+        .arg(Arg::new("output")
+            .long("output")
+            .required(false)
+            .default_value("stdout")
+            .help("Where to output the result")
+            .value_parser([
+                PossibleValue::new("stdout").help("output to stdout"),
+                PossibleValue::new("sink").help("do not output - useful for benchmarking without writing stdout part"),
+            ]))
+
         .arg(Arg::new("format")
             .long("format")
             .required(false)
@@ -61,7 +71,7 @@ pub fn get_cli() -> Command {
             // Must be greater than from-line
             .value_parser(clap::value_parser!(usize))
             .help("until which line to read (excluded)"))
-        
+
         .arg(Arg::new("mapping-file")
             .long("mapping-file")
             .required(false)

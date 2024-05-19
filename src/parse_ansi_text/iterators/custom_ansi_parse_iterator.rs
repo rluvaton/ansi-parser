@@ -12,7 +12,7 @@ pub struct AnsiParseIterator<'a> {
     current_location_until_pending_string: usize,
 }
 impl<'a> Iterator for AnsiParseIterator<'a> {
-    type Item = Output<'a>;
+    type Item = Output;
 
     fn next(&mut self) -> Option<Self::Item> {
         // TODO - if string contain the escape code than split to before the escape code and return it and then the escape code
@@ -59,7 +59,7 @@ impl<'a> Iterator for AnsiParseIterator<'a> {
                         self.pending_string = &self.pending_string[loc..];
 
                         return Some(Output::TextBlock(Text {
-                            text: temp,
+                            text: temp.to_string(),
                             location_in_text: text_location,
                         }));
                     }
@@ -75,7 +75,7 @@ impl<'a> Iterator for AnsiParseIterator<'a> {
                 self.pending_string = &self.pending_string[loc..];
 
                 return Some(Output::TextBlock(Text {
-                    text: temp,
+                    text: temp.to_string(),
                     location_in_text: text_location,
                 }));
             }
@@ -89,7 +89,7 @@ impl<'a> Iterator for AnsiParseIterator<'a> {
             self.current_location_until_pending_string += temp.len();
             self.pending_string = "";
             return Some(Output::TextBlock(Text {
-                text: temp,
+                text: temp.to_string(),
                 location_in_text: text_location,
             }));
         }
@@ -132,27 +132,27 @@ impl AnsiParseIterator<'_> {
     }
 }
 
-pub async fn parse_ansi<'a, S: Stream<Item = String>>(input: S) -> impl Stream<Item = Output<'a>> {
+pub async fn parse_ansi<'a, S: Stream<Item = String>>(input: S) -> impl Stream<Item = Output> {
     stream! {
         let mut current_location_until_pending_string: usize = 0;
-        let mut pending_string: &'a str = "";
+        let mut pending_string: String = "".to_string();
 
         for await value in input {
-            let mut tmp = pending_string.to_string();
-            tmp.push_str(value.as_str());
+            // let mut tmp = pending_string.to_string();
+            pending_string.push_str(value.as_str());
             // TODO - should use different way to ensure the lifetime of the string
-            let tmp: &'a mut str = tmp.leak();
+            // let tmp: &'a mut str = tmp.leak();
 
-            pending_string = tmp;
+            // pending_string = tmp;
 
             while let Some(loc) = pending_string.find('\u{1b}') {
                 // If in the middle than split to before the escape code and after and keep the after for the next iteration
                 if loc != 0 {
-                    let temp = &pending_string[..loc];
+                    let temp = pending_string[..loc].to_string();
                     let text_location = current_location_until_pending_string;
 
                     current_location_until_pending_string += loc;
-                    pending_string = &pending_string[loc..];
+                    pending_string = pending_string[loc..].to_string();
 
                     yield Output::TextBlock(Text {
                         text: temp,
@@ -163,11 +163,13 @@ pub async fn parse_ansi<'a, S: Stream<Item = String>>(input: S) -> impl Stream<I
                 
                 // If the beginning of the string is the key for escape code
                 let pending_text_size_before = pending_string.len();
-                let res = parse_escape(&pending_string[loc..]);
+                let str = pending_string.clone();
+                let str = str.as_str();
+                let res = parse_escape(&str[loc..]);
 
                 // If there is escape code after the escape key
                 if let Ok(ret) = res { 
-                    pending_string = ret.0;
+                    pending_string = ret.0.to_string();
                     current_location_until_pending_string += pending_text_size_before - pending_string.len();
                     yield Output::Escape(ret.1);
                     continue;
@@ -181,9 +183,9 @@ pub async fn parse_ansi<'a, S: Stream<Item = String>>(input: S) -> impl Stream<I
                     let loc = loc + 1;
                     let text_location = current_location_until_pending_string;
 
-                    let temp = &pending_string[..loc];
+                    let temp = pending_string[..loc].to_string();
                     current_location_until_pending_string += old_loc + loc;
-                    pending_string = &pending_string[loc..];
+                    pending_string = pending_string[loc..].to_string();
 
                     yield Output::TextBlock(Text {
                         text: temp,
@@ -205,8 +207,8 @@ pub async fn parse_ansi<'a, S: Stream<Item = String>>(input: S) -> impl Stream<I
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Text<'a> {
-    pub(crate) text: &'a str,
+pub struct Text {
+    pub(crate) text: String,
     pub(crate) location_in_text: usize,
 }
 
@@ -214,14 +216,14 @@ pub struct Text<'a> {
 ///Each block contains either straight-up text, or simply
 ///an ANSI escape sequence.
 #[derive(Debug, Clone, PartialEq)]
-pub enum Output<'a> {
+pub enum Output {
     // TODO - remove
     IgnoreMe,
-    TextBlock(Text<'a>),
+    TextBlock(Text),
     Escape(AnsiSequence),
 }
 
-impl<'a> Display for Output<'a> {
+impl<'a> Display for Output {
     fn fmt(&self, formatter: &mut Formatter) -> DisplayResult {
         use Output::*;
         match self {
@@ -270,15 +272,15 @@ mod tests {
 
         let expected = vec![
             Output::TextBlock(Text {
-                text: "abc",
+                text: "abc".to_string(),
                 location_in_text: input.find("abc").unwrap(),
             }),
             Output::TextBlock(Text {
-                text: "d\nef\ng",
+                text: "d\nef\ng".to_string(),
                 location_in_text: input.find("d\nef\ng").unwrap(),
             }),
             Output::TextBlock(Text {
-                text: "hij",
+                text: "hij".to_string(),
                 location_in_text: input.find("hij").unwrap(),
             }),
         ];
@@ -305,15 +307,15 @@ mod tests {
 
         let expected = vec![
             Output::TextBlock(Text {
-                text: "abc",
+                text: "abc".to_string(),
                 location_in_text: chunks.find("abc").unwrap(),
             }),
             Output::TextBlock(Text {
-                text: "d\nef\ng",
+                text: "d\nef\ng".to_string(),
                 location_in_text: chunks.find("d\nef\ng").unwrap(),
             }),
             Output::TextBlock(Text {
-                text: "hij",
+                text: "hij".to_string(),
                 location_in_text: chunks.find("hij").unwrap(),
             }),
         ];
@@ -343,15 +345,15 @@ mod tests {
 
         let expected = vec![
             Output::TextBlock(Text {
-                text: "abc",
+                text: "abc".to_string(),
                 location_in_text: input.find("abc").unwrap(),
             }),
             Output::TextBlock(Text {
-                text: "d\nef\ng",
+                text: "d\nef\ng".to_string(),
                 location_in_text: input.find("d\nef\ng").unwrap(),
             }),
             Output::TextBlock(Text {
-                text: "hij",
+                text: "hij".to_string(),
                 location_in_text: input.find("hij").unwrap(),
             }),
         ];
@@ -381,15 +383,15 @@ mod tests {
 
         let expected = vec![
             Output::TextBlock(Text {
-                text: "abc",
+                text: "abc".to_string(),
                 location_in_text: chunks.find("abc").unwrap(),
             }),
             Output::TextBlock(Text {
-                text: "d\nef\ng",
+                text: "d\nef\ng".to_string(),
                 location_in_text: chunks.find("d\nef\ng").unwrap(),
             }),
             Output::TextBlock(Text {
-                text: "hij",
+                text: "hij".to_string(),
                 location_in_text: chunks.find("hij").unwrap(),
             }),
         ];

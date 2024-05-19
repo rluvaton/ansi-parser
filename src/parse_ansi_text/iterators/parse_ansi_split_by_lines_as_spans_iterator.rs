@@ -49,7 +49,7 @@ impl<'a> Iterator for ParseAnsiAsSpansByLinesIterator<'a> {
             match output {
                 Output::IgnoreMe => {}
                 Output::TextBlock(text) => {
-                    self.current_span.text.push_str(text.text);
+                    self.current_span.text.push_str(text.text.as_str());
 
                     // If have new line than get
                     if self.current_span.text.contains("\n") {
@@ -313,7 +313,7 @@ impl<'a> ParseAnsiAsSpansByLinesIterator<'a> {
     }
 }
 
-pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output<'a>>>(
+pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output>>(
     input: S,
     options: ParseOptions,
 ) -> impl Stream<Item = Line> {
@@ -330,7 +330,7 @@ pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output<'
             match output {
                 Output::IgnoreMe => {}
                 Output::TextBlock(text) => {
-                    current_span.text.push_str(text.text);
+                    current_span.text.push_str(text.text.as_str());
                     let mut from_index = text.location_in_text;
 
                     // If have new line than get

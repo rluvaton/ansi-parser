@@ -24,3 +24,4 @@ futures-util = "0.3.30"
 tokio = { version = "1.37.0", features = ["rt", "rt-multi-thread", "macros", "fs", "io-util"] }
 tokio-stream = "0.1.15"
 futures = "0.3.30"
+nom = "7.1.3"

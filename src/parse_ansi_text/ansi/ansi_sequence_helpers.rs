@@ -1,5 +1,6 @@
-use ansi_parser::AnsiSequence;
+// use ansi_parser::AnsiSequence;
 use crate::parse_ansi_text::ansi::colors::*;
+use crate::parse_ansi_text::ansi::enums::AnsiSequence;
 use crate::parse_ansi_text::ansi::style::*;
 
 pub enum AnsiSequenceType {
@@ -11,6 +12,60 @@ pub enum AnsiSequenceType {
     TextStyle(TextStyle),
 }
 
+pub fn old_ansi_sequence_to_new(seq: ansi_parser::AnsiSequence) -> AnsiSequence {
+    match seq {
+        ansi_parser::AnsiSequence::Escape => AnsiSequence::Text("\u{1b}".to_string()),
+        ansi_parser::AnsiSequence::CursorPos(a, b) => AnsiSequence::CursorPos(a, b),
+        ansi_parser::AnsiSequence::CursorUp(a) => AnsiSequence::CursorUp(a),
+        ansi_parser::AnsiSequence::CursorDown(a) => AnsiSequence::CursorDown(a),
+        ansi_parser::AnsiSequence::CursorForward(a) => AnsiSequence::CursorForward(a),
+        ansi_parser::AnsiSequence::CursorBackward(a) => AnsiSequence::CursorBackward(a),
+        ansi_parser::AnsiSequence::CursorSave => AnsiSequence::CursorSave,
+        ansi_parser::AnsiSequence::CursorRestore => AnsiSequence::CursorRestore,
+        ansi_parser::AnsiSequence::EraseDisplay => AnsiSequence::EraseDisplay,
+        ansi_parser::AnsiSequence::EraseLine => AnsiSequence::EraseLine,
+        ansi_parser::AnsiSequence::SetGraphicsMode(a) => AnsiSequence::SetGraphicsMode(a),
+        ansi_parser::AnsiSequence::SetMode(a) => AnsiSequence::SetMode(a),
+        ansi_parser::AnsiSequence::ResetMode(a) => AnsiSequence::ResetMode(a),
+        ansi_parser::AnsiSequence::HideCursor => AnsiSequence::HideCursor,
+        ansi_parser::AnsiSequence::ShowCursor => AnsiSequence::ShowCursor,
+        ansi_parser::AnsiSequence::CursorToApp => AnsiSequence::CursorToApp,
+        ansi_parser::AnsiSequence::SetNewLineMode => AnsiSequence::SetNewLineMode,
+        ansi_parser::AnsiSequence::SetCol132 => AnsiSequence::SetCol132,
+        ansi_parser::AnsiSequence::SetSmoothScroll => AnsiSequence::SetSmoothScroll,
+        ansi_parser::AnsiSequence::SetReverseVideo => AnsiSequence::SetReverseVideo,
+        ansi_parser::AnsiSequence::SetOriginRelative => AnsiSequence::SetOriginRelative,
+        ansi_parser::AnsiSequence::SetAutoWrap => AnsiSequence::SetAutoWrap,
+        ansi_parser::AnsiSequence::SetAutoRepeat => AnsiSequence::SetAutoRepeat,
+        ansi_parser::AnsiSequence::SetInterlacing => AnsiSequence::SetInterlacing,
+        ansi_parser::AnsiSequence::SetLineFeedMode => AnsiSequence::SetLineFeedMode,
+        ansi_parser::AnsiSequence::SetCursorKeyToCursor => AnsiSequence::SetCursorKeyToCursor,
+        ansi_parser::AnsiSequence::SetVT52 => AnsiSequence::SetVT52,
+        ansi_parser::AnsiSequence::SetCol80 => AnsiSequence::SetCol80,
+        ansi_parser::AnsiSequence::SetJumpScrolling => AnsiSequence::SetJumpScrolling,
+        ansi_parser::AnsiSequence::SetNormalVideo => AnsiSequence::SetNormalVideo,
+        ansi_parser::AnsiSequence::SetOriginAbsolute => AnsiSequence::SetOriginAbsolute,
+        ansi_parser::AnsiSequence::ResetAutoWrap => AnsiSequence::ResetAutoWrap,
+        ansi_parser::AnsiSequence::ResetAutoRepeat => AnsiSequence::ResetAutoRepeat,
+        ansi_parser::AnsiSequence::ResetInterlacing => AnsiSequence::ResetInterlacing,
+        ansi_parser::AnsiSequence::SetAlternateKeypad => AnsiSequence::SetAlternateKeypad,
+        ansi_parser::AnsiSequence::SetNumericKeypad => AnsiSequence::SetNumericKeypad,
+        ansi_parser::AnsiSequence::SetUKG0 => AnsiSequence::SetUKG0,
+        ansi_parser::AnsiSequence::SetUKG1 => AnsiSequence::SetUKG1,
+        ansi_parser::AnsiSequence::SetUSG0 => AnsiSequence::SetUSG0,
+        ansi_parser::AnsiSequence::SetUSG1 => AnsiSequence::SetUSG1,
+        ansi_parser::AnsiSequence::SetG0SpecialChars => AnsiSequence::SetG0SpecialChars,
+        ansi_parser::AnsiSequence::SetG1SpecialChars => AnsiSequence::SetG1SpecialChars,
+        ansi_parser::AnsiSequence::SetG0AlternateChar => AnsiSequence::SetG0AlternateChar,
+        ansi_parser::AnsiSequence::SetG1AlternateChar => AnsiSequence::SetG1AlternateChar,
+        ansi_parser::AnsiSequence::SetG0AltAndSpecialGraph => AnsiSequence::SetG0AltAndSpecialGraph,
+        ansi_parser::AnsiSequence::SetG1AltAndSpecialGraph => AnsiSequence::SetG1AltAndSpecialGraph,
+        ansi_parser::AnsiSequence::SetSingleShift2 => AnsiSequence::SetSingleShift2,
+        ansi_parser::AnsiSequence::SetSingleShift3 => AnsiSequence::SetSingleShift3,
+        ansi_parser::AnsiSequence::SetTopAndBottom(a, b) => AnsiSequence::SetTopAndBottom(a, b),
+    }
+}
+
 pub fn get_type_from_ansi_sequence(seq: &AnsiSequence) -> AnsiSequenceType {
     if !is_ansi_sequence_code_supported(&seq) {
         println!("Unsupported ansi sequence: {:?}", seq);
@@ -18,25 +73,25 @@ pub fn get_type_from_ansi_sequence(seq: &AnsiSequence) -> AnsiSequenceType {
     }
 
     // println!("Supported Ansi sequence: {:?}", seq);
-    
+
     // Instead of match as we only support single, change to if not set graphics mode panic
 
     match seq {
         // TODO - what it means?
         AnsiSequence::SetGraphicsMode(vec) => {
             // println!("SetGraphicsMode: {:?}", vec);
-            
+
             if vec.len() == 0 {
                 println!("Unrecognized graphics mode: {:?}", vec);
                 return AnsiSequenceType::Unsupported;
             }
-            
+
             if vec[0] == 0 {
                 return AnsiSequenceType::Reset;
             }
-            
+
             let color_type = get_color_type(vec);
-            
+
             // TODO - should replace here default with none color?
             match color_type {
                 ColorType::Foreground(color) => {
@@ -44,24 +99,24 @@ pub fn get_type_from_ansi_sequence(seq: &AnsiSequence) -> AnsiSequenceType {
                 }
                 ColorType::Background(color) => {
                     return AnsiSequenceType::BackgroundColor(color);
-                
+
                 }
                 _ => {}
             }
-            
-            
+
+
             let brightness = get_brightness_type(vec[0]);
-            
+
             if brightness != Brightness::None {
                 return AnsiSequenceType::Brightness(brightness);
             }
-            
+
             let style = get_text_style_type(vec[0]);
-            
+
             if style != TextStyle::None {
                 return AnsiSequenceType::TextStyle(style);
             }
-            
+
             println!("Unrecognized graphics mode: {:?}", vec);
         },
 
@@ -70,12 +125,13 @@ pub fn get_type_from_ansi_sequence(seq: &AnsiSequence) -> AnsiSequenceType {
             panic!("supported ANSI sequence have no handling: {:?}", seq);
         }
     }
-    
+
     return AnsiSequenceType::Unsupported;
 }
 
 pub fn is_ansi_sequence_code_supported(seq: &AnsiSequence) -> bool {
     let supported = match seq {
+        AnsiSequence::Text(_) => true,
 
         // TODO - what it means?
         AnsiSequence::SetGraphicsMode(_) => true,
@@ -85,7 +141,7 @@ pub fn is_ansi_sequence_code_supported(seq: &AnsiSequence) -> bool {
         // TODO - change to _ for all unsupported
 
         // TODO - what it means?
-        AnsiSequence::Escape => false,
+        // AnsiSequence::Escape => false,
 
         // TODO - what it means?
         AnsiSequence::SetMode(_) => false,

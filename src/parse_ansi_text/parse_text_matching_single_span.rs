@@ -2,9 +2,7 @@ use std::iter::Iterator;
 
 use ansi_parser::{AnsiParser, Output};
 
-use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{
-    get_type_from_ansi_sequence, AnsiSequenceType,
-};
+use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{get_type_from_ansi_sequence, AnsiSequenceType, old_ansi_sequence_to_new};
 use crate::parse_ansi_text::ansi::colors::Color;
 use crate::parse_ansi_text::ansi::types::Span;
 
@@ -20,7 +18,7 @@ pub fn parse_text_matching_single_span(text: &str) -> Span {
                 span.text.push_str(text);
             }
             Output::Escape(seq) => {
-                let sequence_type = get_type_from_ansi_sequence(&seq);
+                let sequence_type = get_type_from_ansi_sequence(&old_ansi_sequence_to_new(seq));
 
                 match sequence_type {
                     AnsiSequenceType::Unsupported => {

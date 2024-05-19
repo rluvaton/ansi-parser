@@ -1,10 +1,11 @@
-use tokio_stream::{Stream, StreamExt};
 use async_stream::stream;
 use std::fmt::{Display, Formatter, Result as DisplayResult};
 use std::path::PathBuf;
+use tokio_stream::{Stream, StreamExt};
 
 use crate::files::iterators::create_file_iterator;
-use ansi_parser::{parse_escape, AnsiSequence};
+use crate::parse_ansi_text::ansi::enums::AnsiSequence;
+use crate::parse_ansi_text::ansi::parsers::parse_escape;
 
 pub struct AnsiParseIterator<'a> {
     pending_string: &'a str,
@@ -136,68 +137,58 @@ pub async fn parse_ansi<'a, S: Stream<Item = String>>(input: S) -> impl Stream<I
     stream! {
         let mut current_location_until_pending_string: usize = 0;
         let mut pending_string: String = "".to_string();
-
+        let mut last_text_block: Option<Text> = None;
+        
         for await value in input {
-            // let mut tmp = pending_string.to_string();
             pending_string.push_str(value.as_str());
-            // TODO - should use different way to ensure the lifetime of the string
-            // let tmp: &'a mut str = tmp.leak();
 
-            // pending_string = tmp;
-
-            while let Some(loc) = pending_string.find('\u{1b}') {
-                // If in the middle than split to before the escape code and after and keep the after for the next iteration
-                if loc != 0 {
-                    let temp = pending_string[..loc].to_string();
+            let mut buf = pending_string.as_str();
+            loop {
+                let pending_text_size_before = buf.len();
+                
+                match parse_escape(buf) {
+                  Ok((pending, seq)) => {
+                    buf = pending;
                     let text_location = current_location_until_pending_string;
+                        
+                    current_location_until_pending_string += pending_text_size_before - buf.len();
 
-                    current_location_until_pending_string += loc;
-                    pending_string = pending_string[loc..].to_string();
-
-                    yield Output::TextBlock(Text {
-                        text: temp,
-                        location_in_text: text_location
-                    });
-                    continue;
+                    match seq {
+                      AnsiSequence::Text(str) => {
+                        if last_text_block.is_none() {
+                            last_text_block = Some(Text {
+                              text: str,
+                              location_in_text: text_location,
+                            });
+                        } else {
+                            last_text_block.as_mut().unwrap().text.push_str(str.as_str());
+                        }
+                      },
+                      _ => {
+                         if last_text_block.is_some() {
+                            yield Output::TextBlock(last_text_block.unwrap());
+                            last_text_block = None;
+                         }
+                        yield Output::Escape(seq);
+                     },
+                    }
+                  }
+                  Err(_) => {
+                        break;
+                  },
                 }
-                
-                // If the beginning of the string is the key for escape code
-                let pending_text_size_before = pending_string.len();
-                let str = pending_string.clone();
-                let str = str.as_str();
-                let res = parse_escape(&str[loc..]);
-
-                // If there is escape code after the escape key
-                if let Ok(ret) = res { 
-                    pending_string = ret.0.to_string();
-                    current_location_until_pending_string += pending_text_size_before - pending_string.len();
-                    yield Output::Escape(ret.1);
-                    continue;
-                }
-                
-                // If no escape code after the escape key
-                let old_loc = loc;
-                let pos = pending_string[(loc + 1)..].find('\u{1b}');
-                if let Some(loc) = pos { // If there is escape key also exists in the middle of the string then split to before the escape code and from it to the end of the string
-                    //Added to because it's based one character ahead
-                    let loc = loc + 1;
-                    let text_location = current_location_until_pending_string;
-
-                    let temp = pending_string[..loc].to_string();
-                    current_location_until_pending_string += old_loc + loc;
-                    pending_string = pending_string[loc..].to_string();
-
-                    yield Output::TextBlock(Text {
-                        text: temp,
-                        location_in_text: text_location,
-                    });
-                }
-                
-                break;
             }
+            pending_string = buf.to_string();
         }
         
-        if !pending_string.is_empty() {
+         if last_text_block.is_some() {
+            let mut text_block = last_text_block.unwrap();
+            if !pending_string.is_empty() {
+                text_block.text.push_str(pending_string.as_str());
+            }
+            
+            yield Output::TextBlock(text_block);
+         } else if !pending_string.is_empty() {
             yield Output::TextBlock(Text {
                 text: pending_string,
                 location_in_text: current_location_until_pending_string,
@@ -205,7 +196,6 @@ pub async fn parse_ansi<'a, S: Stream<Item = String>>(input: S) -> impl Stream<I
         }
     }
 }
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct Text {
     pub(crate) text: String,
@@ -236,9 +226,9 @@ impl<'a> Display for Output {
 
 #[cfg(test)]
 mod tests {
+    use crate::compose_streams;
     use futures_util::stream;
     use pretty_assertions::assert_eq;
-    use crate::{compose_streams};
 
     use crate::parse_ansi_text::ansi::colors::*;
     use crate::parse_ansi_text::ansi::constants::RESET_CODE;
@@ -256,7 +246,7 @@ mod tests {
             YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng" + RESET_CODE,
             CYAN_FOREGROUND_CODE.to_string() + "hij" + RESET_CODE,
         ]
-            .join("");
+        .join("");
 
         let chars = CharsIterator {
             index: 0,
@@ -295,8 +285,8 @@ mod tests {
             YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng" + RESET_CODE,
             CYAN_FOREGROUND_CODE.to_string() + "hij" + RESET_CODE,
         ]
-            .join("")
-            .to_string();
+        .join("")
+        .to_string();
 
         let lines: Vec<Output> = AnsiParseIterator::create_from_str(chunks.clone())
             .filter(|item| match item {
@@ -332,16 +322,16 @@ mod tests {
             YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng" + RESET_CODE,
             CYAN_FOREGROUND_CODE.to_string() + "hij" + RESET_CODE,
         ]
-            .join("");
+        .join("");
 
-        let lines: Vec<Output> = compose_streams!(
-            || chars_stream(input.clone()),
-            parse_ansi
-        ).await.filter(|item| match item {
-            Output::TextBlock(_) => true,
-            (_) => false,
-        })
-            .collect().await;
+        let lines: Vec<Output> = compose_streams!(|| chars_stream(input.clone()), parse_ansi)
+            .await
+            .filter(|item| match item {
+                Output::TextBlock(_) => true,
+                (_) => false,
+            })
+            .collect()
+            .await;
 
         let expected = vec![
             Output::TextBlock(Text {
@@ -368,18 +358,18 @@ mod tests {
             YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng" + RESET_CODE,
             CYAN_FOREGROUND_CODE.to_string() + "hij" + RESET_CODE,
         ]
-            .join("")
-            .to_string();
+        .join("")
+        .to_string();
 
-
-        let lines: Vec<Output> = compose_streams!(
-            || stream::iter(vec![chunks.clone()]),
-            parse_ansi
-        ).await.filter(|item| match item {
-            Output::TextBlock(_) => true,
-            (_) => false,
-        })
-            .collect().await;
+        let lines: Vec<Output> =
+            compose_streams!(|| stream::iter(vec![chunks.clone()]), parse_ansi)
+                .await
+                .filter(|item| match item {
+                    Output::TextBlock(_) => true,
+                    (_) => false,
+                })
+                .collect()
+                .await;
 
         let expected = vec![
             Output::TextBlock(Text {
@@ -393,6 +383,47 @@ mod tests {
             Output::TextBlock(Text {
                 text: "hij".to_string(),
                 location_in_text: chunks.find("hij").unwrap(),
+            }),
+        ];
+
+        assert_eq!(lines, expected);
+    }
+
+    #[tokio::test]
+    async fn streams_split_to_lines_should_work_for_split_by_chars_when_text_have_escape_code_used_without_data(
+    ) {
+        let input = "";
+
+        let input = vec![
+            // Adding \x1B which is the escape code to make sure treated as text
+            RED_FOREGROUND_CODE.to_string() + "a\x1Bbc" + RESET_CODE,
+            // Added \x1B before escape code to make sure treated as text
+            YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng\x1B" + RESET_CODE,
+            CYAN_FOREGROUND_CODE.to_string() + "hij" + RESET_CODE,
+        ]
+        .join("");
+
+        let lines: Vec<Output> = compose_streams!(|| chars_stream(input.clone()), parse_ansi)
+            .await
+            .filter(|item| match item {
+                Output::TextBlock(_) => true,
+                (_) => false,
+            })
+            .collect()
+            .await;
+
+        let expected = vec![
+            Output::TextBlock(Text {
+                text: "a\x1Bbc".to_string(),
+                location_in_text: input.find("a\x1Bbc").unwrap(),
+            }),
+            Output::TextBlock(Text {
+                text: "d\nef\ng\x1B".to_string(),
+                location_in_text: input.find("d\nef\ng\x1B").unwrap(),
+            }),
+            Output::TextBlock(Text {
+                text: "hij".to_string(),
+                location_in_text: input.find("hij").unwrap(),
             }),
         ];
 

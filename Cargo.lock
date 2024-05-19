@@ -50,6 +50,7 @@ dependencies = [
  "futures-util",
  "get_chunk",
  "heapless",
+ "nom",
  "pretty_assertions",
  "serde",
  "serde_json",

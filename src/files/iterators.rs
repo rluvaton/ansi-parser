@@ -8,8 +8,7 @@ pub fn create_file_iterator(input_file_path: PathBuf) -> Box<dyn Iterator<Item =
 
     let file_iter = FileIter::try_from(input_file).expect("create input file iterator failed");
     let file_string_iterator = file_iter.into_iter().map(|item| {
-        String::from_utf8(item.expect("Failed to get file chunk"))
-            .expect("Converting file chunk to UTF-8 string failed")
+        String::from_utf8_lossy(item.expect("Failed to get file chunk").as_ref()).to_string()
     });
 
     return Box::new(file_string_iterator);
@@ -34,9 +33,8 @@ pub fn create_file_iterator_from_to_locations(
     }
 
     if to_line.is_none() {
-        let file_string_iterator = file_iter.into_iter().map(|item| {
-            String::from_utf8(item.expect("Failed to get file chunk"))
-                .expect("Converting file chunk to UTF-8 string failed")
+        let file_string_iterator = file_iter.into_iter().map(|item| { 
+            String::from_utf8_lossy(item.expect("Failed to get file chunk").as_ref()).to_string()
         });
 
         return Box::new(file_string_iterator);
@@ -72,14 +70,10 @@ pub fn create_file_iterator_from_to_locations(
             // Making sure trimming is done to the correct item
             item_map_index += 1;
             if should_trim && item_index == item_map_index {
-                return String::from_utf8(
-                    item.expect("Failed to get file chunk")[..trim_size].to_vec(),
-                )
-                    .expect("Converting file chunk to UTF-8 string failed");
+                return String::from_utf8_lossy(item.expect("Failed to get file chunk")[..trim_size].as_ref()).to_string();
             }
 
-            String::from_utf8(item.expect("Failed to get file chunk"))
-                .expect("Converting file chunk to UTF-8 string failed")
+            return String::from_utf8_lossy(item.expect("Failed to get file chunk").as_ref()).to_string();
         });
 
     return Box::new(file_string_iterator);

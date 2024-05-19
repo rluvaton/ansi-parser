@@ -3,6 +3,8 @@
 // this means that should support both Vec<Span> and Vec<Vec<Span>>
 
 use std::iter::Iterator;
+use async_stream::stream;
+use futures_core::Stream;
 use crate::parse_ansi_text::ansi::types::{Span, SpanJson};
 
 pub struct SpansJsonDisplay<IteratorType> {
@@ -55,6 +57,34 @@ impl<IteratorType> Iterator for SpansJsonDisplay<IteratorType>
         }
 
         return None;
+    }
+}
+
+
+pub async fn spans_valid_json<S: Stream<Item = Span>>(input: S) -> impl Stream<Item = String> {
+    stream! {
+        let mut yielded_first_item = false;
+        yield "[\n".to_string();
+        
+        // Can replace the loop here with just json line single span, as it's the same thing
+        for await span in input {
+            let mut str: &str = "";
+            
+            if yielded_first_item {
+                // Print from prev object
+                str = ",";
+            }
+
+
+            yielded_first_item = true;
+            let span_json = SpanJson::create_from_span(&span);
+            let span_json_str = serde_json::to_string(&span_json).unwrap();
+
+            yield str.to_string() + span_json_str.as_str();
+        }
+        
+        yield "\n]".to_string();
+        
     }
 }
 

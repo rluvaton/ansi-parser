@@ -56,5 +56,4 @@ fn create_line_map(line: Line) -> Vec<u8> {
 
     
     return [initial_style_for_line_ansi_string.as_bytes(), first_part_padding.as_bytes(), location_in_file.as_slice(), DELIMITER.as_bytes()].concat();
-
 }

@@ -12,14 +12,19 @@ mod parse_ansi_text;
 mod mapping_file;
 mod cli;
 mod iterators;
+mod streams_helpers;
+mod files;
+mod test_utils;
 
-fn main() {
+
+#[tokio::main]
+async fn main() {
     let matches = get_cli().get_matches();
     
     let command = matches.subcommand_name().expect("Should have been able to get the command");
     
     if command == "parse" {
-        run_parse_command(matches.subcommand_matches("parse").expect("Should have been able to get the parse subcommand"));
+        run_parse_command(matches.subcommand_matches("parse").expect("Should have been able to get the parse subcommand")).await;
     } else if(command == "mapping") {
         let matches = matches.subcommand_matches("mapping").expect("Should have been able to get the mapping subcommand");
         

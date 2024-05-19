@@ -39,7 +39,7 @@ pub fn get_cli() -> Command {
                 // TODO - this should not be possible when split-lines is false
                 PossibleValue::new("flat-json-line").help([
                     "Each line of output is a valid JSON, there are no commas between lines and the output is not wrapped with [ and ].",
-                    "Object with property type: 'new line' will be printed between lines to mark new line",
+                    "Object { \"type\": \"new line\" } will be printed between lines to mark new line",
                     "Only available when 'split-lines' is enabled",
                 ].join("\n")),
             ]))

@@ -1,5 +1,4 @@
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::fs::File as File;
 use std::path::PathBuf;
 
 use get_chunk::iterator::FileIter;
@@ -68,7 +67,6 @@ pub fn create_file_iterator_from_to_locations(
             current += len;
             return current < end;
         })
-
         // Converting to string while also trimming the last item if needed
         .map(move |item| {
             // Making sure trimming is done to the correct item
@@ -77,7 +75,7 @@ pub fn create_file_iterator_from_to_locations(
                 return String::from_utf8(
                     item.expect("Failed to get file chunk")[..trim_size].to_vec(),
                 )
-                .expect("Converting file chunk to UTF-8 string failed");
+                    .expect("Converting file chunk to UTF-8 string failed");
             }
 
             String::from_utf8(item.expect("Failed to get file chunk"))

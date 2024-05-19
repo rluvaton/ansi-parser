@@ -1,24 +1,33 @@
 use std::cmp::max;
 use std::ffi::OsString;
+use std::iter::Iterator;
 use std::path::PathBuf;
+use std::pin::Pin;
+
+use futures::pin_mut;
+use futures_core::Stream;
+use futures_util::stream::StreamExt;
 
 use crate::cli::format::flat_json_line_span_lines::*;
 use crate::cli::format::json_line_single_span::*;
 use crate::cli::format::json_line_span_lines::*;
-use crate::cli::format::json_single_span::*;
+use crate::cli::format::json_single_span::spans_valid_json;
 use crate::cli::format::json_span_lines::*;
-use crate::iterators::file_iterator_helpers::{create_file_iterator_from_to_locations};
+use crate::compose_async_steams;
+use crate::files::streams::{read_file_by_chunks, read_file_by_chunks_from_to_locations};
 use crate::mapping_file::read::{get_line_metadata_from_file, get_mapping_file_ready_to_read};
+use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::parse_ansi;
 use crate::parse_ansi_text::iterators::parse_ansi_as_spans_iterator::*;
-use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::{Line, ParseAnsiAsSpansByLinesIterator};
+use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::{convert_ansi_output_to_lines_of_spans, Line};
 use crate::parse_ansi_text::parse_options::ParseOptions;
+use crate::streams_helpers::unwrap_items;
 
 // TODO - in order to save memory and not read the entire file to memory
 //        we should have a way to have an iterator over the file that yield the spans
 //        currently, the parse_ansi lib is not designed to work with iterators
 //        so we need to yield the current span and the next span
 
-pub fn run_parse_command(matches: &clap::ArgMatches) {
+pub async fn run_parse_command(matches: &clap::ArgMatches) {
     let split_by_lines = *matches.get_one::<bool>("split-lines").unwrap();
 
     let from_line = matches.get_one::<usize>("from-line");
@@ -41,19 +50,30 @@ pub fn run_parse_command(matches: &clap::ArgMatches) {
     if !split_by_lines && flat_json_line_output_format {
         panic!("'flat-json-line' option is only available when 'split-lines' is enabled");
     }
+    
 
-    let mut output_iterator: Box<dyn Iterator<Item=String>>;
-
+    let output_iterator: Pin<Box<dyn Stream<Item=String>>>;
+    
     if !split_by_lines {
-        let parse_ansi_as_spans_iterator = ParseAnsiAsSpansIterator::create_from_file_path(
-            buf_file_path,
-            ParseOptions::default(),
+
+        let parsed_ansi = compose_async_steams!(
+            // TODO - change this chunks
+            || read_file_by_chunks(&file_path, 1024),
+            unwrap_items,
+            parse_ansi,
+            |output| convert_ansi_output_to_spans(output, ParseOptions::default())
         );
-        
+
         if json_output_format {
-            output_iterator = Box::new(parse_ansi_as_spans_iterator.to_span_json());
+            output_iterator = Box::pin(compose_async_steams!(
+                || parsed_ansi,
+                spans_valid_json
+            ).await);
         } else if json_line_output_format {
-            output_iterator = Box::new(parse_ansi_as_spans_iterator.to_span_json_line());
+            output_iterator = Box::pin(compose_async_steams!(
+                || parsed_ansi,
+                spans_json_line
+            ).await);
         } else {
             panic!("Invalid format")
         }
@@ -64,48 +84,62 @@ pub fn run_parse_command(matches: &clap::ArgMatches) {
             from_line,
             to_line,
         );
-        
         if json_output_format {
-            output_iterator = Box::new(parse_ansi_as_spans_iterator.to_json_string_in_span_lines());
+            output_iterator = Box::pin(compose_async_steams!(
+                || parse_ansi_as_spans_iterator,
+                spans_lines_valid_json
+            ).await);
         } else if json_line_output_format {
-            output_iterator = Box::new(parse_ansi_as_spans_iterator.to_json_line_string_in_span_lines());
+            output_iterator = Box::pin(compose_async_steams!(
+                || parse_ansi_as_spans_iterator,
+                spans_lines_json_lines
+            ).await);
         } else if flat_json_line_output_format {
-            output_iterator = Box::new(parse_ansi_as_spans_iterator.to_flat_json_line_string_in_span_lines());
+            output_iterator = Box::pin(compose_async_steams!(
+                || parse_ansi_as_spans_iterator,
+                spans_lines_flat_json_lines
+            ).await);
         } else {
             panic!("Invalid format")
         }
     }
-    
-    print_strings_to_stdout(output_iterator);
+
+    pin_mut!(output_iterator); // needed for iteration
+
+    while let Some(value) = output_iterator.next().await {
+        println!("{}", value);
+    }
 }
 
-fn print_strings_to_stdout<I>(strings: I)
-where
-    I: IntoIterator,
-    I::Item: AsRef<str>,
-{
-    for s in strings {
-        println!("{}", s.as_ref());
+
+async fn print_stream_of_strings_to_stdout<S: Stream<Item=String>>(stream: S) {
+    pin_mut!(stream); // needed for iteration
+
+    while let Some(value) = stream.next().await {
+        println!("got {}", value);
     }
 }
 
 // TODO - return iterator instead of Vec for better performance to not wait for the entire file to be read or load it to memory
-fn get_spans_in_range_if_needed_from_file_path<'a>(
+async fn get_spans_in_range_if_needed_from_file_path<'a>(
     file_path: PathBuf,
     mapping_file_path: Option<&String>,
     from_line: Option<&usize>,
     to_line: Option<&usize>,
-) -> Box<dyn Iterator<Item = Line>> {
+) -> Pin<Box<dyn Stream<Item=Line>>> {
     if from_line.is_none() && to_line.is_none() {
-        return Box::new(ParseAnsiAsSpansByLinesIterator::create_from_file_path(
-            file_path,
-            ParseOptions::default(),
-        ));
+        return Box::pin(compose_async_steams!(
+            // TODO - change this chunks
+            || read_file_by_chunks(&file_path.to_str().unwrap(), 1024),
+            unwrap_items,
+            parse_ansi,
+            |output| convert_ansi_output_to_lines_of_spans(output, ParseOptions::default())
+        ).await);
     }
 
     if mapping_file_path.is_none() {
         // Using slow path since we calculate everything
-        return get_spans_in_range_without_mapping_file(file_path, from_line, to_line);
+        return Box::pin(get_spans_in_range_without_mapping_file(file_path, from_line, to_line).await);
     }
 
     let from_line_value = *from_line.unwrap_or(&0);
@@ -142,44 +176,44 @@ fn get_spans_in_range_if_needed_from_file_path<'a>(
         to_line_index_in_file = Some(to_line_metadata.unwrap().location_in_original_file);
     }
 
-    let file_iterator_in_range = create_file_iterator_from_to_locations(
-        PathBuf::from(OsString::from(file_path)),
-        from_line_index_in_file,
-        to_line_index_in_file,
-    );
-
-    return Box::new(
-        ParseAnsiAsSpansByLinesIterator::create_from_string_iterator(
-            file_iterator_in_range,
-            ParseOptions::default().with_initial_span(from_line_metadata.unwrap().initial_span),
-        ),
-    );
+    return Box::pin(compose_async_steams!(
+        // TODO - change this chunks
+        || read_file_by_chunks_from_to_locations(&file_path.to_str().unwrap(), 1024, from_line_index_in_file, to_line_index_in_file,),
+        unwrap_items,
+        parse_ansi,
+        |output| convert_ansi_output_to_lines_of_spans(output, ParseOptions::default().with_initial_span(from_line_metadata.unwrap().initial_span))
+    ).await);
 }
 
 // TODO - return iterator instead of Vec for better performance to not wait for the entire file to be read or load it to memory
-fn get_spans_in_range_without_mapping_file<'a>(
+async fn get_spans_in_range_without_mapping_file<'a>(
     file_path: PathBuf,
     from_line: Option<&usize>,
     to_line: Option<&usize>,
-) -> Box<dyn Iterator<Item = Line>> {
-    let iterator =
-        ParseAnsiAsSpansByLinesIterator::create_from_file_path(file_path, ParseOptions::default());
+) -> Pin<Box<dyn Stream<Item=Line>>> {
+    let lines_stream = compose_async_steams!(
+            // TODO - change this chunks
+            || read_file_by_chunks(&file_path.to_str().unwrap(), 1024),
+            unwrap_items,
+            parse_ansi,
+            |output| convert_ansi_output_to_lines_of_spans(output, ParseOptions::default())
+        ).await;
 
     if from_line.is_some() && to_line.is_some() {
-        return Box::new(
-            iterator
+        return Box::pin(lines_stream
                 .skip(max(*from_line.unwrap(), 1) - 1)
-                .take(*to_line.unwrap() - *from_line.unwrap() as usize),
-        );
+                .take(*to_line.unwrap() - *from_line.unwrap()));
     }
 
     if from_line.is_some() {
-        return Box::new(iterator.skip(*from_line.unwrap() as usize - 1));
+        return Box::pin(lines_stream
+            .skip(max(*from_line.unwrap(), 1) - 1));
     }
 
     if to_line.is_some() {
-        return Box::new(iterator.take(*to_line.unwrap() as usize));
+        return Box::pin(lines_stream
+            .take(*to_line.unwrap() - *from_line.unwrap()));
     }
 
-    return Box::new(iterator);
+    return Box::pin(lines_stream);
 }

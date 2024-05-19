@@ -3,8 +3,12 @@
 // this means that should support both Vec<Span> and Vec<Vec<Span>>
 
 use std::iter::Iterator;
+use async_stream::stream;
+use futures_core::Stream;
+use futures_util::stream;
 
-use crate::cli::format::json_single_span::SpansJsonDisplay;
+use crate::cli::format::json_single_span::{spans_valid_json, SpansJsonDisplay};
+use crate::parse_ansi_text::ansi::types::SpanJson;
 use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::Line;
 
 pub struct SpansLineJsonLineDisplay<'a, IteratorType> {
@@ -58,6 +62,19 @@ impl<'a, IteratorType> Iterator for SpansLineJsonLineDisplay<'a, IteratorType>
         }
 
         return None;
+    }
+}
+pub async fn spans_lines_json_lines<S: Stream<Item = Line>>(input: S) -> impl Stream<Item = String> {
+    stream! {
+        for await line in input {
+            let str = line.spans.iter().map(|span| {
+                let span_json = SpanJson::create_from_span(&span);
+                let span_json_str = serde_json::to_string(&span_json).unwrap();
+                span_json_str
+            }).collect::<Vec<String>>().join(",");
+            
+            yield "[".to_string() + str.as_str() + "]";
+        }
     }
 }
 

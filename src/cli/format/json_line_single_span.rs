@@ -1,4 +1,6 @@
 use std::iter::Iterator;
+use async_stream::stream;
+use futures_core::Stream;
 use crate::parse_ansi_text::ansi::types::{Span, SpanJson};
 
 pub struct SpansJsonLineDisplay<IteratorType> {
@@ -33,6 +35,18 @@ impl<IteratorType> Iterator for SpansJsonLineDisplay<IteratorType>
         }
 
         return None;
+    }
+}
+
+pub async fn spans_json_line<S: Stream<Item = Span>>(input: S) -> impl Stream<Item = String> {
+    stream! {
+        // Can replace the loop here with just json line single span, as it's the same thing
+        for await span in input {
+            let span_json = SpanJson::create_from_span(&span);
+            let span_json_str = serde_json::to_string(&span_json).unwrap();
+
+            yield span_json_str;
+        }
     }
 }
 

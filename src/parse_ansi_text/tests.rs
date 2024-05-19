@@ -10,29 +10,29 @@ mod tests {
     use crate::parse_ansi_text::ansi::types::*;
     use crate::parse_ansi_text::parse_options::ParseOptions;
 
-    #[test]
-    fn empty_text_should_return_empty_array() {
+    #[tokio::test]
+    async fn empty_text_should_return_empty_array() {
         let input = "";
         let expected = vec![];
-        assert_eq!(parse_ansi_text(input), expected);
+        assert_eq!(parse_ansi_text(input).await, expected);
     }
 
     // -------------
     // No ANSI codes
     // -------------
 
-    #[test]
-    fn single_text_without_ansi_codes_should_return_array_with_one_unstyled_span() {
+    #[tokio::test]
+    async fn single_text_without_ansi_codes_should_return_array_with_one_unstyled_span() {
         let input = "Hello, world!";
         let expected = vec![Span::empty().with_text("Hello, world!".to_string())];
-        assert_eq!(parse_ansi_text(input), expected);
+        assert_eq!(parse_ansi_text(input).await, expected);
     }
 
-    #[test]
-    fn multiline_text_without_ansi_codes_should_return_array_with_one_unstyled_span() {
+    #[tokio::test]
+    async fn multiline_text_without_ansi_codes_should_return_array_with_one_unstyled_span() {
         let input = "Hello, world!\nhow are you";
         let expected = vec![Span::empty().with_text("Hello, world!\nhow are you".to_string())];
-        assert_eq!(parse_ansi_text(input), expected);
+        assert_eq!(parse_ansi_text(input).await, expected);
     }
 
     // -------------
@@ -58,12 +58,12 @@ mod tests {
     #[test_case(Color::BrightMagenta, BRIGHT_MAGENTA_FOREGROUND_CODE ; "Bright Magenta foreground")]
     #[test_case(Color::BrightCyan, BRIGHT_CYAN_FOREGROUND_CODE ; "Bright Cyan foreground")]
     #[test_case(Color::BrightWhite, BRIGHT_WHITE_FOREGROUND_CODE ; "Bright White foreground")]
-    fn single_foreground_color_with_no_other_styles(expected_color: Color, color_code: &str) {
+    async fn single_foreground_color_with_no_other_styles(expected_color: Color, color_code: &str) {
         let input = [color_code, "Hello, world!", RESET_CODE].join("");
         let expected = vec![Span::empty()
             .with_color(expected_color)
             .with_text("Hello, world!".to_string())];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
     #[test_case(Color::Red, RED_BACKGROUND_CODE ; "Red background")]
@@ -82,19 +82,19 @@ mod tests {
     #[test_case(Color::BrightMagenta, BRIGHT_MAGENTA_BACKGROUND_CODE ; "Bright Magenta background")]
     #[test_case(Color::BrightCyan, BRIGHT_CYAN_BACKGROUND_CODE ; "Bright Cyan background")]
     #[test_case(Color::BrightWhite, BRIGHT_WHITE_BACKGROUND_CODE ; "Bright White background")]
-    fn single_background_color_with_no_other_styles(expected_color: Color, color_code: &str) {
+    async fn single_background_color_with_no_other_styles(expected_color: Color, color_code: &str) {
         let input = [color_code, "Hello, world!", RESET_CODE].join("");
         let expected = vec![Span::empty()
             .with_bg_color(expected_color)
             .with_text("Hello, world!".to_string())];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
     #[test_case(TextStyle::Italic, ITALIC_CODE ; "Italic text")]
     #[test_case(TextStyle::Underline, UNDERLINE_CODE ; "Underline text")]
     #[test_case(TextStyle::Inverse, INVERSE_CODE ; "Inverse text")]
     #[test_case(TextStyle::Strikethrough, STRIKETHROUGH_CODE ; "Strikethrough text")]
-    fn single_text_style_with_no_other_styles(
+    async fn single_text_style_with_no_other_styles(
         expected_text_style: TextStyle,
         text_style_code: &str,
     ) {
@@ -102,12 +102,12 @@ mod tests {
         let expected = vec![Span::empty()
             .with_text_style(expected_text_style)
             .with_text("Hello, world!".to_string())];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
     #[test_case(Brightness::Bold, BOLD_CODE ; "Bold text")]
     #[test_case(Brightness::Dim, DIM_CODE ; "Dim text")]
-    fn single_brightness_with_no_other_styles(
+    async fn single_brightness_with_no_other_styles(
         expected_brightness: Brightness,
         brightness_code: &str,
     ) {
@@ -115,15 +115,15 @@ mod tests {
         let expected = vec![Span::empty()
             .with_brightness(expected_brightness)
             .with_text("Hello, world!".to_string())];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
     // -----------------------------------------------------------------------
     // color/brightness override when no text before and without reset
     // -----------------------------------------------------------------------
 
-    #[test]
-    fn foreground_color_should_replace_prev_foreground_color_when_no_text_in_between() {
+    #[tokio::test]
+    async fn foreground_color_should_replace_prev_foreground_color_when_no_text_in_between() {
         let input = [
             BLACK_FOREGROUND_CODE,
             RED_FOREGROUND_CODE,
@@ -139,11 +139,11 @@ mod tests {
             brightness: Brightness::None,
             text_style: TextStyle::None,
         }];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn background_color_should_replace_prev_background_color_when_no_text_in_between() {
+    #[tokio::test]
+    async fn background_color_should_replace_prev_background_color_when_no_text_in_between() {
         let input = [
             BLACK_BACKGROUND_CODE,
             RED_BACKGROUND_CODE,
@@ -159,11 +159,11 @@ mod tests {
             brightness: Brightness::None,
             text_style: TextStyle::None,
         }];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn brightness_should_replace_prev_brightness_when_no_text_in_between() {
+    #[tokio::test]
+    async fn brightness_should_replace_prev_brightness_when_no_text_in_between() {
         let input = [BOLD_CODE, DIM_CODE, "Hello, world!", RESET_CODE].join("");
         let expected = vec![Span {
             brightness: Brightness::Dim,
@@ -173,15 +173,15 @@ mod tests {
             text: "Hello, world!".to_string(),
             text_style: TextStyle::None,
         }];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
     // -----------------------------------------------------------------------
     // style override when no text before and with reset
     // -----------------------------------------------------------------------
 
-    #[test]
-    fn foreground_color_should_replace_prev_foreground_color_after_reset_when_no_text_in_between() {
+    #[tokio::test]
+    async fn foreground_color_should_replace_prev_foreground_color_after_reset_when_no_text_in_between() {
         let input = [
             BLACK_FOREGROUND_CODE,
             RESET_CODE,
@@ -198,11 +198,11 @@ mod tests {
             brightness: Brightness::None,
             text_style: TextStyle::None,
         }];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn background_color_should_replace_prev_background_color_after_reset_when_no_text_in_between() {
+    #[tokio::test]
+    async fn background_color_should_replace_prev_background_color_after_reset_when_no_text_in_between() {
         let input = [
             BLACK_BACKGROUND_CODE,
             RESET_CODE,
@@ -219,11 +219,11 @@ mod tests {
             brightness: Brightness::None,
             text_style: TextStyle::None,
         }];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn brightness_should_replace_prev_brightness_after_reset_when_no_text_in_between() {
+    #[tokio::test]
+    async fn brightness_should_replace_prev_brightness_after_reset_when_no_text_in_between() {
         let input = [BOLD_CODE, RESET_CODE, DIM_CODE, "Hello, world!", RESET_CODE].join("");
         let expected = vec![Span {
             brightness: Brightness::Dim,
@@ -233,11 +233,11 @@ mod tests {
             text: "Hello, world!".to_string(),
             text_style: TextStyle::None,
         }];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn text_style_should_replace_prev_text_style_after_reset_when_no_text_in_between() {
+    #[tokio::test]
+    async fn text_style_should_replace_prev_text_style_after_reset_when_no_text_in_between() {
         let input = [
             ITALIC_CODE,
             RESET_CODE,
@@ -254,15 +254,15 @@ mod tests {
             brightness: Brightness::None,
             text: "Hello, world!".to_string(),
         }];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
     // ---------------------------------------------------------------------------------------
     // Color/Style/Brightness changed after some text without reset and no other style before
     // ---------------------------------------------------------------------------------------
 
-    #[test]
-    fn when_foreground_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_foreground_color(
+    #[tokio::test]
+    async fn when_foreground_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_foreground_color(
     ) {
         let input = [
             BLACK_FOREGROUND_CODE,
@@ -290,11 +290,11 @@ mod tests {
                 text_style: TextStyle::None,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_rgb_values_in_foreground_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_foreground_color(
+    #[tokio::test]
+    async fn when_rgb_values_in_foreground_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_foreground_color(
     ) {
         let input = [
             RGB_FOREGROUND_CODE(188, 29, 68).as_str(),
@@ -322,11 +322,11 @@ mod tests {
                 text_style: TextStyle::None,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_background_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_background_color(
+    #[tokio::test]
+    async fn when_background_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_background_color(
     ) {
         let input = [
             BLACK_BACKGROUND_CODE,
@@ -354,11 +354,11 @@ mod tests {
                 text_style: TextStyle::None,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_rgb_background_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_background_color(
+    #[tokio::test]
+    async fn when_rgb_background_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_background_color(
     ) {
         let input = [
             RGB_BACKGROUND_CODE(188, 29, 68).as_str(),
@@ -386,11 +386,11 @@ mod tests {
                 text_style: TextStyle::None,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_brightness_change_after_some_text_without_reset_should_create_a_new_span_with_new_brightness(
+    #[tokio::test]
+    async fn when_brightness_change_after_some_text_without_reset_should_create_a_new_span_with_new_brightness(
     ) {
         let input = [
             BOLD_CODE,
@@ -418,11 +418,11 @@ mod tests {
                 text_style: TextStyle::None,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_text_style_change_after_some_text_without_reset_should_create_a_new_span_with_merged_text_style(
+    #[tokio::test]
+    async fn when_text_style_change_after_some_text_without_reset_should_create_a_new_span_with_merged_text_style(
     ) {
         let input = [
             ITALIC_CODE,
@@ -450,15 +450,15 @@ mod tests {
                 color: Color::None,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
     // ----------------------------------------------------------------------------------------------
     // Color/Style/Brightness changed after some text without text afterward with other style before
     // ----------------------------------------------------------------------------------------------
 
-    #[test]
-    fn when_foreground_color_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_foreground_color(
+    #[tokio::test]
+    async fn when_foreground_color_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_foreground_color(
     ) {
         let input = [
             ITALIC_CODE,
@@ -489,11 +489,11 @@ mod tests {
                 text_style: TextStyle::Italic,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_background_color_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_background_color(
+    #[tokio::test]
+    async fn when_background_color_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_background_color(
     ) {
         let input = [
             ITALIC_CODE,
@@ -524,11 +524,11 @@ mod tests {
                 text_style: TextStyle::Italic,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_brightness_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_brightness(
+    #[tokio::test]
+    async fn when_brightness_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_brightness(
     ) {
         let input = [
             ITALIC_CODE,
@@ -559,11 +559,11 @@ mod tests {
                 text_style: TextStyle::Italic,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_text_style_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_merged_text_style(
+    #[tokio::test]
+    async fn when_text_style_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_merged_text_style(
     ) {
         let input = [
             WHITE_FOREGROUND_CODE,
@@ -594,15 +594,15 @@ mod tests {
                 brightness: Brightness::Bold,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
     // ------------------------------------------------------------------------------------------
     // Color/Style/Brightness first set after some text without reset with no other style before
     // ------------------------------------------------------------------------------------------
 
-    #[test]
-    fn when_foreground_color_added_after_some_text_without_reset_should_create_a_new_span_with_new_foreground_color(
+    #[tokio::test]
+    async fn when_foreground_color_added_after_some_text_without_reset_should_create_a_new_span_with_new_foreground_color(
     ) {
         let input = [
             "Hello, world!",
@@ -629,11 +629,11 @@ mod tests {
                 text_style: TextStyle::None,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_background_color_added_after_some_text_without_reset_should_create_a_new_span_with_new_background_color(
+    #[tokio::test]
+    async fn when_background_color_added_after_some_text_without_reset_should_create_a_new_span_with_new_background_color(
     ) {
         let input = [
             "Hello, world!",
@@ -660,11 +660,11 @@ mod tests {
                 text_style: TextStyle::None,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_brightness_added_after_some_text_without_reset_should_create_a_new_span_with_new_brightness(
+    #[tokio::test]
+    async fn when_brightness_added_after_some_text_without_reset_should_create_a_new_span_with_new_brightness(
     ) {
         let input = ["Hello, world!", DIM_CODE, "How are you?", RESET_CODE].join("");
         let expected = vec![
@@ -685,11 +685,11 @@ mod tests {
                 text_style: TextStyle::None,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_text_style_added_after_some_text_without_reset_should_create_a_new_span_with_new_text_style(
+    #[tokio::test]
+    async fn when_text_style_added_after_some_text_without_reset_should_create_a_new_span_with_new_text_style(
     ) {
         let input = ["Hello, world!", UNDERLINE_CODE, "How are you?", RESET_CODE].join("");
         let expected = vec![
@@ -710,15 +710,15 @@ mod tests {
                 color: Color::None,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
     // ------------------------------------------------------------------------------------------------
     // Color/Style/Brightness first set after some text without text afterward with other style before
     // ------------------------------------------------------------------------------------------------
 
-    #[test]
-    fn when_foreground_color_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_foreground_color(
+    #[tokio::test]
+    async fn when_foreground_color_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_foreground_color(
     ) {
         let input = [
             ITALIC_CODE,
@@ -748,11 +748,11 @@ mod tests {
                 text_style: TextStyle::Italic,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_background_color_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_background_color(
+    #[tokio::test]
+    async fn when_background_color_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_background_color(
     ) {
         let input = [
             ITALIC_CODE,
@@ -782,11 +782,11 @@ mod tests {
                 text_style: TextStyle::Italic,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_brightness_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_brightness(
+    #[tokio::test]
+    async fn when_brightness_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_brightness(
     ) {
         let input = [
             ITALIC_CODE,
@@ -816,11 +816,11 @@ mod tests {
                 text_style: TextStyle::Italic,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_text_style_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_text_style(
+    #[tokio::test]
+    async fn when_text_style_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_text_style(
     ) {
         let input = [
             DIM_CODE,
@@ -850,15 +850,15 @@ mod tests {
                 brightness: Brightness::Dim,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
     // --------------------------------------------------------------------------------------------
     // Color/Style/Brightness first set after some text without text afterward with no other style
     // --------------------------------------------------------------------------------------------
 
-    #[test]
-    fn when_foreground_color_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span(
+    #[tokio::test]
+    async fn when_foreground_color_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span(
     ) {
         let input = ["Hello, world!", RED_FOREGROUND_CODE].join("");
         let expected = vec![Span {
@@ -869,11 +869,11 @@ mod tests {
             brightness: Brightness::None,
             text_style: TextStyle::None,
         }];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_background_color_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span(
+    #[tokio::test]
+    async fn when_background_color_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span(
     ) {
         let input = ["Hello, world!", RED_BACKGROUND_CODE].join("");
         let expected = vec![Span {
@@ -884,11 +884,11 @@ mod tests {
             brightness: Brightness::None,
             text_style: TextStyle::None,
         }];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_brightness_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span(
+    #[tokio::test]
+    async fn when_brightness_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span(
     ) {
         let input = ["Hello, world!", DIM_CODE].join("");
         let expected = vec![Span {
@@ -899,11 +899,11 @@ mod tests {
             bg_color: Color::None,
             text_style: TextStyle::None,
         }];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
-    #[test]
-    fn when_text_style_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span(
+    #[tokio::test]
+    async fn when_text_style_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span(
     ) {
         let input = ["Hello, world!", UNDERLINE_CODE].join("");
         let expected = vec![Span {
@@ -914,15 +914,15 @@ mod tests {
             brightness: Brightness::None,
             color: Color::None,
         }];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
     // ------------------------------------------------------------
     // Style combination
     // ------------------------------------------------------------
 
-    #[test]
-    fn should_append_text_styles() {
+    #[tokio::test]
+    async fn should_append_text_styles() {
         let input = [
             ITALIC_CODE,
             UNDERLINE_CODE,
@@ -943,15 +943,15 @@ mod tests {
             color: Color::None,
             brightness: Brightness::None,
         }];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
     // -----------------------------------------------------------------------------------------------------
     // Style added after text should create a new span with the same color/brightness and merged text style
     // -----------------------------------------------------------------------------------------------------
 
-    #[test]
-    fn style_added_after_text_should_create_new_span_and_merge_with_style_before() {
+    #[tokio::test]
+    async fn style_added_after_text_should_create_new_span_and_merge_with_style_before() {
         let input = [
             ITALIC_CODE,
             UNDERLINE_CODE,
@@ -980,14 +980,14 @@ mod tests {
                 brightness: Brightness::None,
             },
         ];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
     #[test_case(RED_FOREGROUND_CODE ; "Red foreground added after text again")]
     #[test_case(GREEN_BACKGROUND_CODE ; "Green background added after text again")]
     #[test_case(ITALIC_CODE ; "Italic text added after text again")]
     #[test_case(DIM_CODE ; "Dim text added after text again")]
-    fn same_style_apply_after_text_should_not_create_new_span_for_next_text(same_style_code: &str) {
+    async fn same_style_apply_after_text_should_not_create_new_span_for_next_text(same_style_code: &str) {
         let input = [
             RED_FOREGROUND_CODE,
             GREEN_BACKGROUND_CODE,
@@ -1008,15 +1008,15 @@ mod tests {
             bg_color: Color::Green,
             brightness: Brightness::Dim,
         }];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
     // -------------------------------
     // Parse options with initial span
     // -------------------------------
 
-    #[test]
-    fn span_should_have_the_same_style_as_the_initial_span() {
+    #[tokio::test]
+    async fn span_should_have_the_same_style_as_the_initial_span() {
         let input = ["Hello, world!", RESET_CODE].join("");
         let expected = vec![Span {
             color: Color::Red,
@@ -1031,13 +1031,13 @@ mod tests {
             ParseOptions::default().with_initial_span(Span::empty().with_color(Color::Red));
 
         assert_eq!(
-            parse_ansi_text_with_options(&input, parse_options),
+            parse_ansi_text_with_options(&input, parse_options).await,
             expected
         );
     }
 
-    #[test]
-    fn non_first_spans_should_not_have_the_same_style_as_the_initial_span() {
+    #[tokio::test]
+    async fn non_first_spans_should_not_have_the_same_style_as_the_initial_span() {
         let input = ["Hello, world!", RESET_CODE, "How are you?"].join("");
         let expected = vec![
             Span {
@@ -1062,7 +1062,7 @@ mod tests {
             ParseOptions::default().with_initial_span(Span::empty().with_color(Color::Red));
 
         assert_eq!(
-            parse_ansi_text_with_options(&input, parse_options),
+            parse_ansi_text_with_options(&input, parse_options).await,
             expected
         );
     }
@@ -1071,8 +1071,8 @@ mod tests {
     // Parse options with split by lines
     // ----------------------------------
 
-    #[test]
-    fn spans_should_have_same_style_when_split_by_line() {
+    #[tokio::test]
+    async fn spans_should_have_same_style_when_split_by_line() {
         let input = [
             &*RGB_BACKGROUND_CODE(188, 29, 68),
             &*RGB_FOREGROUND_CODE(255, 19, 94),
@@ -1110,13 +1110,13 @@ mod tests {
             ParseOptions::default().with_initial_span(Span::empty().with_color(Color::Red));
 
         assert_eq!(
-            parse_ansi_text_split_by_lines(&input, parse_options),
+            parse_ansi_text_split_by_lines(&input, parse_options).await,
             expected
         );
     }
 
-    #[test]
-    fn multiple_styles() {
+    #[tokio::test]
+    async fn multiple_styles() {
         let input = [
             &*RGB_BACKGROUND_CODE(188, 29, 68),
             &*RGB_FOREGROUND_CODE(255, 19, 94),
@@ -1134,6 +1134,6 @@ mod tests {
             brightness: Brightness::Bold,
             text_style: TextStyle::Italic | TextStyle::Underline,
         }];
-        assert_eq!(parse_ansi_text(&input), expected);
+        assert_eq!(parse_ansi_text(&input).await, expected);
     }
 }

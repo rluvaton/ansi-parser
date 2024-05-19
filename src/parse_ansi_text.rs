@@ -1,11 +1,15 @@
 use ansi_parser::AnsiParser;
 
+use futures::stream::StreamExt;
 use ansi::types::Span;
-use crate::parse_ansi_text::iterators::parse_ansi_as_spans_iterator::ParseAnsiAsSpansIterator;
-use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::{Line, ParseAnsiAsSpansByLinesIterator};
+use crate::compose_async_steams;
+use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::parse_ansi;
+use crate::parse_ansi_text::iterators::parse_ansi_as_spans_iterator::{convert_ansi_output_to_spans, ParseAnsiAsSpansIterator};
+use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::{convert_ansi_output_to_lines_of_spans, Line, ParseAnsiAsSpansByLinesIterator};
 use crate::parse_ansi_text::iterators::playground_iterator::CharsIterator;
 
 use crate::parse_ansi_text::parse_options::ParseOptions;
+use crate::test_utils::{async_chars_stream, async_stream_from_vector};
 
 mod tests;
 pub mod parse_options;
@@ -15,7 +19,7 @@ pub mod ansi;
 
 // TODO - remove convert string to iterator - done this to test that the iterator works
 
-pub fn parse_ansi_text(str: &str) -> Vec<Span> {
+pub async fn parse_ansi_text(str: &str) -> Vec<Span> {
     //Parse the first two blocks in the list
     //By parsing it this way, it allows you to iterate over the
     //elements returned.
@@ -23,27 +27,34 @@ pub fn parse_ansi_text(str: &str) -> Vec<Span> {
     //The parser only every holds a reference to the data,
     //so there is no allocation.
 
-    
-    let output: Vec<Span> = ParseAnsiAsSpansIterator::create_from_string_iterator(Box::new(CharsIterator {
-        index: 0,
-        str: str.to_string(),
-    }), ParseOptions::default()).collect::<Vec<Span>>();
+    let output: Vec<Span> = compose_async_steams!(
+        || async_chars_stream(str.to_string()),
+        parse_ansi,
+        |output| convert_ansi_output_to_spans(output, ParseOptions::default())
+    ).await.collect::<Vec<Span>>().await;
     
     return output;
 }
 
-pub fn parse_ansi_text_with_options(str: &str, options: ParseOptions) -> Vec<Span> {
-    let output: Vec<Span> = ParseAnsiAsSpansIterator::create_from_string_iterator(Box::new(CharsIterator {
-        index: 0,
-        str: str.to_string(),
-    }), options).collect::<Vec<Span>>();
+pub async fn parse_ansi_text_with_options(str: &str, options: ParseOptions) -> Vec<Span> {
+    let output: Vec<Span> = compose_async_steams!(
+        || async_chars_stream(str.to_string()),
+        parse_ansi,
+        |output| convert_ansi_output_to_spans(output, options)
+    ).await.collect::<Vec<Span>>().await;
 
     return output;
 }
 
-pub fn parse_ansi_text_split_by_lines(str: &str, options: ParseOptions) -> Vec<Line> {
-    return ParseAnsiAsSpansByLinesIterator::create_from_string_iterator(Box::new(CharsIterator {
-        index: 0,
-        str: str.to_string(),
-    }), options).collect();
+pub async fn parse_ansi_text_split_by_lines(str: &str, options: ParseOptions) -> Vec<Line> {
+    return compose_async_steams!(
+        || async_chars_stream(str.to_string()),
+        parse_ansi,
+        |output| convert_ansi_output_to_lines_of_spans(output, options)
+    ).await.collect::<Vec<Line>>().await;
+    // 
+    // return ParseAnsiAsSpansByLinesIterator::create_from_string_iterator(Box::new(CharsIterator {
+    //     index: 0,
+    //     str: str.to_string(),
+    // }), options).collect();
 }

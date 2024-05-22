@@ -1,6 +1,5 @@
 use std::cmp::max;
 use std::ffi::OsString;
-use std::iter::Iterator;
 use std::path::PathBuf;
 use std::pin::Pin;
 

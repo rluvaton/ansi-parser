@@ -100,7 +100,7 @@ pub fn get_cli() -> Command {
             .required(true)
             .value_hint(ValueHint::FilePath)
             .help("mapping file to output"));
-    ;
+    
 
     let mapping_command = Command::new("mapping")
         .about("Mapping file for easy access")

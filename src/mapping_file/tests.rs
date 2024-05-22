@@ -5,10 +5,12 @@ mod tests {
     use tempfile::*;
     use crate::mapping_file::create::*;
     use crate::mapping_file::read::*;
-    use crate::mapping_file::*;
     use pretty_assertions::assert_eq;
+    use crate::mapping_file::constants::*;
+    use crate::parse_ansi_text::ansi::colors::*;
 
     use crate::parse_ansi_text::ansi::constants::RESET_CODE;
+    use crate::parse_ansi_text::ansi::style::*;
     use crate::parse_ansi_text::parse_text_matching_single_span::parse_text_matching_single_span;
     use crate::parse_ansi_text::ansi::types::Span;
 

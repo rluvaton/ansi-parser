@@ -501,8 +501,6 @@ mod tests {
 
     #[test]
     fn iterators_split_to_lines_should_work_for_split_by_chars() {
-        let input = "";
-
         let input = vec![
             RED_FOREGROUND_CODE.to_string() + "abc" + RESET_CODE,
             YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng" + RESET_CODE,
@@ -613,8 +611,6 @@ mod tests {
     
     #[tokio::test]
     async fn steams_split_to_lines_should_work_for_split_by_chars() {
-        let input = "";
-
         let input = vec![
             RED_FOREGROUND_CODE.to_string() + "abc" + RESET_CODE,
             YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng" + RESET_CODE,

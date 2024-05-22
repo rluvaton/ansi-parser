@@ -239,8 +239,6 @@ mod tests {
 
     #[test]
     fn iterator_split_to_lines_should_work_for_split_by_chars() {
-        let input = "";
-
         let input = vec![
             RED_FOREGROUND_CODE.to_string() + "abc" + RESET_CODE,
             YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng" + RESET_CODE,
@@ -256,7 +254,7 @@ mod tests {
         let lines: Vec<Output> = AnsiParseIterator::create(Box::new(chars))
             .filter(|item| match item {
                 Output::TextBlock(_) => true,
-                (_) => false,
+                _ => false,
             })
             .collect();
 
@@ -291,7 +289,7 @@ mod tests {
         let lines: Vec<Output> = AnsiParseIterator::create_from_str(chunks.clone())
             .filter(|item| match item {
                 Output::TextBlock(_) => true,
-                (_) => false,
+                _ => false,
             })
             .collect();
 
@@ -328,7 +326,7 @@ mod tests {
             .await
             .filter(|item| match item {
                 Output::TextBlock(_) => true,
-                (_) => false,
+                _ => false,
             })
             .collect()
             .await;
@@ -366,7 +364,7 @@ mod tests {
                 .await
                 .filter(|item| match item {
                     Output::TextBlock(_) => true,
-                    (_) => false,
+                    _ => false,
                 })
                 .collect()
                 .await;
@@ -407,7 +405,7 @@ mod tests {
             .await
             .filter(|item| match item {
                 Output::TextBlock(_) => true,
-                (_) => false,
+                _ => false,
             })
             .collect()
             .await;

@@ -274,7 +274,6 @@ mod tests {
             text_style: TextStyle::None,
             brightness: Brightness::None,
         };
-        let span = original_span.clone().with_text("".to_string());
         assert_eq!(original_span, Span {
             text: "Hello, world!".to_string(),
 

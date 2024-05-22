@@ -117,8 +117,6 @@ mod tests {
 
     #[test]
     fn split_to_lines_should_work() {
-        let input = "";
-
         let chunks = vec!["abc".to_string(), "d\nef\ng".to_string(), "hij".to_string()];
         let lines: Vec<String> = chunks.into_iter().to_lines().collect();
 

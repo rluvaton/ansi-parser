@@ -74,7 +74,7 @@ pub async fn run_parse_command(matches: &clap::ArgMatches) {
             panic!("Invalid format")
         }
     } else {
-        let mut parse_ansi_as_spans_iterator = get_spans_in_range_if_needed_from_file_path(
+        let parse_ansi_as_spans_iterator = get_spans_in_range_if_needed_from_file_path(
             buf_file_path.clone(),
             mapping_file,
             from_line,

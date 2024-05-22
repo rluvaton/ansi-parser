@@ -1,4 +1,4 @@
-use std::fmt::Display;
+
 use std::io;
 use std::iter::Iterator;
 
@@ -6,7 +6,7 @@ use get_chunk::iterator::FileIter;
 
 use crate::parse_ansi_text::ansi::colors::{BLACK_BACKGROUND_CODE, RED_BACKGROUND_CODE};
 use crate::parse_ansi_text::ansi::constants::RESET_CODE;
-use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::AnsiParseIterator;
+
 
 // TODO - change type here
 fn run() -> io::Result<u8> {
@@ -30,10 +30,10 @@ fn run() -> io::Result<u8> {
         "Goodbye".to_string(),
         " world!".to_string(),
     ];
-    let iterator = RandomStringsIterator { vec: input_chunks, index: 0 };
+    let _iterator = RandomStringsIterator { vec: input_chunks, index: 0 };
 
 
-    let file_iter = FileIter::new("file.txt")?;
+    let _file_iter = FileIter::new("file.txt")?;
 
     // or
     // let file_iter = FileIter::try_from(File::open("file.txt")?)?;

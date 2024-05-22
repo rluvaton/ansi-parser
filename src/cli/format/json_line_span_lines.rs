@@ -5,9 +5,9 @@
 use std::iter::Iterator;
 use async_stream::stream;
 use futures_core::Stream;
-use futures_util::stream;
 
-use crate::cli::format::json_single_span::{spans_valid_json, SpansJsonDisplay};
+
+use crate::cli::format::json_single_span::{SpansJsonDisplay};
 use crate::parse_ansi_text::ansi::types::SpanJson;
 use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::Line;
 

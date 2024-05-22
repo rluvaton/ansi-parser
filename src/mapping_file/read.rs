@@ -13,7 +13,7 @@ pub struct MappingItem {
 }
 
 pub fn get_initial_style_for_line(mapping_text: String, line_number: usize) -> Option<MappingItem> {
-    if(line_number < 1) {
+    if line_number < 1 {
         panic!("Line number must be at least 1");
     }
 
@@ -31,14 +31,14 @@ pub fn get_initial_style_for_line(mapping_text: String, line_number: usize) -> O
 
     let offset_in_text = content_start_offset + ((line_number - 1) * line_length);
 
-    if(offset_in_text >= mapping_text.len()) {
+    if offset_in_text >= mapping_text.len() {
         println!("Invalid mapping, line number is missing");
 
         // TODO - throw instead of returning None
         return None;
     }
 
-    if(offset_in_text + line_length > mapping_text.len()) {
+    if offset_in_text + line_length > mapping_text.len() {
         println!("Invalid mapping, each line is not the same length");
         
         // TODO - throw instead of returning None
@@ -62,7 +62,7 @@ pub fn get_initial_style_for_line(mapping_text: String, line_number: usize) -> O
 
 
 pub fn get_line_metadata_from_file_path(file_path: PathBuf, line_number: usize) -> Option<MappingItem> {
-    if(line_number < 1) {
+    if line_number < 1 {
         panic!("Line number must be at least 1");
     }
 
@@ -73,7 +73,7 @@ pub fn get_line_metadata_from_file_path(file_path: PathBuf, line_number: usize) 
 
 // This is useful when wanting to avoid opening the file multiple times - like reading block of lines
 pub fn get_line_metadata_from_file(file: &mut File, line_number: usize, content_start_offset: usize, line_length: usize) -> Option<MappingItem> {
-    if(line_number < 1) {
+    if line_number < 1 {
         panic!("Line number must be at least 1");
     }
 

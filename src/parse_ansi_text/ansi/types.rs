@@ -1,5 +1,5 @@
-use std::ops::BitAnd;
-use serde::{Deserialize, Serialize, Serializer};
+
+use serde::{Serialize, Serializer};
 use crate::parse_ansi_text::ansi::colors::{Color, convert_color_type_to_ansi_code, get_rgb_values_from_8_bit};
 use crate::parse_ansi_text::ansi::colors::ColorType::{Background, Foreground};
 use crate::parse_ansi_text::ansi::style::{BOLD_CODE, Brightness, DIM_CODE, INVERSE_CODE, ITALIC_CODE, STRIKETHROUGH_CODE, TextStyle, UNDERLINE_CODE};
@@ -80,7 +80,7 @@ impl Span {
     
     pub fn with_color(mut self, color: Color) -> Span {
         // Set default color as none
-        if(matches!(color, Color::Default)) {
+        if matches!(color, Color::Default) {
             self.color = Color::None;
         } else {
             self.color = color;
@@ -90,7 +90,7 @@ impl Span {
     
     pub fn with_bg_color(mut self, bg_color: Color) -> Span {
         // Default color is None
-        if(matches!(bg_color, Color::Default)) {
+        if matches!(bg_color, Color::Default) {
             self.bg_color = Color::None;
         } else {
             self.bg_color = bg_color;

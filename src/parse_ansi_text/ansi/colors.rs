@@ -222,7 +222,7 @@ pub fn get_color_type(vec: &Vec<u8, U5>) -> ColorType {
             6 => Color::Cyan,
             7 => Color::White,
             8 => {
-                if(vec.len() < 2) {
+                if vec.len() < 2 {
                     panic!("Invalid Color code {:?}", vec);
                 }
 
@@ -231,7 +231,7 @@ pub fn get_color_type(vec: &Vec<u8, U5>) -> ColorType {
                 match color_type {
                     // RGB
                     2 => {
-                        let mut color: Color;
+                        let color: Color;
                         if vec.len() < 5 {
                             println!("Invalid RGB color code: {:?}", vec);
                             color = Color::None;
@@ -243,7 +243,7 @@ pub fn get_color_type(vec: &Vec<u8, U5>) -> ColorType {
                     },
                     // 8-bit color
                     5 => {
-                        let mut color: Color;
+                        let color: Color;
 
                         if vec.len() < 3 {
                             println!("Invalid 8bit color code: {:?}", vec);

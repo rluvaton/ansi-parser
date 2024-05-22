@@ -55,7 +55,7 @@ pub fn create_file_iterator_from_to_locations(
             item_index += 1;
             let len = item.as_ref().expect("Failed to get file chunk").len();
 
-            if (current + len > end && current < end) {
+            if current + len > end && current < end {
                 should_trim = true;
                 trim_size = end - current;
 

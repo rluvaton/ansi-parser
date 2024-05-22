@@ -49,7 +49,7 @@ pub async fn read_file_by_chunks_tokio(
 
 pub async fn read_file_by_chunks(
     file_path: &str,
-    chunk_size: usize,
+    _chunk_size: usize,
 ) -> impl Stream<Item = io::Result<String>> {
     let input_file_path = PathBuf::from(OsString::from(file_path));
     let input_file = std::fs::File::open(input_file_path).expect("opening input file path failed");

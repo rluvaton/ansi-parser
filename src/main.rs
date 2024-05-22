@@ -2,7 +2,7 @@ extern crate clap;
 
 use std::env;
 
-use ansi_parser;
+
 
 use crate::cli::definition::get_cli;
 use crate::cli::mapping_file_command::run_create_mapping_file_command;
@@ -25,7 +25,7 @@ async fn main() {
     
     if command == "parse" {
         run_parse_command(matches.subcommand_matches("parse").expect("Should have been able to get the parse subcommand")).await;
-    } else if(command == "mapping") {
+    } else if command == "mapping" {
         let matches = matches.subcommand_matches("mapping").expect("Should have been able to get the mapping subcommand");
         
         let command = matches.subcommand_name().expect("Should have been able to get the mapping subcommand");

@@ -64,7 +64,7 @@ impl Display for AnsiSequence {
         use AnsiSequence::*;
         match self {
             Text(text) => write!(formatter, "{}", text),
-            Escape => write!(formatter, "\u{1b}"),
+            _Escape => write!(formatter, "\u{1b}"),
             CursorPos(line, col) => write!(formatter, "[{};{}H", line, col),
             CursorUp(amt) => write!(formatter, "[{}A", amt),
             CursorDown(amt) => write!(formatter, "[{}B", amt),

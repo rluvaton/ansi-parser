@@ -83,7 +83,7 @@ impl<IteratorType> Iterator for SplitToLines<IteratorType>
         }
 
         // If here, then we have reached the end of the input iterator
-        if(!self.pending_chunk.is_empty()) {
+        if !self.pending_chunk.is_empty() {
             let line = self.pending_chunk.to_string();
             
             // So next call will go to return none

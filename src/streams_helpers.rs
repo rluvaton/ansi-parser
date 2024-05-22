@@ -19,7 +19,8 @@ while let Some(value) = s.next().await {
 ```
  */
 
-#[macro_export] macro_rules! compose_streams {
+#[macro_export]
+macro_rules! compose_streams {
     // match rule which matches multiple expressions in an argument
     ($readable:expr, $($transform:expr),*) => {
         (|| {
@@ -32,7 +33,6 @@ while let Some(value) = s.next().await {
         })()
     };
 }
-
 
 /**
 Each function must be async and return a stream
@@ -52,7 +52,8 @@ while let Some(value) = s.next().await {
 }
 ```
  */
-#[macro_export] macro_rules! compose_async_steams {
+#[macro_export]
+macro_rules! compose_async_steams {
     ($readable:expr, $($transform:expr),*) => {
         (|| async {
             let output = $readable();
@@ -66,10 +67,7 @@ while let Some(value) = s.next().await {
     };
 }
 
-
-pub async fn unwrap_items<I>(input: impl Stream<Item = io::Result<I>>)
-                         -> impl Stream<Item=I>
-{
+pub async fn unwrap_items<I>(input: impl Stream<Item = io::Result<I>>) -> impl Stream<Item = I> {
     stream! {
         for await value in input {
             yield value.unwrap();
@@ -77,3 +75,10 @@ pub async fn unwrap_items<I>(input: impl Stream<Item = io::Result<I>>)
     }
 }
 
+pub async fn convert_sync_to_async_stream<I>(input: impl Stream<Item = I>) -> impl Stream<Item = I> {
+    stream! {
+        for await value in input {
+            yield value;
+        }
+    }
+}

@@ -1,1 +1,1 @@
-pub const RESET_CODE : &str = "\x1B[0m";
+pub const RESET_CODE: &str = "\x1B[0m";

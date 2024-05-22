@@ -1,9 +1,12 @@
-
-use serde::{Serialize, Serializer};
-use crate::parse_ansi_text::ansi::colors::{Color, convert_color_type_to_ansi_code, get_rgb_values_from_8_bit};
 use crate::parse_ansi_text::ansi::colors::ColorType::{Background, Foreground};
-use crate::parse_ansi_text::ansi::style::{BOLD_CODE, Brightness, DIM_CODE, INVERSE_CODE, ITALIC_CODE, STRIKETHROUGH_CODE, TextStyle, UNDERLINE_CODE};
-
+use crate::parse_ansi_text::ansi::colors::{
+    convert_color_type_to_ansi_code, get_rgb_values_from_8_bit, Color,
+};
+use crate::parse_ansi_text::ansi::style::{
+    Brightness, TextStyle, BOLD_CODE, DIM_CODE, INVERSE_CODE, ITALIC_CODE, STRIKETHROUGH_CODE,
+    UNDERLINE_CODE,
+};
+use serde::{Serialize, Serializer};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Span {
@@ -27,17 +30,15 @@ pub struct SpanJson {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bg_color: Option<String>,
-    
+
     // Brightness
-    
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub bold: bool,
-    
+
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub dim: bool,
-    
+
     // Text Style
-    
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub italic: bool,
     #[serde(skip_serializing_if = "std::ops::Not::not")]
@@ -48,11 +49,10 @@ pub struct SpanJson {
     pub strikethrough: bool,
 }
 
-
 impl Serialize for Span {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
+    where
+        S: Serializer,
     {
         // TODO - change this to move to span json and than use the regular serialize
 
@@ -60,9 +60,7 @@ impl Serialize for Span {
     }
 }
 
-
 impl Span {
-    
     pub fn empty() -> Span {
         Span {
             text: "".to_string(),
@@ -72,12 +70,12 @@ impl Span {
             brightness: Brightness::None,
         }
     }
-    
+
     pub fn with_text(mut self, text: String) -> Span {
         self.text = text;
         self
     }
-    
+
     pub fn with_color(mut self, color: Color) -> Span {
         // Set default color as none
         if matches!(color, Color::Default) {
@@ -87,7 +85,7 @@ impl Span {
         }
         self
     }
-    
+
     pub fn with_bg_color(mut self, bg_color: Color) -> Span {
         // Default color is None
         if matches!(bg_color, Color::Default) {
@@ -97,17 +95,17 @@ impl Span {
         }
         self
     }
-    
+
     pub fn with_brightness(mut self, brightness: Brightness) -> Span {
         self.brightness = brightness;
         self
     }
-    
+
     pub fn with_text_style(mut self, text_style: TextStyle) -> Span {
         self.text_style = text_style;
         self
     }
-    
+
     pub fn clone_without_text(span: &Span) -> Span {
         Span {
             text: "".to_string(),
@@ -117,10 +115,10 @@ impl Span {
             text_style: span.text_style,
         }
     }
-    
+
     pub fn serialize_to_ansi_string(self) -> String {
         let mut ansi_string = "".to_string();
-        
+
         // Brightness
         if matches!(self.brightness, Brightness::Bold) {
             ansi_string = ansi_string + BOLD_CODE;
@@ -141,27 +139,29 @@ impl Span {
         if self.text_style & TextStyle::Strikethrough != TextStyle::empty() {
             ansi_string = ansi_string + STRIKETHROUGH_CODE;
         }
-        
+
         // Color
-        ansi_string = ansi_string + convert_color_type_to_ansi_code(Foreground(self.color)).as_str();
-        ansi_string = ansi_string + convert_color_type_to_ansi_code(Background(self.bg_color)).as_str();
-        
+        ansi_string =
+            ansi_string + convert_color_type_to_ansi_code(Foreground(self.color)).as_str();
+        ansi_string =
+            ansi_string + convert_color_type_to_ansi_code(Background(self.bg_color)).as_str();
+
         // Text
         ansi_string = ansi_string + self.text.as_str();
 
         return ansi_string;
     }
-    
+
     pub fn replace_default_color_with_none(mut self) -> Span {
-            if matches!(self.color, Color::Default) {
-                self.color = Color::None;
-            }
+        if matches!(self.color, Color::Default) {
+            self.color = Color::None;
+        }
 
-            if matches!(self.bg_color, Color::Default) {
-                self.bg_color = Color::None;
-            }
+        if matches!(self.bg_color, Color::Default) {
+            self.bg_color = Color::None;
+        }
 
-            self
+        self
     }
 }
 
@@ -169,15 +169,15 @@ impl SpanJson {
     pub fn create_from_span(span: &Span) -> SpanJson {
         SpanJson {
             text: span.text.clone(),
-            
+
             // Colors
             color: Self::get_color_str_from_color(span.color),
             bg_color: Self::get_color_str_from_color(span.bg_color),
-            
+
             // Brightness
             bold: span.brightness == Brightness::Bold,
             dim: span.brightness == Brightness::Dim,
-            
+
             // Text style
             italic: span.text_style & TextStyle::Italic != TextStyle::empty(),
             underline: span.text_style & TextStyle::Underline != TextStyle::empty(),
@@ -208,22 +208,21 @@ impl SpanJson {
             Color::BrightMagenta => Some("brightMagenta".to_string()),
             Color::BrightCyan => Some("brightCyan".to_string()),
             Color::BrightWhite => Some("brightWhite".to_string()),
-            
+
             Color::EightBit(eight_bit) => {
                 let (r, g, b) = get_rgb_values_from_8_bit(eight_bit);
-                    
+
                 Some(format!("rgb({}, {}, {})", r, g, b))
-            },
+            }
             Color::Rgb(r, g, b) => Some(format!("rgb({}, {}, {})", r, g, b)),
         }
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use pretty_assertions::{assert_eq};
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn it_works() {
@@ -233,14 +232,17 @@ mod tests {
     #[test]
     fn create_span_with_no_styling_have_no_styles_and_only_text() {
         let span = Span::empty().with_text("Hello, world!".to_string());
-        assert_eq!(span, Span {
-            text: "Hello, world!".to_string(),
+        assert_eq!(
+            span,
+            Span {
+                text: "Hello, world!".to_string(),
 
-            color: Color::None,
-            bg_color: Color::None,
-            text_style: TextStyle::None,
-            brightness: Brightness::None,
-        });
+                color: Color::None,
+                bg_color: Color::None,
+                text_style: TextStyle::None,
+                brightness: Brightness::None,
+            }
+        );
     }
 
     #[test]
@@ -254,14 +256,17 @@ mod tests {
             brightness: Brightness::None,
         };
         let span = original_span.clone().with_text("".to_string());
-        assert_eq!(span, Span {
-            text: "".to_string(),
+        assert_eq!(
+            span,
+            Span {
+                text: "".to_string(),
 
-            color: Color::Red,
-            bg_color: Color::None,
-            text_style: TextStyle::None,
-            brightness: Brightness::None,
-        });
+                color: Color::Red,
+                bg_color: Color::None,
+                text_style: TextStyle::None,
+                brightness: Brightness::None,
+            }
+        );
     }
 
     #[test]
@@ -274,13 +279,16 @@ mod tests {
             text_style: TextStyle::None,
             brightness: Brightness::None,
         };
-        assert_eq!(original_span, Span {
-            text: "Hello, world!".to_string(),
+        assert_eq!(
+            original_span,
+            Span {
+                text: "Hello, world!".to_string(),
 
-            color: Color::Red,
-            bg_color: Color::None,
-            text_style: TextStyle::None,
-            brightness: Brightness::None,
-        });
+                color: Color::Red,
+                bg_color: Color::None,
+                text_style: TextStyle::None,
+                brightness: Brightness::None,
+            }
+        );
     }
 }

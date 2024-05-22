@@ -14,7 +14,7 @@ pub enum AnsiSequenceType {
 
 pub fn old_ansi_sequence_to_new(seq: ansi_parser::AnsiSequence) -> AnsiSequence {
     match seq {
-        ansi_parser::AnsiSequence::Escape => AnsiSequence::Text("\u{1b}".to_string()),
+        ansi_parser::AnsiSequence::Escape => AnsiSequence::Text(Box::from("\u{1b}")),
         ansi_parser::AnsiSequence::CursorPos(a, b) => AnsiSequence::CursorPos(a, b),
         ansi_parser::AnsiSequence::CursorUp(a) => AnsiSequence::CursorUp(a),
         ansi_parser::AnsiSequence::CursorDown(a) => AnsiSequence::CursorDown(a),
@@ -99,11 +99,9 @@ pub fn get_type_from_ansi_sequence(seq: &AnsiSequence) -> AnsiSequenceType {
                 }
                 ColorType::Background(color) => {
                     return AnsiSequenceType::BackgroundColor(color);
-
                 }
                 _ => {}
             }
-
 
             let brightness = get_brightness_type(vec[0]);
 
@@ -118,7 +116,7 @@ pub fn get_type_from_ansi_sequence(seq: &AnsiSequence) -> AnsiSequenceType {
             }
 
             println!("Unrecognized graphics mode: {:?}", vec);
-        },
+        }
 
         _ => {
             // Should not be here

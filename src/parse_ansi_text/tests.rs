@@ -3,12 +3,12 @@ mod tests {
     use pretty_assertions::assert_eq;
     use test_case::test_case;
 
-    use crate::parse_ansi_text::*;
     use crate::parse_ansi_text::ansi::colors::*;
     use crate::parse_ansi_text::ansi::constants::*;
     use crate::parse_ansi_text::ansi::style::*;
     use crate::parse_ansi_text::ansi::types::*;
     use crate::parse_ansi_text::parse_options::ParseOptions;
+    use crate::parse_ansi_text::*;
 
     #[tokio::test]
     async fn empty_text_should_return_empty_array() {
@@ -181,7 +181,8 @@ mod tests {
     // -----------------------------------------------------------------------
 
     #[tokio::test]
-    async fn foreground_color_should_replace_prev_foreground_color_after_reset_when_no_text_in_between() {
+    async fn foreground_color_should_replace_prev_foreground_color_after_reset_when_no_text_in_between(
+    ) {
         let input = [
             BLACK_FOREGROUND_CODE,
             RESET_CODE,
@@ -202,7 +203,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn background_color_should_replace_prev_background_color_after_reset_when_no_text_in_between() {
+    async fn background_color_should_replace_prev_background_color_after_reset_when_no_text_in_between(
+    ) {
         let input = [
             BLACK_BACKGROUND_CODE,
             RESET_CODE,
@@ -987,7 +989,9 @@ mod tests {
     #[test_case(GREEN_BACKGROUND_CODE ; "Green background added after text again")]
     #[test_case(ITALIC_CODE ; "Italic text added after text again")]
     #[test_case(DIM_CODE ; "Dim text added after text again")]
-    async fn same_style_apply_after_text_should_not_create_new_span_for_next_text(same_style_code: &str) {
+    async fn same_style_apply_after_text_should_not_create_new_span_for_next_text(
+        same_style_code: &str,
+    ) {
         let input = [
             RED_FOREGROUND_CODE,
             GREEN_BACKGROUND_CODE,

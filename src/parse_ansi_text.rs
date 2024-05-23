@@ -3,10 +3,10 @@
 use futures::stream::StreamExt;
 use ansi::types::Span;
 use crate::compose_async_steams;
-use crate::parse_ansi_text::ansi_to_span::stream_helpers::merge_text_output;
-use crate::parse_ansi_text::ansi_to_span::stream_parse::parse_ansi;
-use crate::parse_ansi_text::iterators::parse_ansi_as_spans_iterator::{convert_ansi_output_to_spans};
-use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::{convert_ansi_output_to_lines_of_spans, Line};
+use crate::parse_ansi_text::ansi_text_to_output::stream_helpers::merge_text_output;
+use crate::parse_ansi_text::ansi_text_to_output::stream_parse::parse_ansi;
+use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_as_spans::{convert_ansi_output_to_spans};
+use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_split_by_lines_as_spans::{convert_ansi_output_to_lines_of_spans, Line};
 
 
 use crate::parse_ansi_text::parse_options::ParseOptions;
@@ -15,10 +15,10 @@ use crate::test_utils::{async_chars_stream};
 mod tests;
 pub mod parse_options;
 pub mod parse_text_matching_single_span;
-pub mod iterators;
+pub mod ansi_output_to_spans;
 pub mod ansi;
 pub mod raw_ansi_parse;
-pub mod ansi_to_span;
+pub mod ansi_text_to_output;
 
 // TODO - remove convert string to iterator - done this to test that the iterator works
 

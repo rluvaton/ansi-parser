@@ -15,10 +15,10 @@ use crate::cli::format::json_span_lines::*;
 use crate::compose_async_steams;
 use crate::files::streams::{read_file_by_chunks, read_file_by_chunks_from_to_locations};
 use crate::mapping_file::read::{get_line_metadata_from_file, get_mapping_file_ready_to_read};
-use crate::parse_ansi_text::ansi_to_span::stream_helpers::merge_text_output;
-use crate::parse_ansi_text::ansi_to_span::stream_parse::parse_ansi;
-use crate::parse_ansi_text::iterators::parse_ansi_as_spans_iterator::*;
-use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::{
+use crate::parse_ansi_text::ansi_text_to_output::stream_helpers::merge_text_output;
+use crate::parse_ansi_text::ansi_text_to_output::stream_parse::parse_ansi;
+use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_as_spans::*;
+use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_split_by_lines_as_spans::{
     convert_ansi_output_to_lines_of_spans, Line,
 };
 use crate::parse_ansi_text::parse_options::ParseOptions;

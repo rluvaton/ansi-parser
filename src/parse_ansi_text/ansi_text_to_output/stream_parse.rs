@@ -3,7 +3,7 @@ use std::fmt::Display;
 use async_stream::stream;
 use tokio_stream::{Stream, StreamExt};
 
-use crate::parse_ansi_text::ansi_to_span::str_part_parse::parse_single_ansi;
+use crate::parse_ansi_text::ansi_text_to_output::str_part_parse::parse_single_ansi;
 use crate::parse_ansi_text::raw_ansi_parse::{Output, Text};
 
 pub async fn parse_ansi<'a, S: Stream<Item = String>>(input: S) -> impl Stream<Item = Output> {
@@ -39,7 +39,7 @@ mod tests {
     use crate::{compose_async_steams, compose_streams};
     use crate::parse_ansi_text::ansi::colors::*;
     use crate::parse_ansi_text::ansi::constants::RESET_CODE;
-    use crate::parse_ansi_text::ansi_to_span::stream_helpers::merge_text_output;
+    use crate::parse_ansi_text::ansi_text_to_output::stream_helpers::merge_text_output;
     use crate::parse_ansi_text::raw_ansi_parse::{Output, Text};
     use crate::streams_helpers::vector_to_async_stream;
     use crate::test_utils::{async_chars_stream, chars_stream};

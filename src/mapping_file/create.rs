@@ -10,9 +10,9 @@ use crate::compose_async_steams;
 use crate::files::streams::read_file_by_chunks;
 use crate::mapping_file::constants::*;
 use crate::parse_ansi_text::ansi::types::Span;
-use crate::parse_ansi_text::ansi_to_span::stream_helpers::merge_text_output;
-use crate::parse_ansi_text::ansi_to_span::stream_parse::parse_ansi;
-use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::{convert_ansi_output_to_lines_of_spans, Line};
+use crate::parse_ansi_text::ansi_text_to_output::stream_helpers::merge_text_output;
+use crate::parse_ansi_text::ansi_text_to_output::stream_parse::parse_ansi;
+use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_split_by_lines_as_spans::{convert_ansi_output_to_lines_of_spans, Line};
 use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::streams_helpers::unwrap_items;
 

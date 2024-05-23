@@ -195,6 +195,7 @@ pub async fn parse_ansi<'a, S: Stream<Item = String>>(input: S) -> impl Stream<I
         }
     }
 }
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Text {
     pub(crate) text: String,

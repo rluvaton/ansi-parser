@@ -55,7 +55,7 @@ pub fn get_initial_style_for_line(mapping_text: String, line_number: usize) -> O
     let span = parse_text_matching_single_span(&line_style);
 
     return Some(MappingItem {
-        initial_span: span.with_text("".to_string()),
+        initial_span: span.with_text("".to_string().as_bytes().to_vec()),
         location_in_original_file: reading_of_number as usize
     });
 }
@@ -99,7 +99,7 @@ pub fn get_line_metadata_from_file(file: &mut File, line_number: usize, content_
     let line_style = String::from_utf8(requested_line_initial_style).expect("Converting requested line to UTF-8 string failed");
 
     return Some(MappingItem {
-        initial_span: parse_text_matching_single_span(&line_style).clone().with_text("".to_string()),
+        initial_span: parse_text_matching_single_span(&line_style).clone().with_text("".to_string().as_bytes().to_vec()),
         location_in_original_file: u64::from_ne_bytes(requested_line_original_location.try_into().unwrap()) as usize
     });
 }

@@ -57,15 +57,15 @@ async fn write_mapping_file(file: &mut File, input: impl Stream<Item = Line>)
 
 
 fn create_line_map(line: Line) -> Vec<u8> {
-    let initial_span_for_line = if line.spans.is_empty() { Span::empty() } else { line.spans[0].clone().with_text("".to_string()) };
+    let initial_span_for_line = if line.spans.is_empty() { Span::empty() } else { line.spans[0].clone().with_text("".to_string().as_bytes().to_vec()) };
 
     let initial_style_for_line_ansi_string = initial_span_for_line.serialize_to_ansi_string();
 
     let ansi_len = initial_style_for_line_ansi_string.len();
 
-    let first_part_padding = " ".repeat(FIRST_PART_LINE_LENGTH - ansi_len);
+    let first_part_padding = " ".repeat(FIRST_PART_LINE_LENGTH - ansi_len).as_bytes().to_vec();
 
     let location_in_file = line.location_in_file.to_ne_bytes();
 
-    return [initial_style_for_line_ansi_string.as_bytes(), first_part_padding.as_bytes(), location_in_file.as_slice(), DELIMITER.as_bytes()].concat();
+    return [initial_style_for_line_ansi_string, first_part_padding, location_in_file.to_vec(), DELIMITER.as_bytes().to_vec()].concat();
 }

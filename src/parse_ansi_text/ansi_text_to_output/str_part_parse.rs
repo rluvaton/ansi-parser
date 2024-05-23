@@ -7,10 +7,10 @@ use crate::parse_ansi_text::raw_ansi_parse::{AnsiSequence, Output, parse_escape,
 pub struct ParseSingleAnsiResult<'a> {
     pub(crate) output: Vec<Output<'a>>,
     pub(crate) current_location_until_pending_string: usize,
-    pub(crate) pending_string: String,
+    pub(crate) pending_string: Vec<u8>,
 }
 
-pub fn parse_single_ansi<'a>(value: &'a str, mut current_location_until_pending_string: usize) -> ParseSingleAnsiResult<'a> {
+pub fn parse_single_ansi(value: &[u8], mut current_location_until_pending_string: usize) -> ParseSingleAnsiResult {
     let mut output: Vec<Output> = Vec::new();
     let mut buf = value;
     loop {
@@ -49,7 +49,7 @@ pub fn parse_single_ansi<'a>(value: &'a str, mut current_location_until_pending_
     return ParseSingleAnsiResult {
         output,
         current_location_until_pending_string,
-        pending_string: buf.to_string(),
+        pending_string: buf.to_vec(),
     }
 }
 

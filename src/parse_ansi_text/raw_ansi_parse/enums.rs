@@ -4,7 +4,7 @@
 #[derive(Debug, PartialEq, Clone)]
 pub enum AnsiSequence<'a> {
     // TODO - change to &str?
-    Text(&'a str),
+    Text(&'a [u8]),
     // Escape,
     CursorPos(u32, u32),
     CursorUp(u32),
@@ -63,7 +63,7 @@ impl Display for AnsiSequence<'_> {
 
         use AnsiSequence::*;
         match self {
-            Text(text) => write!(formatter, "{}", text),
+            Text(text) => write!(formatter, "{}", String::from_utf8(text.to_vec()).unwrap()),
             _Escape => write!(formatter, "\u{1b}"),
             CursorPos(line, col) => write!(formatter, "[{};{}H", line, col),
             CursorUp(amt) => write!(formatter, "[{}A", amt),

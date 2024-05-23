@@ -50,7 +50,7 @@ pub async fn read_file_by_chunks_tokio(
 pub async fn read_file_by_chunks(
     file_path: &str,
     _chunk_size: usize,
-) -> impl Stream<Item = io::Result<String>> {
+) -> impl Stream<Item = io::Result<Vec<u8>>> {
     let input_file_path = PathBuf::from(OsString::from(file_path));
     let input_file = std::fs::File::open(input_file_path).expect("opening input file path failed");
 
@@ -106,7 +106,7 @@ pub async fn read_file_by_chunks_from_to_locations(
     chunk_size: usize,
     from_line: Option<usize>,
     to_line: Option<usize>,
-) -> Pin<Box<dyn Stream<Item = io::Result<String>>>> {
+) -> Pin<Box<dyn Stream<Item = io::Result<Vec<u8>>>>> {
     if from_line.is_none() && to_line.is_none() {
         return Box::pin(read_file_by_chunks(file_path, chunk_size).await);
     }
@@ -134,12 +134,12 @@ pub async fn read_file_by_chunks_from_to_locations(
         for item in file_iter.into_iter() {
             let item = item.expect("Failed to get file chunk");
             if current + item.len() > end && current < end {
-                yield Ok(String::from_utf8_lossy(item[..end - current].as_ref()).to_string());
+                yield Ok(item[..end - current].to_vec());
                 break;
             }
             current += item.len();
-            let s = String::from_utf8_lossy(item.as_ref()).to_string();
-            yield Ok(s);
+            // let s = String::from_utf8_lossy(item.as_ref()).to_string();
+            yield Ok(item.to_vec());
         }
     });
 }
@@ -147,11 +147,11 @@ pub async fn read_file_by_chunks_from_to_locations(
 
 async fn read_file_from_file_iterator(
     file_iter: FileIter<std::fs::File>
-) -> impl Stream<Item = io::Result<String>> {
+) -> impl Stream<Item = io::Result<Vec<u8>>> {
     stream! {
         for item in file_iter.into_iter() {
-            let s = String::from_utf8_lossy(item.expect("Failed to get file chunk").as_ref()).to_string();
-            yield Ok(s);
+            // let s = String::from_utf8_lossy(item.expect("Failed to get file chunk").as_ref()).to_string();
+            yield Ok(item.expect("Failed to get file chunk"));
         }
     }
 }

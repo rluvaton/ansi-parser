@@ -15,7 +15,7 @@ pub fn parse_text_matching_single_span(text: &str) -> Span {
     while let Some(output) = raw_ansi_parse.next() {
         match output {
             Output::TextBlock(text) => {
-                span.text.push_str(text);
+                span.text = [span.text, text.as_bytes().to_vec()].concat();
             }
             Output::Escape(seq) => {
                 let sequence_type = get_type_from_ansi_sequence(&old_ansi_sequence_to_new(seq));
@@ -84,7 +84,7 @@ mod tests {
 
         let output: Span = parse_text_matching_single_span(input_str);
 
-        let expected = Span::empty().with_text("Hello world".to_string());
+        let expected = Span::empty().with_text("Hello world".to_string().as_bytes().to_vec());
         assert_eq!(output, expected);
     }
 
@@ -94,7 +94,7 @@ mod tests {
 
         let output: Span = parse_text_matching_single_span(input_str.as_str());
 
-        let expected = Span::empty().with_bg_color(Color::Red).with_text("Hello world".to_string());
+        let expected = Span::empty().with_bg_color(Color::Red).with_text("Hello world".to_string().as_bytes().to_vec());
         assert_eq!(output, expected);
     }
 
@@ -134,7 +134,7 @@ mod tests {
             .with_color(Color::Cyan)
             .with_brightness(Brightness::Bold)
             .with_text_style(TextStyle::Italic | TextStyle::Strikethrough | TextStyle::Inverse | TextStyle::Underline)
-            .with_text("Hello world".to_string());
+            .with_text("Hello world".to_string().as_bytes().to_vec());
         assert_eq!(output, expected);
     }
 }

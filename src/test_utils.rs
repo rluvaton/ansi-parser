@@ -11,11 +11,11 @@ pub fn chars_stream(str: String) -> impl Stream<Item=String> {
     }
 }
 
-pub async fn async_chars_stream(str: String) -> impl Stream<Item=String> {
+pub async fn async_chars_stream(str: String) -> impl Stream<Item=Vec<u8>> {
     stream! {
         let chars = str.chars();
         for c in chars {
-            yield c.to_string();
+            yield c.to_string().as_bytes().to_vec();
         }
     }
 }

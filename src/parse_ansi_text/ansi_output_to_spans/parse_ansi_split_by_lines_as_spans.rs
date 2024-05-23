@@ -33,15 +33,16 @@ pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output<'
         for await output in input {
             match output {
                 Output::TextBlock(text) => {
-                    current_span.text.push_str(text.text);
+
+                    current_span.text = [current_span.text.as_slice(), text.text].concat();
                     let mut from_index = text.location_in_text;
 
                     // If have new line than get
-                    while current_span.text.contains("\n") {
-                        let i = current_span.text.find("\n").unwrap();
+                    while current_span.text.contains(&10u8) { // 10 is the ascii code for newline
+                        let i = current_span.text.iter().position(|item| *item == 10u8).unwrap();// 10 is the ascii code for newline
 
                         // Create new span with the text until the newline
-                        let new_span = current_span.clone().with_text(current_span.text[..i].to_string());
+                        let new_span = current_span.clone().with_text(current_span.text[..i].to_vec());
                     
                         let mut line_to_yield = line.clone().unwrap_or(vec![]);
                         if !new_span.text.is_empty() {
@@ -52,7 +53,7 @@ pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output<'
                         let start_of_line = last_line_index;
                         
                         line = None;
-                        current_span = current_span.clone().with_text(current_span.text[(i + 1)..].to_string());
+                        current_span = current_span.clone().with_text(current_span.text[(i + 1)..].to_vec());
                         last_line_index = from_index + i + 1;
                         from_index = last_line_index;
                         
@@ -94,7 +95,7 @@ pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output<'
                                 let span = current_span.clone();
                                 current_span = current_span
                                     .clone()
-                                    .with_text("".to_string())
+                                    .with_text(vec![])
                                     // Apply the color
                                     .with_color(color);
 
@@ -116,7 +117,7 @@ pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output<'
                                 let span = current_span.clone();
                                 current_span = current_span
                                     .clone()
-                                    .with_text("".to_string())
+                                    .with_text(vec![])
                                     // Apply the background color
                                     .with_bg_color(color);
 
@@ -132,7 +133,7 @@ pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output<'
                                 let span = current_span.clone();
                                 current_span = current_span
                                     .clone()
-                                    .with_text("".to_string())
+                                    .with_text(vec![])
                                     // Apply the background color
                                     .with_brightness(brightness);
 
@@ -148,7 +149,7 @@ pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output<'
                                 let span = current_span.clone();
                                 current_span = current_span
                                     .clone()
-                                    .with_text("".to_string())
+                                    .with_text(vec![])
                                     // Merge the style
                                     .with_text_style(current_span.text_style | style);
 
@@ -213,10 +214,10 @@ mod tests {
             Line {
                 spans: vec![
                     Span::empty()
-                        .with_text("abc".to_string())
+                        .with_text("abc".to_string().as_bytes().to_vec())
                         .with_color(Color::Red),
                     Span::empty()
-                        .with_text("d".to_string())
+                        .with_text("d".to_string().as_bytes().to_vec())
                         .with_color(Color::Yellow),
                 ],
                 location_in_file: 0,
@@ -224,7 +225,7 @@ mod tests {
             // Line 2:
             Line {
                 spans: vec![Span::empty()
-                    .with_text("ef".to_string())
+                    .with_text("ef".to_string().as_bytes().to_vec())
                     .with_color(Color::Yellow)],
                 location_in_file: input.find("ef").unwrap(),
             },
@@ -232,10 +233,10 @@ mod tests {
             Line {
                 spans: vec![
                     Span::empty()
-                        .with_text("g".to_string())
+                        .with_text("g".to_string().as_bytes().to_vec())
                         .with_color(Color::Yellow),
                     Span::empty()
-                        .with_text("hij".to_string())
+                        .with_text("hij".to_string().as_bytes().to_vec())
                         .with_color(Color::Cyan),
                 ],
                 location_in_file: input.find("g").unwrap(),
@@ -256,7 +257,7 @@ mod tests {
             .to_string();
 
         let lines: Vec<Line> = compose_async_steams!(
-            || async_stream_from_vector(vec![chunks.clone()]),
+            || async_stream_from_vector(vec![chunks.clone().as_bytes().to_vec()]),
             parse_ansi,
             merge_text_output,
             |output| convert_ansi_output_to_lines_of_spans(output, ParseOptions::default())
@@ -267,10 +268,10 @@ mod tests {
             Line {
                 spans: vec![
                     Span::empty()
-                        .with_text("abc".to_string())
+                        .with_text("abc".to_string().as_bytes().to_vec())
                         .with_color(Color::Red),
                     Span::empty()
-                        .with_text("d".to_string())
+                        .with_text("d".to_string().as_bytes().to_vec())
                         .with_color(Color::Yellow),
                 ],
                 location_in_file: 0,
@@ -278,7 +279,7 @@ mod tests {
             // Line 2:
             Line {
                 spans: vec![Span::empty()
-                    .with_text("ef".to_string())
+                    .with_text("ef".to_string().as_bytes().to_vec())
                     .with_color(Color::Yellow)],
                 location_in_file: chunks.find("ef").unwrap(),
             },
@@ -286,10 +287,10 @@ mod tests {
             Line {
                 spans: vec![
                     Span::empty()
-                        .with_text("g".to_string())
+                        .with_text("g".to_string().as_bytes().to_vec())
                         .with_color(Color::Yellow),
                     Span::empty()
-                        .with_text("hij".to_string())
+                        .with_text("hij".to_string().as_bytes().to_vec())
                         .with_color(Color::Cyan),
                 ],
                 location_in_file: chunks.find("g").unwrap(),

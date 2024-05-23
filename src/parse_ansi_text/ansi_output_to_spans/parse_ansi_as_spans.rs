@@ -19,7 +19,7 @@ pub async fn convert_ansi_output_to_spans<'a, S: Stream<Item = Output<'a>>>(inpu
         for await output in input {
             match output {
                 Output::TextBlock(text) => {
-                    current_span.text.push_str(text.text);
+                    current_span.text = [current_span.text, text.text.to_vec()].concat();
                 }
                 Output::Escape(seq) => {
                     let sequence_type = get_type_from_ansi_sequence(&seq);
@@ -51,7 +51,7 @@ pub async fn convert_ansi_output_to_spans<'a, S: Stream<Item = Output<'a>>>(inpu
                                 let span = current_span.clone();
                                 current_span = current_span
                                     .clone()
-                                    .with_text("".to_string())
+                                    .with_text(vec![])
                                     // Apply the color
                                     .with_color(color);
 
@@ -73,7 +73,7 @@ pub async fn convert_ansi_output_to_spans<'a, S: Stream<Item = Output<'a>>>(inpu
                                 let span = current_span.clone();
                                 current_span = current_span
                                     .clone()
-                                    .with_text("".to_string())
+                                    .with_text(vec![])
                                     // Apply the background color
                                     .with_bg_color(color);
 
@@ -89,7 +89,7 @@ pub async fn convert_ansi_output_to_spans<'a, S: Stream<Item = Output<'a>>>(inpu
                                 let span = current_span.clone();
                                 current_span = current_span
                                     .clone()
-                                    .with_text("".to_string())
+                                    .with_text(vec![])
                                     // Apply the background color
                                     .with_brightness(brightness);
 
@@ -105,7 +105,7 @@ pub async fn convert_ansi_output_to_spans<'a, S: Stream<Item = Output<'a>>>(inpu
                                 let span = current_span.clone();
                                 current_span = current_span
                                     .clone()
-                                    .with_text("".to_string())
+                                    .with_text(vec![])
                                     // Merge the style
                                     .with_text_style(current_span.text_style | style);
 
@@ -159,7 +159,7 @@ mod tests {
         ).await.collect::<Vec<Span>>().await;
         
         let expected = vec![Span::empty()
-            .with_text("Hello, World!".to_string())
+            .with_text("Hello, World!".to_string().as_bytes().to_vec())
             .with_bg_color(Color::Red)];
         assert_eq!(output, expected);
     }
@@ -169,14 +169,14 @@ mod tests {
         let input_str = [RED_BACKGROUND_CODE, "Hello, World!", RESET_CODE].join("");
 
         let output: Vec<Span> = compose_async_steams!(
-            || async_stream_from_vector(vec![input_str]),
+            || async_stream_from_vector(vec![input_str.as_bytes().to_vec()]),
             parse_ansi,
             merge_text_output,
             |output| convert_ansi_output_to_spans(output, ParseOptions::default())
         ).await.collect::<Vec<Span>>().await;
 
         let expected = vec![Span::empty()
-            .with_text("Hello, World!".to_string())
+            .with_text("Hello, World!".to_string().as_bytes().to_vec())
             .with_bg_color(Color::Red)];
         assert_eq!(output, expected);
     }

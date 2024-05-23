@@ -4,12 +4,7 @@ use crate::parse_ansi_text::raw_ansi_parse::{AnsiSequence};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Text<'a> {
-    pub(crate) text: &'a str,
-    pub(crate) location_in_text: usize,
-}
-
-pub struct TextWithString {
-    pub(crate) text: String,
+    pub(crate) text: &'a [u8],
     pub(crate) location_in_text: usize,
 }
 
@@ -26,7 +21,7 @@ impl<'a> Display for Output<'a> {
     fn fmt(&self, formatter: &mut Formatter) -> DisplayResult {
         use Output::*;
         match self {
-            TextBlock(txt) => write!(formatter, "{}", txt.text),
+            TextBlock(txt) => write!(formatter, "{}", String::from_utf8(txt.text.to_vec()).unwrap()),
             Escape(seq) => write!(formatter, "{}", seq),
         }
     }

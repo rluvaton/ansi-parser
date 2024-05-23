@@ -1,8 +1,11 @@
 use std::ffi::OsString;
+use std::ops::Deref;
 use std::path::PathBuf;
+use std::str;
 
 use get_chunk::ChunkSize;
 use get_chunk::iterator::FileIter;
+use nom::AsBytes;
 
 use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{AnsiSequenceType, get_type_from_ansi_sequence};
 use crate::parse_ansi_text::ansi::colors::Color;
@@ -21,7 +24,7 @@ pub fn tmp_parse(file_path: String, options: ParseOptions) {
     let file_iter = file_iter.set_mode(ChunkSize::Bytes(1024 * 1024 * 10));
 
     let mut current_location_until_pending_string: usize = 0;
-    let mut pending_string: String = "".to_string();
+    let mut pending_string: Vec<u8> = "".to_string().as_bytes().to_vec();
 
     let mut current_span: Span = options
             .initial_span
@@ -33,13 +36,14 @@ pub fn tmp_parse(file_path: String, options: ParseOptions) {
 
     for item in file_iter.into_iter() {
         let item = item.expect("Failed to get file chunk");
-        let value = String::from_utf8_lossy(item.as_ref());
+        let value = item;
 
         // --------- Parse
-        pending_string.push_str(value.as_ref());
+        pending_string = [pending_string, value].concat();
+        // pending_string.push_str(value.as_ref());
 
 
-        let result = parse_single_ansi(pending_string.as_str(), current_location_until_pending_string);
+        let result = parse_single_ansi(pending_string.as_bytes(), current_location_until_pending_string);
         current_location_until_pending_string = result.current_location_until_pending_string;
         //
         // for output in result.output {
@@ -62,7 +66,7 @@ pub fn tmp_parse(file_path: String, options: ParseOptions) {
 
                     // let span_json = SpanJson::create_from_span(&current_span);
                     let span_json = SpanJson {
-                        text: current_span.text,
+                        text: str::from_utf8(current_span.text.deref()).unwrap(),
 
                         // Colors
                         color: SpanJson::get_color_str_from_color(current_span.color),
@@ -105,14 +109,14 @@ pub fn tmp_parse(file_path: String, options: ParseOptions) {
         // ------------ until here merge
 
 
-        pending_string = result.pending_string;
+        pending_string = result.pending_string.to_vec();
 
         // last_pending = result.pending_string.clone();
     }
 
     if !pending_string.is_empty() {
         let ready_output = Output::TextBlock(Text {
-            text: pending_string.as_str(),
+            text: pending_string.as_bytes(),
             // TODO - this is not right
             location_in_text: 0,
         });
@@ -121,12 +125,14 @@ pub fn tmp_parse(file_path: String, options: ParseOptions) {
 
         match span_result {
             ResultType::Parse(_) => {
+
+                // let text = String::from_utf8_lossy(current_span.text.deref());
                 // TODO - do something with current span
 
                 // let string_to_output = spans_valid_json(current_span, &mut yielded_first_item);
                 // print!("{}", string_to_output);
                 let span_json = SpanJson {
-                    text: current_span.text,
+                    text: str::from_utf8(current_span.text.deref()).unwrap(),
 
                     // Colors
                     color: SpanJson::get_color_str_from_color(current_span.color),
@@ -168,7 +174,8 @@ enum ResultType {
 pub fn convert_ansi_output_to_spans<'a>(output: Output<'a>, current_span: &'a mut Span) -> ResultType {
     match output {
         Output::TextBlock(text) => {
-            current_span.text.push_str(text.text);
+            current_span.text = [current_span.text.to_vec(), text.text.to_vec()].concat();
+            // current_span.text.push_str(text.text);
             return ResultType::WaitForNext;
         }
         Output::Escape(seq) => {
@@ -196,7 +203,7 @@ pub fn convert_ansi_output_to_spans<'a>(output: Output<'a>, current_span: &'a mu
                     if current_span.text.len() > 0 && current_span.color != color {
                         return ResultType::Parse(current_span
                             .clone()
-                            .with_text("".to_string())
+                            .with_text("".to_string().as_bytes().to_vec())
                             // Apply the color
                             .with_color(color));
                     }
@@ -213,7 +220,7 @@ pub fn convert_ansi_output_to_spans<'a>(output: Output<'a>, current_span: &'a mu
                     if current_span.text.len() > 0 && current_span.bg_color != color {
                         return ResultType::Parse(current_span
                             .clone()
-                            .with_text("".to_string())
+                            .with_text("".to_string().as_bytes().to_vec())
                              // Apply the background color
                              .with_bg_color(color)
                         );
@@ -226,7 +233,7 @@ pub fn convert_ansi_output_to_spans<'a>(output: Output<'a>, current_span: &'a mu
                     if current_span.text.len() > 0 && current_span.brightness != brightness {
                         return ResultType::Parse(current_span
                             .clone()
-                            .with_text("".to_string())
+                            .with_text("".to_string().as_bytes().to_vec())
                             // Apply the background color
                             .with_brightness(brightness)
                         );
@@ -238,7 +245,7 @@ pub fn convert_ansi_output_to_spans<'a>(output: Output<'a>, current_span: &'a mu
                     if current_span.text.len() > 0 && current_span.text_style != style {
                         return ResultType::Parse(current_span
                             .clone()
-                            .with_text("".to_string())
+                            .with_text("".to_string().as_bytes().to_vec())
                             // Merge the style
                             .with_text_style(current_span.text_style | style)
                         );

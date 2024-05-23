@@ -1,5 +1,7 @@
-
+use std::ops::Deref;
+use nom::AsBytes;
 use sonic_rs::{Serialize};
+use std::str;
 use crate::parse_ansi_text::ansi::colors::{Color, convert_color_type_to_ansi_code, get_rgb_values_from_8_bit};
 use crate::parse_ansi_text::ansi::colors::ColorType::{Background, Foreground};
 use crate::parse_ansi_text::ansi::style::{BOLD_CODE, Brightness, DIM_CODE, INVERSE_CODE, ITALIC_CODE, STRIKETHROUGH_CODE, TextStyle, UNDERLINE_CODE};
@@ -7,7 +9,7 @@ use crate::parse_ansi_text::ansi::style::{BOLD_CODE, Brightness, DIM_CODE, INVER
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Span {
-    pub text: String,
+    pub text: Vec<u8>,
     pub color: Color,
     pub bg_color: Color,
 
@@ -17,9 +19,9 @@ pub struct Span {
 
 // TODO - find a better way to create a new struct for json
 #[derive(Debug, PartialEq, Clone, Serialize)]
-pub struct SpanJson {
+pub struct SpanJson<'a> {
     // Always serialize
-    pub text: String,
+    pub text: &'a str,
 
     // Colors
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -48,12 +50,11 @@ pub struct SpanJson {
     pub strikethrough: bool,
 }
 
-
 impl Span {
     
     pub fn empty() -> Span {
         Span {
-            text: "".to_string(),
+            text: "".as_bytes().to_vec(),
             color: Color::None,
             bg_color: Color::None,
             text_style: TextStyle::None,
@@ -61,7 +62,7 @@ impl Span {
         }
     }
     
-    pub fn with_text(mut self, text: String) -> Span {
+    pub fn with_text(mut self, text: Vec<u8>) -> Span {
         self.text = text;
         self
     }
@@ -98,7 +99,7 @@ impl Span {
     
     pub fn clone_without_text(span: &Span) -> Span {
         Span {
-            text: "".to_string(),
+            text: "".as_bytes().to_vec(),
             color: span.color,
             bg_color: span.bg_color,
             brightness: span.brightness,
@@ -106,36 +107,36 @@ impl Span {
         }
     }
     
-    pub fn serialize_to_ansi_string(self) -> String {
-        let mut ansi_string = "".to_string();
+    pub fn serialize_to_ansi_string(self) -> Vec<u8> {
+        let mut ansi_string = vec![];
         
         // Brightness
         if matches!(self.brightness, Brightness::Bold) {
-            ansi_string = ansi_string + BOLD_CODE;
+            ansi_string = [ansi_string, BOLD_CODE.as_bytes().to_vec()].concat();
         } else if matches!(self.brightness, Brightness::Dim) {
-            ansi_string = ansi_string + DIM_CODE;
+            ansi_string = [ansi_string, DIM_CODE.as_bytes().to_vec()].concat();
         }
 
         // Text style
         if self.text_style & TextStyle::Inverse != TextStyle::empty() {
-            ansi_string = ansi_string + INVERSE_CODE;
+            ansi_string = [ansi_string, INVERSE_CODE.as_bytes().to_vec()].concat();
         }
         if self.text_style & TextStyle::Italic != TextStyle::empty() {
-            ansi_string = ansi_string + ITALIC_CODE;
+            ansi_string = [ansi_string, ITALIC_CODE.as_bytes().to_vec()].concat();
         }
         if self.text_style & TextStyle::Underline != TextStyle::empty() {
-            ansi_string = ansi_string + UNDERLINE_CODE;
+            ansi_string = [ansi_string, UNDERLINE_CODE.as_bytes().to_vec()].concat();
         }
         if self.text_style & TextStyle::Strikethrough != TextStyle::empty() {
-            ansi_string = ansi_string + STRIKETHROUGH_CODE;
+            ansi_string = [ansi_string, STRIKETHROUGH_CODE.as_bytes().to_vec()].concat();
         }
         
         // Color
-        ansi_string = ansi_string + convert_color_type_to_ansi_code(Foreground(self.color)).as_str();
-        ansi_string = ansi_string + convert_color_type_to_ansi_code(Background(self.bg_color)).as_str();
+        ansi_string = [ansi_string, convert_color_type_to_ansi_code(Foreground(self.color)).as_bytes().to_vec()].concat();
+        ansi_string = [ansi_string, convert_color_type_to_ansi_code(Background(self.bg_color)).as_bytes().to_vec()].concat();
         
         // Text
-        ansi_string = ansi_string + self.text.as_str();
+        ansi_string = [ansi_string, self.text].concat();
 
         return ansi_string;
     }
@@ -153,10 +154,10 @@ impl Span {
     }
 }
 
-impl SpanJson {
-    pub fn create_from_span(span: &Span) -> SpanJson {
+impl SpanJson<'_> {
+    pub fn create_from_span(span: &Span) -> SpanJson<'_> {
         SpanJson {
-            text: span.text.clone(),
+            text: str::from_utf8(span.text.deref()).unwrap(),
             
             // Colors
             color: Self::get_color_str_from_color(span.color),
@@ -220,9 +221,9 @@ mod tests {
 
     #[test]
     fn create_span_with_no_styling_have_no_styles_and_only_text() {
-        let span = Span::empty().with_text("Hello, world!".to_string());
+        let span = Span::empty().with_text("Hello, world!".to_string().as_bytes().to_vec());
         assert_eq!(span, Span {
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().as_bytes().to_vec(),
 
             color: Color::None,
             bg_color: Color::None,
@@ -234,16 +235,16 @@ mod tests {
     #[test]
     fn clone_span_without_text_should_only_copy_style() {
         let original_span = Span {
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().as_bytes().to_vec(),
 
             color: Color::Red,
             bg_color: Color::None,
             text_style: TextStyle::None,
             brightness: Brightness::None,
         };
-        let span = original_span.clone().with_text("".to_string());
+        let span = original_span.clone().with_text("".to_string().as_bytes().to_vec());
         assert_eq!(span, Span {
-            text: "".to_string(),
+            text: "".to_string().as_bytes().to_vec(),
 
             color: Color::Red,
             bg_color: Color::None,
@@ -255,7 +256,7 @@ mod tests {
     #[test]
     fn clone_span_without_text_should_not_change_original_span() {
         let original_span = Span {
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().as_bytes().to_vec(),
 
             color: Color::Red,
             bg_color: Color::None,
@@ -263,7 +264,7 @@ mod tests {
             brightness: Brightness::None,
         };
         assert_eq!(original_span, Span {
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().as_bytes().to_vec(),
 
             color: Color::Red,
             bg_color: Color::None,

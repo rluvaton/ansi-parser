@@ -6,18 +6,18 @@ use tokio_stream::{Stream, StreamExt};
 use crate::parse_ansi_text::ansi_text_to_output::str_part_parse::{parse_single_ansi};
 use crate::parse_ansi_text::raw_ansi_parse::{Output, Text};
 
-pub async fn parse_ansi<'a, S: Stream<Item = String> + 'a>(input: S) -> impl Stream<Item = Output<'a>> + 'a {
+pub async fn parse_ansi<'a, S: Stream<Item = Vec<u8>> + 'a>(input: S) -> impl Stream<Item = Output<'a>> + 'a {
     stream! {
         let mut current_location_until_pending_string: usize = 0;
-        let mut pending_string: String = "".to_string();
+        let mut pending_string: Vec<u8> = vec![];
         
         for await value in input {
-            pending_string.push_str(value.as_str());
+            pending_string = [pending_string, value].concat();
             let new_pending = pending_string.clone();
             
                 // TODO - avoid leak
             // let result = parse_single_ansi(new_pending, current_location_until_pending_string);
-            let result = parse_single_ansi("", current_location_until_pending_string);
+            let result = parse_single_ansi("".as_bytes(), current_location_until_pending_string);
             current_location_until_pending_string = result.current_location_until_pending_string;
             pending_string = result.pending_string;
             
@@ -52,7 +52,7 @@ mod tests {
 
     fn create_text_block(text: &str, location_in_text: usize) -> Output {
         Output::TextBlock(Text {
-            text,
+            text: text.as_bytes(),
             location_in_text,
         })
     }
@@ -101,7 +101,7 @@ mod tests {
             .to_string();
 
         let lines: Vec<Output> =
-            compose_streams!(|| stream::iter(vec![input.clone()]), parse_ansi)
+            compose_streams!(|| stream::iter(vec![input.clone().as_bytes().to_vec()]), parse_ansi)
                 .await
                 .filter(|item| match item {
                     Output::TextBlock(_) => true,
@@ -111,7 +111,7 @@ mod tests {
                 .await;
 
         let lines: Vec<Output> = compose_async_steams!(
-            || vector_to_async_stream(vec![input.clone()]),
+            || vector_to_async_stream(vec![input.clone().as_bytes().to_vec()]),
             parse_ansi,
             merge_text_output
         )

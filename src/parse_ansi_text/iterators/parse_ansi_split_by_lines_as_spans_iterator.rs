@@ -49,7 +49,7 @@ impl<'a> Iterator for ParseAnsiAsSpansByLinesIterator<'a> {
             match output {
                 Output::IgnoreMe => {}
                 Output::TextBlock(text) => {
-                    self.current_span.text.push_str(text.text.as_ref());
+                    self.current_span.text.push_str(text.text.as_str());
 
                     // If have new line than get
                     if self.current_span.text.contains("\n") {
@@ -330,7 +330,7 @@ pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output>>
             match output {
                 Output::IgnoreMe => {}
                 Output::TextBlock(text) => {
-                    current_span.text.push_str(text.text.as_ref());
+                    current_span.text.push_str(text.text.as_str());
                     let mut from_index = text.location_in_text;
 
                     // If have new line than get
@@ -339,20 +339,20 @@ pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output>>
 
                         // Create new span with the text until the newline
                         let new_span = current_span.clone().with_text(current_span.text[..i].to_string());
-
+                    
                         let mut line_to_yield = line.clone().unwrap_or(vec![]);
                         if !new_span.text.is_empty() {
                             line_to_yield.push(new_span);
                         }
-
+                        
                         // Use for te first time the last line index
                         let start_of_line = last_line_index;
-
+                        
                         line = None;
                         current_span = current_span.clone().with_text(current_span.text[(i + 1)..].to_string());
                         last_line_index = from_index + i + 1;
                         from_index = last_line_index;
-
+                        
                         yield Line {
                             spans: line_to_yield,
                             location_in_file: start_of_line,
@@ -461,20 +461,20 @@ pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output>>
             // if current_span.text.len() > 0 {
             //     let span = current_span.clone();
             //     current_span = Span::empty();
-            //
+            // 
             //     line.as_mut().unwrap().push(span);
-            //
+            // 
             //     let new_line = line.clone().unwrap();
-            //
+            // 
             //     line = Some(vec![]);
-            //
+            // 
             //     yield Line {
             //         spans: new_line,
             //         location_in_file: last_line_index,
             //     };
             // }
         }
-
+        
         if line.is_some() {
             yield Line {
                 spans: line.unwrap(),
@@ -486,16 +486,16 @@ pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output>>
 
 #[cfg(test)]
 mod tests {
-    use crate::compose_async_steams;
     use futures::stream::StreamExt;
     use pretty_assertions::assert_eq;
+    use crate::compose_async_steams;
 
     use crate::parse_ansi_text::ansi::colors::*;
     use crate::parse_ansi_text::ansi::constants::RESET_CODE;
-    use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::{merge_text_output, parse_ansi};
+    use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::parse_ansi;
     use crate::parse_ansi_text::iterators::playground_iterator::CharsIterator;
     use crate::parse_ansi_text::parse_options::ParseOptions;
-    use crate::test_utils::{async_chars_stream, async_chars_stream_str, async_chars_stream_string, async_stream_from_vector};
+    use crate::test_utils::{async_chars_stream, async_stream_from_vector};
 
     use super::*;
 
@@ -608,7 +608,7 @@ mod tests {
 
         assert_eq!(lines, expected);
     }
-
+    
     #[tokio::test]
     async fn steams_split_to_lines_should_work_for_split_by_chars() {
         let input = vec![
@@ -616,17 +616,13 @@ mod tests {
             YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng" + RESET_CODE,
             CYAN_FOREGROUND_CODE.to_string() + "hij" + RESET_CODE,
         ]
-        .join("");
+            .join("");
 
-        let lines: Vec<Line> =
-            compose_async_steams!(
-                || async_chars_stream_string(input.clone()),
-                parse_ansi,
-                merge_text_output,
-                |output| convert_ansi_output_to_lines_of_spans(output, ParseOptions::default()))
-            .await
-            .collect::<Vec<Line>>()
-            .await;
+        let lines: Vec<Line> = compose_async_steams!(
+            || async_chars_stream(input.clone()),
+            parse_ansi,
+            |output| convert_ansi_output_to_lines_of_spans(output, ParseOptions::default())
+        ).await.collect::<Vec<Line>>().await;
 
         let expected = vec![
             // Line 1:
@@ -672,18 +668,14 @@ mod tests {
             YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng" + RESET_CODE,
             CYAN_FOREGROUND_CODE.to_string() + "hij" + RESET_CODE,
         ]
-        .join("")
-        .to_string();
+            .join("")
+            .to_string();
 
         let lines: Vec<Line> = compose_async_steams!(
-            || async_stream_from_vector(vec![chunks.clone().into_boxed_str()]),
+            || async_stream_from_vector(vec![chunks.clone()]),
             parse_ansi,
-            merge_text_output,
             |output| convert_ansi_output_to_lines_of_spans(output, ParseOptions::default())
-        )
-        .await
-        .collect::<Vec<Line>>()
-        .await;
+        ).await.collect::<Vec<Line>>().await;
 
         let expected = vec![
             // Line 1:

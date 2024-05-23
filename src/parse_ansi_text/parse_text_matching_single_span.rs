@@ -2,9 +2,7 @@ use std::iter::Iterator;
 
 use ansi_parser::{AnsiParser, Output};
 
-use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{
-    get_type_from_ansi_sequence, old_ansi_sequence_to_new, AnsiSequenceType,
-};
+use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{get_type_from_ansi_sequence, AnsiSequenceType, old_ansi_sequence_to_new};
 use crate::parse_ansi_text::ansi::colors::Color;
 use crate::parse_ansi_text::ansi::types::Span;
 
@@ -66,9 +64,9 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     use crate::parse_ansi_text::ansi::colors::*;
+    use crate::parse_ansi_text::parse_text_matching_single_span::*;
     use crate::parse_ansi_text::ansi::style::*;
     use crate::parse_ansi_text::ansi::types::*;
-    use crate::parse_ansi_text::parse_text_matching_single_span::*;
 
     #[test]
     fn should_return_empty_span_for_empty_input() {
@@ -96,9 +94,7 @@ mod tests {
 
         let output: Span = parse_text_matching_single_span(input_str.as_str());
 
-        let expected = Span::empty()
-            .with_bg_color(Color::Red)
-            .with_text("Hello world".to_string());
+        let expected = Span::empty().with_bg_color(Color::Red).with_text("Hello world".to_string());
         assert_eq!(output, expected);
     }
 
@@ -137,12 +133,7 @@ mod tests {
             .with_bg_color(Color::Blue)
             .with_color(Color::Cyan)
             .with_brightness(Brightness::Bold)
-            .with_text_style(
-                TextStyle::Italic
-                    | TextStyle::Strikethrough
-                    | TextStyle::Inverse
-                    | TextStyle::Underline,
-            )
+            .with_text_style(TextStyle::Italic | TextStyle::Strikethrough | TextStyle::Inverse | TextStyle::Underline)
             .with_text("Hello world".to_string());
         assert_eq!(output, expected);
     }

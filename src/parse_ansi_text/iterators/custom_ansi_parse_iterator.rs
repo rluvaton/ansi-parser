@@ -1,7 +1,6 @@
+use async_stream::stream;
 use std::fmt::{Display, Formatter, Result as DisplayResult};
 use std::path::PathBuf;
-
-use async_stream::stream;
 use tokio_stream::{Stream, StreamExt};
 
 use crate::files::iterators::create_file_iterator;
@@ -56,12 +55,12 @@ impl<'a> Iterator for AnsiParseIterator<'a> {
                         let loc = loc + 1;
                         let text_location = self.current_location_until_pending_string;
 
-                        let temp = self.pending_string[..loc].to_string().into_boxed_str();
+                        let temp = &self.pending_string[..loc];
                         self.current_location_until_pending_string += old_loc + loc;
                         self.pending_string = &self.pending_string[loc..];
 
                         return Some(Output::TextBlock(Text {
-                            text: temp,
+                            text: temp.to_string(),
                             location_in_text: text_location,
                         }));
                     }
@@ -70,14 +69,14 @@ impl<'a> Iterator for AnsiParseIterator<'a> {
                 }
             } else {
                 // If in the middle than split to before the escape code and after and keep the after for the next iteration
-                let temp = self.pending_string[..loc].to_string().into_boxed_str();
+                let temp = &self.pending_string[..loc];
                 let text_location = self.current_location_until_pending_string;
 
                 self.current_location_until_pending_string += loc;
                 self.pending_string = &self.pending_string[loc..];
 
                 return Some(Output::TextBlock(Text {
-                    text: temp,
+                    text: temp.to_string(),
                     location_in_text: text_location,
                 }));
             }
@@ -87,11 +86,11 @@ impl<'a> Iterator for AnsiParseIterator<'a> {
 
         if next.is_none() {
             let text_location = self.current_location_until_pending_string;
-            let temp = self.pending_string.to_string().into_boxed_str();
+            let temp = self.pending_string;
             self.current_location_until_pending_string += temp.len();
             self.pending_string = "";
             return Some(Output::TextBlock(Text {
-                text: temp,
+                text: temp.to_string(),
                 location_in_text: text_location,
             }));
         }
@@ -134,33 +133,42 @@ impl AnsiParseIterator<'_> {
     }
 }
 
-pub async fn parse_ansi<S: Stream<Item = Box<str>>>(input: S) -> impl Stream<Item = Output> {
+pub async fn parse_ansi<'a, S: Stream<Item = String>>(input: S) -> impl Stream<Item = Output> {
     stream! {
         let mut current_location_until_pending_string: usize = 0;
         let mut pending_string: String = "".to_string();
-
+        let mut last_text_block: Option<Text> = None;
+        
         for await value in input {
-            pending_string.push_str(value.as_ref());
+            pending_string.push_str(value.as_str());
 
             let mut buf = pending_string.as_str();
             loop {
                 let pending_text_size_before = buf.len();
-
-                match parse_escape(buf.as_ref()) {
+                
+                match parse_escape(buf) {
                   Ok((pending, seq)) => {
                     buf = pending;
                     let text_location = current_location_until_pending_string;
-
+                        
                     current_location_until_pending_string += pending_text_size_before - buf.len();
 
                     match seq {
                       AnsiSequence::Text(str) => {
-                        yield Output::TextBlock(Text {
-                              text: Box::from(str),
+                        if last_text_block.is_none() {
+                            last_text_block = Some(Text {
+                              text: str,
                               location_in_text: text_location,
-                        });
+                            });
+                        } else {
+                            last_text_block.as_mut().unwrap().text.push_str(str.as_str());
+                        }
                       },
                       _ => {
+                         if last_text_block.is_some() {
+                            yield Output::TextBlock(last_text_block.unwrap());
+                            last_text_block = None;
+                         }
                         yield Output::Escape(seq);
                      },
                     }
@@ -172,54 +180,25 @@ pub async fn parse_ansi<S: Stream<Item = Box<str>>>(input: S) -> impl Stream<Ite
             }
             pending_string = buf.to_string();
         }
-
-         if !pending_string.is_empty() {
+        
+         if last_text_block.is_some() {
+            let mut text_block = last_text_block.unwrap();
+            if !pending_string.is_empty() {
+                text_block.text.push_str(pending_string.as_str());
+            }
+            
+            yield Output::TextBlock(text_block);
+         } else if !pending_string.is_empty() {
             yield Output::TextBlock(Text {
-                text: pending_string.into_boxed_str(),
+                text: pending_string,
                 location_in_text: current_location_until_pending_string,
             });
         }
     }
 }
-
-pub async fn merge_text_output<S: Stream<Item = Output>>(input: S) -> impl Stream<Item = Output> {
-    stream! {
-        let mut text_blocks_vec: Vec<Text> = Vec::new();
-
-        for await value in input {
-            match value {
-                Output::TextBlock(txt) => {
-                    text_blocks_vec.push(txt);
-                },
-                _ => {
-                    if !text_blocks_vec.is_empty() {
-                        yield Output::TextBlock(Text {
-                            text: text_blocks_vec.iter().map(|x| x.text.as_ref()).collect::<String>().into_boxed_str(),
-                            location_in_text: text_blocks_vec.first().unwrap().location_in_text,
-                        });
-                        text_blocks_vec.clear();
-                        text_blocks_vec.shrink_to_fit();
-                    }
-                    yield value;
-                }
-            
-            }
-        }
-        
-        if !text_blocks_vec.is_empty() {
-            yield Output::TextBlock(Text {
-                text: text_blocks_vec.iter().map(|x| x.text.as_ref()).collect::<String>().into_boxed_str(),
-                location_in_text: text_blocks_vec.first().unwrap().location_in_text,
-            });
-        }
-    }
-}
-
-
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct Text {
-    pub(crate) text: Box<str>,
+    pub(crate) text: String,
     pub(crate) location_in_text: usize,
 }
 
@@ -247,24 +226,16 @@ impl<'a> Display for Output {
 
 #[cfg(test)]
 mod tests {
+    use crate::compose_streams;
     use futures_util::stream;
     use pretty_assertions::assert_eq;
 
-    use crate::compose_async_steams;
     use crate::parse_ansi_text::ansi::colors::*;
     use crate::parse_ansi_text::ansi::constants::RESET_CODE;
     use crate::parse_ansi_text::iterators::playground_iterator::CharsIterator;
-    use crate::streams_helpers::convert_sync_to_async_stream;
-    use crate::test_utils::async_chars_stream_str;
+    use crate::test_utils::chars_stream;
 
     use super::*;
-
-    fn create_text_item(text: &str, location_in_text: usize) -> Output {
-        Output::TextBlock(Text {
-            text: text.to_string().into_boxed_str(),
-            location_in_text,
-        })
-    }
 
     #[test]
     fn iterator_split_to_lines_should_work_for_split_by_chars() {
@@ -288,9 +259,18 @@ mod tests {
             .collect();
 
         let expected = vec![
-            create_text_item("abc", input.find("abc").unwrap()),
-            create_text_item("d\nef\ng", input.find("d\nef\ng").unwrap()),
-            create_text_item("hij", input.find("hij").unwrap()),
+            Output::TextBlock(Text {
+                text: "abc".to_string(),
+                location_in_text: input.find("abc").unwrap(),
+            }),
+            Output::TextBlock(Text {
+                text: "d\nef\ng".to_string(),
+                location_in_text: input.find("d\nef\ng").unwrap(),
+            }),
+            Output::TextBlock(Text {
+                text: "hij".to_string(),
+                location_in_text: input.find("hij").unwrap(),
+            }),
         ];
 
         assert_eq!(lines, expected);
@@ -314,9 +294,18 @@ mod tests {
             .collect();
 
         let expected = vec![
-            create_text_item("abc", chunks.find("abc").unwrap()),
-            create_text_item("d\nef\ng", chunks.find("d\nef\ng").unwrap()),
-            create_text_item("hij", chunks.find("hij").unwrap()),
+            Output::TextBlock(Text {
+                text: "abc".to_string(),
+                location_in_text: chunks.find("abc").unwrap(),
+            }),
+            Output::TextBlock(Text {
+                text: "d\nef\ng".to_string(),
+                location_in_text: chunks.find("d\nef\ng").unwrap(),
+            }),
+            Output::TextBlock(Text {
+                text: "hij".to_string(),
+                location_in_text: chunks.find("hij").unwrap(),
+            }),
         ];
 
         assert_eq!(lines, expected);
@@ -333,11 +322,7 @@ mod tests {
         ]
         .join("");
 
-        let lines: Vec<Output> = compose_async_steams!(
-            || async_chars_stream_str(input.as_str()),
-            parse_ansi,
-            merge_text_output
-        )
+        let lines: Vec<Output> = compose_streams!(|| chars_stream(input.clone()), parse_ansi)
             .await
             .filter(|item| match item {
                 Output::TextBlock(_) => true,
@@ -347,9 +332,18 @@ mod tests {
             .await;
 
         let expected = vec![
-            create_text_item("abc", input.find("abc").unwrap()),
-            create_text_item("d\nef\ng", input.find("d\nef\ng").unwrap()),
-            create_text_item("hij", input.find("hij").unwrap()),
+            Output::TextBlock(Text {
+                text: "abc".to_string(),
+                location_in_text: input.find("abc").unwrap(),
+            }),
+            Output::TextBlock(Text {
+                text: "d\nef\ng".to_string(),
+                location_in_text: input.find("d\nef\ng").unwrap(),
+            }),
+            Output::TextBlock(Text {
+                text: "hij".to_string(),
+                location_in_text: input.find("hij").unwrap(),
+            }),
         ];
 
         assert_eq!(lines, expected);
@@ -365,24 +359,29 @@ mod tests {
         .join("")
         .to_string();
 
-
-        let lines: Vec<Output> = compose_async_steams!(
-            || convert_sync_to_async_stream(stream::iter(vec![chunks.clone().into_boxed_str()])),
-            parse_ansi,
-            merge_text_output
-        )
-            .await
-            .filter(|item| match item {
-                Output::TextBlock(_) => true,
-                _ => false,
-            })
-            .collect()
-            .await;
+        let lines: Vec<Output> =
+            compose_streams!(|| stream::iter(vec![chunks.clone()]), parse_ansi)
+                .await
+                .filter(|item| match item {
+                    Output::TextBlock(_) => true,
+                    _ => false,
+                })
+                .collect()
+                .await;
 
         let expected = vec![
-            create_text_item("abc", chunks.find("abc").unwrap()),
-            create_text_item("d\nef\ng", chunks.find("d\nef\ng").unwrap()),
-            create_text_item("hij", chunks.find("hij").unwrap()),
+            Output::TextBlock(Text {
+                text: "abc".to_string(),
+                location_in_text: chunks.find("abc").unwrap(),
+            }),
+            Output::TextBlock(Text {
+                text: "d\nef\ng".to_string(),
+                location_in_text: chunks.find("d\nef\ng").unwrap(),
+            }),
+            Output::TextBlock(Text {
+                text: "hij".to_string(),
+                location_in_text: chunks.find("hij").unwrap(),
+            }),
         ];
 
         assert_eq!(lines, expected);
@@ -402,12 +401,7 @@ mod tests {
         ]
         .join("");
 
-
-        let lines: Vec<Output> = compose_async_steams!(
-            || async_chars_stream_str(input.as_str()),
-            parse_ansi,
-            merge_text_output
-        )
+        let lines: Vec<Output> = compose_streams!(|| chars_stream(input.clone()), parse_ansi)
             .await
             .filter(|item| match item {
                 Output::TextBlock(_) => true,
@@ -415,11 +409,20 @@ mod tests {
             })
             .collect()
             .await;
-        
+
         let expected = vec![
-            create_text_item("a\x1Bbc", input.find("a\x1Bbc").unwrap()),
-            create_text_item("d\nef\ng\x1B", input.find("d\nef\ng\x1B").unwrap()),
-            create_text_item("hij", input.find("hij").unwrap()),
+            Output::TextBlock(Text {
+                text: "a\x1Bbc".to_string(),
+                location_in_text: input.find("a\x1Bbc").unwrap(),
+            }),
+            Output::TextBlock(Text {
+                text: "d\nef\ng\x1B".to_string(),
+                location_in_text: input.find("d\nef\ng\x1B").unwrap(),
+            }),
+            Output::TextBlock(Text {
+                text: "hij".to_string(),
+                location_in_text: input.find("hij").unwrap(),
+            }),
         ];
 
         assert_eq!(lines, expected);

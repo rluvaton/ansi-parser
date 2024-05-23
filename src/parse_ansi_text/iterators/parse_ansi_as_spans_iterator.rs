@@ -1,11 +1,11 @@
-use async_stream::stream;
 use std::iter::Iterator;
 use std::path::PathBuf;
+use async_stream::stream;
 
 use tokio_stream::Stream;
 
 use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{
-    get_type_from_ansi_sequence, AnsiSequenceType,
+    AnsiSequenceType, get_type_from_ansi_sequence,
 };
 use crate::parse_ansi_text::ansi::colors::Color;
 use crate::parse_ansi_text::ansi::types::Span;
@@ -27,7 +27,7 @@ impl<'a> Iterator for ParseAnsiAsSpansIterator<'a> {
             match output {
                 Output::IgnoreMe => {}
                 Output::TextBlock(text) => {
-                    self.current_span.text.push_str(text.text.as_ref());
+                    self.current_span.text.push_str(text.text.as_str());
                 }
                 Output::Escape(seq) => {
                     let sequence_type = get_type_from_ansi_sequence(&seq);
@@ -190,10 +190,7 @@ impl ParseAnsiAsSpansIterator<'_> {
     }
 }
 
-pub async fn convert_ansi_output_to_spans<S: Stream<Item = Output>>(
-    input: S,
-    options: ParseOptions,
-) -> impl Stream<Item = Span> {
+pub async fn convert_ansi_output_to_spans<'a, S: Stream<Item = Output>>(input: S, options: ParseOptions) -> impl Stream<Item = Span> {
     stream! {
         let mut current_span: Span = options
                 .initial_span
@@ -204,7 +201,7 @@ pub async fn convert_ansi_output_to_spans<S: Stream<Item = Output>>(
             match output {
                 Output::IgnoreMe => {}
                 Output::TextBlock(text) => {
-                    current_span.text.push_str(text.text.as_ref());
+                    current_span.text.push_str(text.text.as_str());
                 }
                 Output::Escape(seq) => {
                     let sequence_type = get_type_from_ansi_sequence(&seq);
@@ -314,8 +311,8 @@ pub async fn convert_ansi_output_to_spans<S: Stream<Item = Output>>(
 
 #[cfg(test)]
 mod tests {
-    use futures::stream::StreamExt;
     use pretty_assertions::assert_eq;
+    use futures::stream::StreamExt;
 
     use crate::compose_async_steams;
     use crate::parse_ansi_text::ansi::colors::*;
@@ -334,7 +331,7 @@ mod tests {
             "Hello, World!".to_string(),
             RESET_CODE.to_string(),
         ]
-        .join("");
+            .join("");
 
         let chars = CharsIterator {
             index: 0,
@@ -380,17 +377,14 @@ mod tests {
             "Hello, World!".to_string(),
             RESET_CODE.to_string(),
         ]
-        .join("");
+            .join("");
 
         let output: Vec<Span> = compose_async_steams!(
-            || async_chars_stream_string(input_str.clone()),
+            || async_chars_stream(input_str.clone()),
             parse_ansi,
             |output| convert_ansi_output_to_spans(output, ParseOptions::default())
-        )
-        .await
-        .collect::<Vec<Span>>()
-        .await;
-
+        ).await.collect::<Vec<Span>>().await;
+        
         let expected = vec![Span::empty()
             .with_text("Hello, World!".to_string())
             .with_bg_color(Color::Red)];
@@ -402,13 +396,10 @@ mod tests {
         let input_str = [RED_BACKGROUND_CODE, "Hello, World!", RESET_CODE].join("");
 
         let output: Vec<Span> = compose_async_steams!(
-            || async_stream_from_vector(vec![input_str.into_boxed_str()]),
+            || async_stream_from_vector(vec![input_str]),
             parse_ansi,
             |output| convert_ansi_output_to_spans(output, ParseOptions::default())
-        )
-        .await
-        .collect::<Vec<Span>>()
-        .await;
+        ).await.collect::<Vec<Span>>().await;
 
         let expected = vec![Span::empty()
             .with_text("Hello, World!".to_string())

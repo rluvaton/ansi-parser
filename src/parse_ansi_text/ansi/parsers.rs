@@ -6,8 +6,8 @@ use nom::bytes::streaming::{tag, take, take_until};
 use nom::character::streaming::{digit0, digit1};
 use nom::combinator::{map, map_res, opt, value};
 use nom::error::ErrorKind;
-use nom::sequence::{delimited, preceded, tuple};
 use nom::IResult;
+use nom::sequence::{delimited, preceded, tuple};
 
 use crate::parse_ansi_text::ansi::enums::AnsiSequence;
 
@@ -21,6 +21,7 @@ macro_rules! tag_parser {
 
 fn parse_u32(input: &str) -> IResult<&str, u32> {
     map_res(digit1, |s: &str| s.parse::<u32>())(input)
+    
 }
 
 fn parse_u8(input: &str) -> IResult<&str, u8> {
@@ -47,43 +48,31 @@ fn cursor_pos(input: &str) -> IResult<&str, AnsiSequence> {
 }
 
 fn escape(input: &str) -> IResult<&str, AnsiSequence> {
-    value(AnsiSequence::Text(Box::from("\u{1b}")), tag("\u{1b}"))(input)
+    value(AnsiSequence::Text("\u{1b}".to_string()), tag("\u{1b}"))(input)
 }
 
 fn cursor_up(input: &str) -> IResult<&str, AnsiSequence> {
-    preceded(
-        tag("\u{1b}"),
-        map(delimited(tag("["), parse_def_cursor_int, tag("A")), |am| {
-            AnsiSequence::CursorUp(am)
-        }),
-    )(input)
+    preceded(tag("\u{1b}"), map(delimited(tag("["), parse_def_cursor_int, tag("A")), |am| {
+        AnsiSequence::CursorUp(am)
+    }))(input)
 }
 
 fn cursor_down(input: &str) -> IResult<&str, AnsiSequence> {
-    preceded(
-        tag("\u{1b}"),
-        map(delimited(tag("["), parse_def_cursor_int, tag("B")), |am| {
-            AnsiSequence::CursorDown(am)
-        }),
-    )(input)
+    preceded(tag("\u{1b}"), map(delimited(tag("["), parse_def_cursor_int, tag("B")), |am| {
+        AnsiSequence::CursorDown(am)
+    }))(input)
 }
 
 fn cursor_forward(input: &str) -> IResult<&str, AnsiSequence> {
-    preceded(
-        tag("\u{1b}"),
-        map(delimited(tag("["), parse_def_cursor_int, tag("C")), |am| {
-            AnsiSequence::CursorForward(am)
-        }),
-    )(input)
+    preceded(tag("\u{1b}"), map(delimited(tag("["), parse_def_cursor_int, tag("C")), |am| {
+        AnsiSequence::CursorForward(am)
+    }))(input)
 }
 
 fn cursor_backward(input: &str) -> IResult<&str, AnsiSequence> {
-    preceded(
-        tag("\u{1b}"),
-        map(delimited(tag("["), parse_def_cursor_int, tag("D")), |am| {
-            AnsiSequence::CursorBackward(am)
-        }),
-    )(input)
+    preceded(tag("\u{1b}"), map(delimited(tag("["), parse_def_cursor_int, tag("D")), |am| {
+        AnsiSequence::CursorBackward(am)
+    }))(input)
 }
 
 fn graphics_mode1(input: &str) -> IResult<&str, AnsiSequence> {
@@ -174,13 +163,10 @@ fn reset_mode(input: &str) -> IResult<&str, AnsiSequence> {
 }
 
 fn set_top_and_bottom(input: &str) -> IResult<&str, AnsiSequence> {
-    preceded(
-        tag("\u{1b}"),
-        map(
-            tuple((tag("["), parse_u32, tag(";"), parse_u32, tag("r"))),
-            |(_, x, _, y, _)| AnsiSequence::SetTopAndBottom(x, y),
-        ),
-    )(input)
+    preceded(tag("\u{1b}"), map(
+        tuple((tag("["), parse_u32, tag(";"), parse_u32, tag("r"))),
+        |(_, x, _, y, _)| AnsiSequence::SetTopAndBottom(x, y),
+    ))(input)
 }
 
 tag_parser!(cursor_save, "\u{1b}[s", AnsiSequence::CursorSave);
@@ -190,97 +176,37 @@ tag_parser!(erase_line, "\u{1b}[K", AnsiSequence::EraseLine);
 tag_parser!(hide_cursor, "\u{1b}[?25l", AnsiSequence::HideCursor);
 tag_parser!(show_cursor, "\u{1b}[?25h", AnsiSequence::ShowCursor);
 tag_parser!(cursor_to_app, "\u{1b}[?1h", AnsiSequence::CursorToApp);
-tag_parser!(
-    set_new_line_mode,
-    "\u{1b}[20h",
-    AnsiSequence::SetNewLineMode
-);
+tag_parser!(set_new_line_mode, "\u{1b}[20h", AnsiSequence::SetNewLineMode);
 tag_parser!(set_col_132, "\u{1b}[?3h", AnsiSequence::SetCol132);
-tag_parser!(
-    set_smooth_scroll,
-    "\u{1b}[?4h",
-    AnsiSequence::SetSmoothScroll
-);
-tag_parser!(
-    set_reverse_video,
-    "\u{1b}[?5h",
-    AnsiSequence::SetReverseVideo
-);
-tag_parser!(
-    set_origin_rel,
-    "\u{1b}[?6h",
-    AnsiSequence::SetOriginRelative
-);
+tag_parser!(set_smooth_scroll, "\u{1b}[?4h", AnsiSequence::SetSmoothScroll);
+tag_parser!(set_reverse_video, "\u{1b}[?5h", AnsiSequence::SetReverseVideo);
+tag_parser!(set_origin_rel, "\u{1b}[?6h", AnsiSequence::SetOriginRelative);
 tag_parser!(set_auto_wrap, "\u{1b}[?7h", AnsiSequence::SetAutoWrap);
 tag_parser!(set_auto_repeat, "\u{1b}[?8h", AnsiSequence::SetAutoRepeat);
 tag_parser!(set_interlacing, "\u{1b}[?9h", AnsiSequence::SetInterlacing);
 tag_parser!(set_linefeed, "\u{1b}[20l", AnsiSequence::SetLineFeedMode);
-tag_parser!(
-    set_cursorkey,
-    "\u{1b}[?1l",
-    AnsiSequence::SetCursorKeyToCursor
-);
+tag_parser!(set_cursorkey, "\u{1b}[?1l", AnsiSequence::SetCursorKeyToCursor);
 tag_parser!(set_vt52, "\u{1b}[?2l", AnsiSequence::SetVT52);
 tag_parser!(set_col80, "\u{1b}[?3l", AnsiSequence::SetCol80);
-tag_parser!(
-    set_jump_scroll,
-    "\u{1b}[?4l",
-    AnsiSequence::SetJumpScrolling
-);
+tag_parser!(set_jump_scroll, "\u{1b}[?4l", AnsiSequence::SetJumpScrolling);
 tag_parser!(set_normal_video, "\u{1b}[?5l", AnsiSequence::SetNormalVideo);
-tag_parser!(
-    set_origin_abs,
-    "\u{1b}[?6l",
-    AnsiSequence::SetOriginAbsolute
-);
+tag_parser!(set_origin_abs, "\u{1b}[?6l", AnsiSequence::SetOriginAbsolute);
 tag_parser!(reset_auto_wrap, "\u{1b}[?7l", AnsiSequence::ResetAutoWrap);
-tag_parser!(
-    reset_auto_repeat,
-    "\u{1b}[?8l",
-    AnsiSequence::ResetAutoRepeat
-);
-tag_parser!(
-    reset_interlacing,
-    "\u{1b}[?9l",
-    AnsiSequence::ResetInterlacing
-);
+tag_parser!(reset_auto_repeat, "\u{1b}[?8l", AnsiSequence::ResetAutoRepeat);
+tag_parser!(reset_interlacing, "\u{1b}[?9l", AnsiSequence::ResetInterlacing);
 
-tag_parser!(
-    set_alternate_keypad,
-    "\u{1b}=",
-    AnsiSequence::SetAlternateKeypad
-);
-tag_parser!(
-    set_numeric_keypad,
-    "\u{1b}>",
-    AnsiSequence::SetNumericKeypad
-);
+tag_parser!(set_alternate_keypad, "\u{1b}=", AnsiSequence::SetAlternateKeypad);
+tag_parser!(set_numeric_keypad, "\u{1b}>", AnsiSequence::SetNumericKeypad);
 tag_parser!(set_uk_g0, "\u{1b}(A", AnsiSequence::SetUKG0);
 tag_parser!(set_uk_g1, "\u{1b})A", AnsiSequence::SetUKG1);
 tag_parser!(set_us_g0, "\u{1b}(B", AnsiSequence::SetUSG0);
 tag_parser!(set_us_g1, "\u{1b})B", AnsiSequence::SetUSG1);
 tag_parser!(set_g0_special, "\u{1b}(0", AnsiSequence::SetG0SpecialChars);
 tag_parser!(set_g1_special, "\u{1b})0", AnsiSequence::SetG1SpecialChars);
-tag_parser!(
-    set_g0_alternate,
-    "\u{1b}(1",
-    AnsiSequence::SetG0AlternateChar
-);
-tag_parser!(
-    set_g1_alternate,
-    "\u{1b})1",
-    AnsiSequence::SetG1AlternateChar
-);
-tag_parser!(
-    set_g0_graph,
-    "\u{1b}(2",
-    AnsiSequence::SetG0AltAndSpecialGraph
-);
-tag_parser!(
-    set_g1_graph,
-    "\u{1b})2",
-    AnsiSequence::SetG1AltAndSpecialGraph
-);
+tag_parser!(set_g0_alternate, "\u{1b}(1", AnsiSequence::SetG0AlternateChar);
+tag_parser!(set_g1_alternate, "\u{1b})1", AnsiSequence::SetG1AlternateChar);
+tag_parser!(set_g0_graph, "\u{1b}(2", AnsiSequence::SetG0AltAndSpecialGraph);
+tag_parser!(set_g1_graph, "\u{1b})2", AnsiSequence::SetG1AltAndSpecialGraph);
 tag_parser!(set_single_shift2, "\u{1b}N", AnsiSequence::SetSingleShift2);
 tag_parser!(set_single_shift3, "\u{1b}O", AnsiSequence::SetSingleShift3);
 
@@ -290,6 +216,7 @@ fn combined(input: &str) -> IResult<&str, AnsiSequence> {
     // So we simply nest them.
     alt((
         alt((
+
             // TODO - remove escape
             // escape,
             cursor_pos,
@@ -359,6 +286,7 @@ fn take_single(s: &str) -> IResult<&str, &str> {
     take(1usize)(s)
 }
 
+
 pub fn parse_escape(input: &str) -> IResult<&str, AnsiSequence> {
     if input.is_empty() {
         return Err(nom::Err::Incomplete(nom::Needed::Unknown));
@@ -370,7 +298,7 @@ pub fn parse_escape(input: &str) -> IResult<&str, AnsiSequence> {
             let (str, matched_string) = res;
             if !matched_string.is_empty() {
                 // TODO - avoid to string
-                return Ok((str, AnsiSequence::Text(Box::from(matched_string))));
+                return Ok((str, AnsiSequence::Text(matched_string.to_string())));
             }
         }
         Err(_) => {}
@@ -386,13 +314,13 @@ pub fn parse_escape(input: &str) -> IResult<&str, AnsiSequence> {
                 nom::Err::Error(sub_error) => {
                     // If fail to match than we have escape code in the first char
                     // we check in fail to match and not incomplete as we might get more text that might be escape code
-                    if matches!(sub_error.code, ErrorKind::Tag) {
+                    if matches!(sub_error.code, ErrorKind::Tag)  {
                         let single_res = take_single(input);
-
+                        
                         if single_res.is_ok() {
                             let (str, matched_string) = single_res.unwrap();
                             // TODO - avoid to string
-                            return Ok((str, AnsiSequence::Text(Box::from(matched_string))));
+                            return Ok((str, AnsiSequence::Text(matched_string.to_string())));
                         }
                     }
                     return Err(nom::Err::Error(sub_error));
@@ -401,6 +329,7 @@ pub fn parse_escape(input: &str) -> IResult<&str, AnsiSequence> {
                     return Err(e);
                 }
             }
+
         }
     }
 }
@@ -416,19 +345,7 @@ mod tests {
 
     #[test]
     fn test_value() {
-        assert_eq!(
-            parse_escape(RED_BACKGROUND_CODE),
-            Ok((
-                "",
-                AnsiSequence::SetGraphicsMode(Vec::from_slice(&[41]).unwrap())
-            ))
-        );
-        assert_eq!(
-            parse_escape(RESET_CODE),
-            Ok((
-                "",
-                AnsiSequence::SetGraphicsMode(Vec::from_slice(&[0]).unwrap())
-            ))
-        );
+        assert_eq!(parse_escape(RED_BACKGROUND_CODE), Ok(("", AnsiSequence::SetGraphicsMode(Vec::from_slice(&[41]).unwrap()))));
+        assert_eq!(parse_escape(RESET_CODE), Ok(("", AnsiSequence::SetGraphicsMode(Vec::from_slice(&[0]).unwrap()))));
     }
 }

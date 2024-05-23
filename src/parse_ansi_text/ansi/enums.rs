@@ -4,7 +4,7 @@
 #[derive(Debug, PartialEq, Clone)]
 pub enum AnsiSequence {
     // TODO - change to &str?
-    Text(Box<str>),
+    Text(String),
     // Escape,
     CursorPos(u32, u32),
     CursorUp(u32),

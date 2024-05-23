@@ -1,16 +1,16 @@
-use crate::parse_ansi_text::ansi::types::{Span, SpanJson};
+use std::iter::Iterator;
 use async_stream::stream;
 use futures_core::Stream;
-use std::iter::Iterator;
+use crate::parse_ansi_text::ansi::types::{Span, SpanJson};
 
 pub struct SpansJsonLineDisplay<IteratorType> {
     iter: IteratorType,
-    yielded_first_item: bool,
+    yielded_first_item: bool
 }
 
 impl<IteratorType> Iterator for SpansJsonLineDisplay<IteratorType>
-where
-    IteratorType: Iterator<Item = Span>,
+    where
+        IteratorType: Iterator<Item = Span>,
 {
     // Output item
     type Item = String;
@@ -25,6 +25,7 @@ where
                 // Print from prev object
                 str = ",";
             }
+
 
             self.yielded_first_item = true;
             let span_json = SpanJson::create_from_span(&span);
@@ -51,10 +52,7 @@ pub async fn spans_json_line<S: Stream<Item = Span>>(input: S) -> impl Stream<It
 
 impl<IteratorType> SpansJsonLineDisplay<IteratorType> {
     pub fn new(iter: IteratorType) -> Self {
-        Self {
-            iter,
-            yielded_first_item: false,
-        }
+        Self { iter, yielded_first_item: false }
     }
 }
 

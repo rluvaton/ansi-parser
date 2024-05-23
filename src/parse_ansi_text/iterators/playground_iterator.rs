@@ -1,3 +1,4 @@
+
 use std::io;
 use std::iter::Iterator;
 
@@ -5,6 +6,7 @@ use get_chunk::iterator::FileIter;
 
 use crate::parse_ansi_text::ansi::colors::{BLACK_BACKGROUND_CODE, RED_BACKGROUND_CODE};
 use crate::parse_ansi_text::ansi::constants::RESET_CODE;
+
 
 // TODO - change type here
 fn run() -> io::Result<u8> {
@@ -28,10 +30,8 @@ fn run() -> io::Result<u8> {
         "Goodbye".to_string(),
         " world!".to_string(),
     ];
-    let _iterator = RandomStringsIterator {
-        vec: input_chunks,
-        index: 0,
-    };
+    let _iterator = RandomStringsIterator { vec: input_chunks, index: 0 };
+
 
     let _file_iter = FileIter::new("file.txt")?;
 
@@ -48,7 +48,7 @@ fn run() -> io::Result<u8> {
     // }
 
     // let file_iterator = file_iter.into_iter().map(|item| item.expect("Failed to get file chunk")).expect("Converting file chunk to UTF-8 string failed"));
-    //
+    // 
     // let iterator = AnsiParseIterator::create(Box::new(file_iterator));
 
     //

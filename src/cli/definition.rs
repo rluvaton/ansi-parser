@@ -1,7 +1,9 @@
-use clap::builder::PossibleValue;
+
 use clap::{Arg, ArgAction, Command, ValueHint};
+use clap::builder::PossibleValue;
 
 pub fn get_cli() -> Command {
+
     let parse_command = Command::new("parse")
         .about("Parse ANSI text")
         .arg(Arg::new("file")
@@ -78,24 +80,27 @@ pub fn get_cli() -> Command {
 
     let create_mapping_command = Command::new("create")
         .about("Mapping file for easy access")
-        .arg(
-            Arg::new("input")
-                .short('i')
-                .long("input")
-                .short_alias('f')
-                .alias("file")
-                .required(true)
-                .value_hint(ValueHint::FilePath)
-                .help("file to read"),
-        )
-        .arg(
-            Arg::new("output")
-                .short('o')
-                .long("output")
-                .required(true)
-                .value_hint(ValueHint::FilePath)
-                .help("mapping file to output"),
-        );
+        .arg(Arg::new("input")
+
+            .short('i')
+            .long("input")
+
+            .short_alias('f')
+            .alias("file")
+
+            .required(true)
+            .value_hint(ValueHint::FilePath)
+            .help("file to read"))
+
+        .arg(Arg::new("output")
+
+            .short('o')
+            .long("output")
+
+            .required(true)
+            .value_hint(ValueHint::FilePath)
+            .help("mapping file to output"));
+    
 
     let mapping_command = Command::new("mapping")
         .about("Mapping file for easy access")

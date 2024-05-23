@@ -9,7 +9,7 @@ use nom::error::ErrorKind;
 use nom::IResult;
 use nom::sequence::{delimited, preceded, tuple};
 
-use crate::parse_ansi_text::ansi::enums::AnsiSequence;
+use crate::parse_ansi_text::raw_ansi_parse::enums::AnsiSequence;
 
 macro_rules! tag_parser {
     ($sig:ident, $tag:expr, $ret:expr) => {

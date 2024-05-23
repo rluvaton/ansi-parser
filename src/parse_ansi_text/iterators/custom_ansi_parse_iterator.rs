@@ -4,8 +4,7 @@ use std::path::PathBuf;
 use tokio_stream::{Stream, StreamExt};
 
 use crate::files::iterators::create_file_iterator;
-use crate::parse_ansi_text::ansi::enums::AnsiSequence;
-use crate::parse_ansi_text::ansi::parsers::parse_escape;
+use crate::parse_ansi_text::raw_ansi_parse::{AnsiSequence, parse_escape};
 
 pub struct AnsiParseIterator<'a> {
     pending_string: &'a str,

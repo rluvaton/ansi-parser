@@ -16,6 +16,7 @@ pub mod parse_options;
 pub mod parse_text_matching_single_span;
 pub mod iterators;
 pub mod ansi;
+pub mod raw_ansi_parse;
 
 // TODO - remove convert string to iterator - done this to test that the iterator works
 

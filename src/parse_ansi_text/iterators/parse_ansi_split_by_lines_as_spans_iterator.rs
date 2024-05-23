@@ -8,8 +8,9 @@ use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{
 };
 use crate::parse_ansi_text::ansi::colors::Color;
 use crate::parse_ansi_text::ansi::types::Span;
-use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::{AnsiParseIterator, Output};
+use crate::parse_ansi_text::ansi_to_span::iterator_parse::AnsiParseIterator;
 use crate::parse_ansi_text::parse_options::ParseOptions;
+use crate::parse_ansi_text::raw_ansi_parse::Output;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Line {
@@ -492,7 +493,8 @@ mod tests {
 
     use crate::parse_ansi_text::ansi::colors::*;
     use crate::parse_ansi_text::ansi::constants::RESET_CODE;
-    use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::parse_ansi;
+    use crate::parse_ansi_text::ansi_to_span::stream_helpers::merge_text_output;
+    use crate::parse_ansi_text::ansi_to_span::stream_parse::parse_ansi;
     use crate::parse_ansi_text::iterators::playground_iterator::CharsIterator;
     use crate::parse_ansi_text::parse_options::ParseOptions;
     use crate::test_utils::{async_chars_stream, async_stream_from_vector};
@@ -621,6 +623,7 @@ mod tests {
         let lines: Vec<Line> = compose_async_steams!(
             || async_chars_stream(input.clone()),
             parse_ansi,
+            merge_text_output,
             |output| convert_ansi_output_to_lines_of_spans(output, ParseOptions::default())
         ).await.collect::<Vec<Line>>().await;
 
@@ -674,6 +677,7 @@ mod tests {
         let lines: Vec<Line> = compose_async_steams!(
             || async_stream_from_vector(vec![chunks.clone()]),
             parse_ansi,
+            merge_text_output,
             |output| convert_ansi_output_to_lines_of_spans(output, ParseOptions::default())
         ).await.collect::<Vec<Line>>().await;
 

@@ -3,14 +3,12 @@ use std::path::PathBuf;
 use async_stream::stream;
 
 use tokio_stream::Stream;
-
-use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{
-    AnsiSequenceType, get_type_from_ansi_sequence,
-};
+use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{AnsiSequenceType, get_type_from_ansi_sequence};
 use crate::parse_ansi_text::ansi::colors::Color;
 use crate::parse_ansi_text::ansi::types::Span;
-use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::{AnsiParseIterator, Output};
+use crate::parse_ansi_text::ansi_to_span::iterator_parse::AnsiParseIterator;
 use crate::parse_ansi_text::parse_options::ParseOptions;
+use crate::parse_ansi_text::raw_ansi_parse::Output;
 
 pub struct ParseAnsiAsSpansIterator<'a> {
     pub(crate) iter: AnsiParseIterator<'a>,
@@ -318,7 +316,8 @@ mod tests {
     use crate::parse_ansi_text::ansi::colors::*;
     use crate::parse_ansi_text::ansi::constants::*;
     use crate::parse_ansi_text::ansi::types::*;
-    use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::*;
+    use crate::parse_ansi_text::ansi_to_span::stream_helpers::merge_text_output;
+    use crate::parse_ansi_text::ansi_to_span::stream_parse::*;
     use crate::parse_ansi_text::iterators::playground_iterator::CharsIterator;
     use crate::test_utils::*;
 
@@ -382,6 +381,7 @@ mod tests {
         let output: Vec<Span> = compose_async_steams!(
             || async_chars_stream(input_str.clone()),
             parse_ansi,
+            merge_text_output,
             |output| convert_ansi_output_to_spans(output, ParseOptions::default())
         ).await.collect::<Vec<Span>>().await;
         
@@ -398,6 +398,7 @@ mod tests {
         let output: Vec<Span> = compose_async_steams!(
             || async_stream_from_vector(vec![input_str]),
             parse_ansi,
+            merge_text_output,
             |output| convert_ansi_output_to_spans(output, ParseOptions::default())
         ).await.collect::<Vec<Span>>().await;
 

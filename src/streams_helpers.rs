@@ -1,4 +1,5 @@
 use async_stream::stream;
+use futures_util::stream;
 use tokio::io;
 use tokio_stream::Stream;
 
@@ -77,3 +78,13 @@ pub async fn unwrap_items<I>(input: impl Stream<Item = io::Result<I>>)
     }
 }
 
+pub async fn vector_to_async_stream<I>(input: Vec<I>)
+                                       -> impl Stream<Item=I>
+{
+    let iterator = stream::iter(input);
+    stream! {
+        for await value in iterator {
+            yield value;
+        }
+    }
+}

@@ -1,10 +1,10 @@
-use async_stream::stream;
-use std::fmt::{Display, Formatter, Result as DisplayResult};
+use std::fmt::Display;
 use std::path::PathBuf;
+
 use tokio_stream::{Stream, StreamExt};
 
 use crate::files::iterators::create_file_iterator;
-use crate::parse_ansi_text::raw_ansi_parse::{AnsiSequence, parse_escape};
+use crate::parse_ansi_text::raw_ansi_parse::{Output, parse_escape, Text};
 
 pub struct AnsiParseIterator<'a> {
     pending_string: &'a str,
@@ -36,7 +36,7 @@ impl<'a> Iterator for AnsiParseIterator<'a> {
             if loc == 0 {
                 // If the beginning of the string is the key for escape code
                 let pending_text_size_before = self.pending_string.len();
-                let res = parse_escape(&self.pending_string[loc..]);
+                let res = parse_escape(&self.pending_string[loc..], false);
 
                 if let Ok(ret) = res {
                     // If there is escape code after the escape key
@@ -132,108 +132,14 @@ impl AnsiParseIterator<'_> {
     }
 }
 
-pub async fn parse_ansi<'a, S: Stream<Item = String>>(input: S) -> impl Stream<Item = Output> {
-    stream! {
-        let mut current_location_until_pending_string: usize = 0;
-        let mut pending_string: String = "".to_string();
-        let mut last_text_block: Option<Text> = None;
-        
-        for await value in input {
-            pending_string.push_str(value.as_str());
-
-            let mut buf = pending_string.as_str();
-            loop {
-                let pending_text_size_before = buf.len();
-                
-                match parse_escape(buf) {
-                  Ok((pending, seq)) => {
-                    buf = pending;
-                    let text_location = current_location_until_pending_string;
-                        
-                    current_location_until_pending_string += pending_text_size_before - buf.len();
-
-                    match seq {
-                      AnsiSequence::Text(str) => {
-                        if last_text_block.is_none() {
-                            last_text_block = Some(Text {
-                              text: str,
-                              location_in_text: text_location,
-                            });
-                        } else {
-                            last_text_block.as_mut().unwrap().text.push_str(str.as_str());
-                        }
-                      },
-                      _ => {
-                         if last_text_block.is_some() {
-                            yield Output::TextBlock(last_text_block.unwrap());
-                            last_text_block = None;
-                         }
-                        yield Output::Escape(seq);
-                     },
-                    }
-                  }
-                  Err(_) => {
-                        break;
-                  },
-                }
-            }
-            pending_string = buf.to_string();
-        }
-        
-         if last_text_block.is_some() {
-            let mut text_block = last_text_block.unwrap();
-            if !pending_string.is_empty() {
-                text_block.text.push_str(pending_string.as_str());
-            }
-            
-            yield Output::TextBlock(text_block);
-         } else if !pending_string.is_empty() {
-            yield Output::TextBlock(Text {
-                text: pending_string,
-                location_in_text: current_location_until_pending_string,
-            });
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Text {
-    pub(crate) text: String,
-    pub(crate) location_in_text: usize,
-}
-
-///This is what is outputted by the parsing iterator.
-///Each block contains either straight-up text, or simply
-///an ANSI escape sequence.
-#[derive(Debug, Clone, PartialEq)]
-pub enum Output {
-    // TODO - remove
-    IgnoreMe,
-    TextBlock(Text),
-    Escape(AnsiSequence),
-}
-
-impl<'a> Display for Output {
-    fn fmt(&self, formatter: &mut Formatter) -> DisplayResult {
-        use Output::*;
-        match self {
-            IgnoreMe => write!(formatter, "IgnoreMe"),
-            TextBlock(txt) => write!(formatter, "{}", txt.text),
-            Escape(seq) => write!(formatter, "{}", seq),
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {
-    use crate::compose_streams;
-    use futures_util::stream;
     use pretty_assertions::assert_eq;
 
     use crate::parse_ansi_text::ansi::colors::*;
     use crate::parse_ansi_text::ansi::constants::RESET_CODE;
     use crate::parse_ansi_text::iterators::playground_iterator::CharsIterator;
-    use crate::test_utils::chars_stream;
 
     use super::*;
 
@@ -244,7 +150,7 @@ mod tests {
             YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng" + RESET_CODE,
             CYAN_FOREGROUND_CODE.to_string() + "hij" + RESET_CODE,
         ]
-        .join("");
+            .join("");
 
         let chars = CharsIterator {
             index: 0,
@@ -283,8 +189,8 @@ mod tests {
             YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng" + RESET_CODE,
             CYAN_FOREGROUND_CODE.to_string() + "hij" + RESET_CODE,
         ]
-        .join("")
-        .to_string();
+            .join("")
+            .to_string();
 
         let lines: Vec<Output> = AnsiParseIterator::create_from_str(chunks.clone())
             .filter(|item| match item {
@@ -311,120 +217,4 @@ mod tests {
         assert_eq!(lines, expected);
     }
 
-    #[tokio::test]
-    async fn streams_split_to_lines_should_work_for_split_by_chars() {
-        let input = "";
-
-        let input = vec![
-            RED_FOREGROUND_CODE.to_string() + "abc" + RESET_CODE,
-            YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng" + RESET_CODE,
-            CYAN_FOREGROUND_CODE.to_string() + "hij" + RESET_CODE,
-        ]
-        .join("");
-
-        let lines: Vec<Output> = compose_streams!(|| chars_stream(input.clone()), parse_ansi)
-            .await
-            .filter(|item| match item {
-                Output::TextBlock(_) => true,
-                _ => false,
-            })
-            .collect()
-            .await;
-
-        let expected = vec![
-            Output::TextBlock(Text {
-                text: "abc".to_string(),
-                location_in_text: input.find("abc").unwrap(),
-            }),
-            Output::TextBlock(Text {
-                text: "d\nef\ng".to_string(),
-                location_in_text: input.find("d\nef\ng").unwrap(),
-            }),
-            Output::TextBlock(Text {
-                text: "hij".to_string(),
-                location_in_text: input.find("hij").unwrap(),
-            }),
-        ];
-
-        assert_eq!(lines, expected);
-    }
-
-    #[tokio::test]
-    async fn streams_split_to_lines_should_work_for_single_chunk() {
-        let chunks = vec![
-            RED_FOREGROUND_CODE.to_string() + "abc" + RESET_CODE,
-            YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng" + RESET_CODE,
-            CYAN_FOREGROUND_CODE.to_string() + "hij" + RESET_CODE,
-        ]
-        .join("")
-        .to_string();
-
-        let lines: Vec<Output> =
-            compose_streams!(|| stream::iter(vec![chunks.clone()]), parse_ansi)
-                .await
-                .filter(|item| match item {
-                    Output::TextBlock(_) => true,
-                    _ => false,
-                })
-                .collect()
-                .await;
-
-        let expected = vec![
-            Output::TextBlock(Text {
-                text: "abc".to_string(),
-                location_in_text: chunks.find("abc").unwrap(),
-            }),
-            Output::TextBlock(Text {
-                text: "d\nef\ng".to_string(),
-                location_in_text: chunks.find("d\nef\ng").unwrap(),
-            }),
-            Output::TextBlock(Text {
-                text: "hij".to_string(),
-                location_in_text: chunks.find("hij").unwrap(),
-            }),
-        ];
-
-        assert_eq!(lines, expected);
-    }
-
-    #[tokio::test]
-    async fn streams_split_to_lines_should_work_for_split_by_chars_when_text_have_escape_code_used_without_data(
-    ) {
-        let input = "";
-
-        let input = vec![
-            // Adding \x1B which is the escape code to make sure treated as text
-            RED_FOREGROUND_CODE.to_string() + "a\x1Bbc" + RESET_CODE,
-            // Added \x1B before escape code to make sure treated as text
-            YELLOW_FOREGROUND_CODE.to_string() + "d\nef\ng\x1B" + RESET_CODE,
-            CYAN_FOREGROUND_CODE.to_string() + "hij" + RESET_CODE,
-        ]
-        .join("");
-
-        let lines: Vec<Output> = compose_streams!(|| chars_stream(input.clone()), parse_ansi)
-            .await
-            .filter(|item| match item {
-                Output::TextBlock(_) => true,
-                _ => false,
-            })
-            .collect()
-            .await;
-
-        let expected = vec![
-            Output::TextBlock(Text {
-                text: "a\x1Bbc".to_string(),
-                location_in_text: input.find("a\x1Bbc").unwrap(),
-            }),
-            Output::TextBlock(Text {
-                text: "d\nef\ng\x1B".to_string(),
-                location_in_text: input.find("d\nef\ng\x1B").unwrap(),
-            }),
-            Output::TextBlock(Text {
-                text: "hij".to_string(),
-                location_in_text: input.find("hij").unwrap(),
-            }),
-        ];
-
-        assert_eq!(lines, expected);
-    }
 }

@@ -19,7 +19,7 @@ pub fn create_mapping_file(file_path: PathBuf, contents: String) {
     let mut file = File::create(file_path).expect("create mapping file failed");
 
     let lines_iterators = ParseAnsiAsSpansByLinesIterator::create_from_str(contents, ParseOptions::default());
-    
+
     write_mapping_file_from_iterator(&mut file, lines_iterators);
 }
 

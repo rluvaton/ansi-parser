@@ -3,7 +3,7 @@
 use futures::stream::StreamExt;
 use ansi::types::Span;
 use crate::compose_async_steams;
-use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::parse_ansi;
+use crate::parse_ansi_text::ansi_to_span::stream_parse::parse_ansi;
 use crate::parse_ansi_text::iterators::parse_ansi_as_spans_iterator::{convert_ansi_output_to_spans};
 use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::{convert_ansi_output_to_lines_of_spans, Line};
 
@@ -17,6 +17,7 @@ pub mod parse_text_matching_single_span;
 pub mod iterators;
 pub mod ansi;
 pub mod raw_ansi_parse;
+pub mod ansi_to_span;
 
 // TODO - remove convert string to iterator - done this to test that the iterator works
 

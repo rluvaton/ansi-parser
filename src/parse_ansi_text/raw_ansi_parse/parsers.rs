@@ -287,21 +287,30 @@ fn take_single(s: &str) -> IResult<&str, &str> {
 }
 
 
-pub fn parse_escape(input: &str) -> IResult<&str, AnsiSequence> {
+pub fn parse_escape(input: &str, complete_string: bool) -> IResult<&str, AnsiSequence> {
     if input.is_empty() {
         return Err(nom::Err::Incomplete(nom::Needed::Unknown));
     }
 
-    let res = until_escape(input);
-    match res {
-        Ok(res) => {
-            let (str, matched_string) = res;
-            if !matched_string.is_empty() {
-                // TODO - avoid to string
-                return Ok((str, AnsiSequence::Text(matched_string.to_string())));
+    // If not starting with the escape code then the matching string shouldn't be empty, I think
+    if !input.starts_with("\u{1b}") {
+        let res = until_escape(input);
+        match res {
+            Ok(res) => {
+                let (str, matched_string) = res;
+                if !matched_string.is_empty() {
+                    // TODO - avoid to string
+                    return Ok((str, AnsiSequence::Text(matched_string.to_string())));
+                }
+            }
+            Err(err) => {
+                
+                
+                if complete_string && matches!(err, nom::Err::Incomplete(_) ) {
+                    return Ok(("", AnsiSequence::Text(input.to_string())));
+                }
             }
         }
-        Err(_) => {}
     }
 
     let res = escape_codes(input);
@@ -345,7 +354,7 @@ mod tests {
 
     #[test]
     fn test_value() {
-        assert_eq!(parse_escape(RED_BACKGROUND_CODE), Ok(("", AnsiSequence::SetGraphicsMode(Vec::from_slice(&[41]).unwrap()))));
-        assert_eq!(parse_escape(RESET_CODE), Ok(("", AnsiSequence::SetGraphicsMode(Vec::from_slice(&[0]).unwrap()))));
+        assert_eq!(parse_escape(RED_BACKGROUND_CODE, true), Ok(("", AnsiSequence::SetGraphicsMode(Vec::from_slice(&[41]).unwrap()))));
+        assert_eq!(parse_escape(RESET_CODE, true), Ok(("", AnsiSequence::SetGraphicsMode(Vec::from_slice(&[0]).unwrap()))));
     }
 }

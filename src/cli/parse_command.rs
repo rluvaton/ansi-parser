@@ -15,7 +15,8 @@ use crate::cli::format::json_span_lines::*;
 use crate::compose_async_steams;
 use crate::files::streams::{read_file_by_chunks, read_file_by_chunks_from_to_locations};
 use crate::mapping_file::read::{get_line_metadata_from_file, get_mapping_file_ready_to_read};
-use crate::parse_ansi_text::iterators::custom_ansi_parse_iterator::parse_ansi;
+use crate::parse_ansi_text::ansi_to_span::stream_helpers::merge_text_output;
+use crate::parse_ansi_text::ansi_to_span::stream_parse::parse_ansi;
 use crate::parse_ansi_text::iterators::parse_ansi_as_spans_iterator::*;
 use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::{
     convert_ansi_output_to_lines_of_spans, Line,
@@ -60,6 +61,7 @@ pub async fn run_parse_command(matches: &clap::ArgMatches) {
             || read_file_by_chunks(&file_path, 1024),
             unwrap_items,
             parse_ansi,
+            merge_text_output,
             |output| convert_ansi_output_to_spans(output, ParseOptions::default())
         );
 
@@ -141,6 +143,7 @@ async fn get_spans_in_range_if_needed_from_file_path<'a>(
                 || read_file_by_chunks(&file_path.to_str().unwrap(), 1024),
                 unwrap_items,
                 parse_ansi,
+                merge_text_output,
                 |output| convert_ansi_output_to_lines_of_spans(output, ParseOptions::default())
             )
             .await,
@@ -216,6 +219,7 @@ async fn get_spans_in_range_if_needed_from_file_path<'a>(
             ),
             unwrap_items,
             parse_ansi,
+            merge_text_output,
             |output| convert_ansi_output_to_lines_of_spans(
                 output,
                 ParseOptions::default().with_initial_span(from_line_metadata.unwrap().initial_span)
@@ -236,6 +240,7 @@ async fn get_spans_in_range_without_mapping_file<'a>(
         || read_file_by_chunks(&file_path.to_str().unwrap(), 1024),
         unwrap_items,
         parse_ansi,
+        merge_text_output,
         |output| convert_ansi_output_to_lines_of_spans(output, ParseOptions::default())
     )
     .await;

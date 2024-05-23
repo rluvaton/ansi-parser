@@ -304,8 +304,6 @@ pub fn parse_escape(input: &str, complete_string: bool) -> IResult<&str, AnsiSeq
                 }
             }
             Err(err) => {
-                
-                
                 if complete_string && matches!(err, nom::Err::Incomplete(_) ) {
                     return Ok(("", AnsiSequence::Text(input)));
                 }

@@ -55,10 +55,10 @@ pub async fn run_parse_command(matches: &clap::ArgMatches) {
     }
 
     tmp_parse(file_path.to_string(), ParseOptions::default());
-    // 
-    // 
+    //
+    //
     // let output_iterator: Pin<Box<dyn Stream<Item = String>>>;
-    // 
+    //
     // if !split_by_lines {
     //     let parsed_ansi = compose_async_steams!(
     //         // TODO - change this chunks
@@ -68,7 +68,7 @@ pub async fn run_parse_command(matches: &clap::ArgMatches) {
     //         merge_text_output,
     //         |output| convert_ansi_output_to_spans(output, ParseOptions::default())
     //     );
-    // 
+    //
     //     if json_output_format {
     //         output_iterator =
     //             Box::pin(compose_async_steams!(|| parsed_ansi, spans_valid_json).await);
@@ -104,11 +104,11 @@ pub async fn run_parse_command(matches: &clap::ArgMatches) {
     //         panic!("Invalid format")
     //     }
     // }
-    // 
+    //
     // let output = matches
     //     .get_one::<String>("output")
     //     .expect("Should have been able to get the output destination");
-    // 
+    //
     // if output == "stdout" {
     //     print_stream_of_strings_to_stdout(output_iterator).await;
     // } else if output == "sink" {

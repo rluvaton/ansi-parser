@@ -31,7 +31,7 @@ async fn main() {
         let command = matches.subcommand_name().expect("Should have been able to get the mapping subcommand");
         
         if command == "create" {
-            run_create_mapping_file_command(matches.subcommand_matches("create").expect("Should have been able to get the create subcommand"));
+            run_create_mapping_file_command(matches.subcommand_matches("create").expect("Should have been able to get the create subcommand")).await;
         } else {
             panic!("Unknown mapping subcommand: {}", command);
         }

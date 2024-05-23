@@ -3,6 +3,7 @@
 use futures::stream::StreamExt;
 use ansi::types::Span;
 use crate::compose_async_steams;
+use crate::parse_ansi_text::ansi_to_span::stream_helpers::merge_text_output;
 use crate::parse_ansi_text::ansi_to_span::stream_parse::parse_ansi;
 use crate::parse_ansi_text::iterators::parse_ansi_as_spans_iterator::{convert_ansi_output_to_spans};
 use crate::parse_ansi_text::iterators::parse_ansi_split_by_lines_as_spans_iterator::{convert_ansi_output_to_lines_of_spans, Line};
@@ -32,6 +33,7 @@ pub async fn parse_ansi_text(str: &str) -> Vec<Span> {
     let output: Vec<Span> = compose_async_steams!(
         || async_chars_stream(str.to_string()),
         parse_ansi,
+        merge_text_output,
         |output| convert_ansi_output_to_spans(output, ParseOptions::default())
     ).await.collect::<Vec<Span>>().await;
     
@@ -42,6 +44,7 @@ pub async fn parse_ansi_text_with_options(str: &str, options: ParseOptions) -> V
     let output: Vec<Span> = compose_async_steams!(
         || async_chars_stream(str.to_string()),
         parse_ansi,
+        merge_text_output,
         |output| convert_ansi_output_to_spans(output, options)
     ).await.collect::<Vec<Span>>().await;
 
@@ -52,11 +55,7 @@ pub async fn parse_ansi_text_split_by_lines(str: &str, options: ParseOptions) ->
     return compose_async_steams!(
         || async_chars_stream(str.to_string()),
         parse_ansi,
+        merge_text_output,
         |output| convert_ansi_output_to_lines_of_spans(output, options)
     ).await.collect::<Vec<Line>>().await;
-    // 
-    // return ParseAnsiAsSpansByLinesIterator::create_from_string_iterator(Box::new(CharsIterator {
-    //     index: 0,
-    //     str: str.to_string(),
-    // }), options).collect();
 }

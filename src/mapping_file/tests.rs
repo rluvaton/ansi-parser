@@ -28,293 +28,12 @@ mod tests {
         return count;
     }
 
-    // -------------------------------------
-    // Create mapping text file from string
-    // -------------------------------------
-
-    #[test]
-    fn file_output_should_have_line_length_before_first_delimiter() {
-        let input = [
-            // Style from start of the line
-            BLACK_BACKGROUND_CODE.to_string()
-                + "Hello, "
-                + RESET_CODE
-                + CYAN_BACKGROUND_CODE
-                + BOLD_CODE
-                + "world!",
-            // Style from prev line
-            "how are you ".to_string() + DIM_CODE + "I'm fine" + RESET_CODE,
-            // No Style
-            "Great to hear".to_string(),
-        ]
-            .join("\n");
-
-        let tmp_file_path = get_tmp_file_path();
-
-        create_mapping_file(tmp_file_path.clone(), input.to_string());
-
-        let mapping_file_content = std::fs::read(tmp_file_path.clone()).unwrap();
-
-        let lines = mapping_file_content.split(|item| *item == b'\n').collect::<Vec<&[u8]>>();
-
-        let first_line = String::from_utf8(lines[0].to_vec()).expect("First line should be valid utf8");
-
-        let expected = FULL_LINE_LENGTH.to_string();
-
-        assert_eq!(first_line, expected);
-    }
-
-    #[test]
-    fn file_output_should_have_same_number_of_lines_when_calculated_by_line_length() {
-        let input_lines = [
-            // Style from start of the line
-            BLACK_BACKGROUND_CODE.to_string()
-                + "Hello, "
-                + RESET_CODE
-                + CYAN_BACKGROUND_CODE
-                + BOLD_CODE
-                + "world!",
-            // Style from prev line
-            "how are you ".to_string() + DIM_CODE + "I'm fine" + RESET_CODE,
-            // No Style
-            "Great to hear".to_string(),
-            // No style in the beginning and style in the end
-            "I'm happy".to_string() + BOLD_CODE + "!" + RESET_CODE,
-            // Empty line
-            "".to_string(),
-            // Text style in the beginning
-            ITALIC_CODE.to_string()
-                + UNDERLINE_CODE
-                + "this is line with multiple text style"
-                + RESET_CODE,
-            // All Possible style combined
-            BOLD_CODE.to_string()
-                + ITALIC_CODE
-                + INVERSE_CODE
-                + UNDERLINE_CODE
-                + STRIKETHROUGH_CODE
-                + RGB_FOREGROUND_CODE(255, 255, 255).as_str()
-                + RGB_BACKGROUND_CODE(255, 255, 255).as_str()
-                + "this is line with all possible styles",
-            // Empty line with style from prev line
-            "".to_string(),
-        ];
-
-        let input = input_lines.join("\n");
-
-        let tmp_file_path = get_tmp_file_path();
-
-        create_mapping_file(tmp_file_path.clone(), input.to_string());
-
-        let mapping_file_content = std::fs::read(tmp_file_path.clone()).unwrap();
-        let number_of_lines_in_mapping =
-            (mapping_file_content.len() - mapping_file_content.iter().position(|item| *item == b'\n').unwrap()) / FULL_LINE_LENGTH;
-
-        assert_eq!(number_of_lines_in_mapping, input_lines.len());
-    }
-
-    #[test]
-    fn file_output_should_have_same_number_of_lines_when_calculated_by_line_numbers() {
-        let input_lines = [
-            // Style from start of the line
-            BLACK_BACKGROUND_CODE.to_string()
-                + "Hello, "
-                + RESET_CODE
-                + CYAN_BACKGROUND_CODE
-                + BOLD_CODE
-                + "world!",
-            // Style from prev line
-            "how are you ".to_string() + DIM_CODE + "I'm fine" + RESET_CODE,
-            // No Style
-            "Great to hear".to_string(),
-            // No style in the beginning and style in the end
-            "I'm happy".to_string() + BOLD_CODE + "!" + RESET_CODE,
-            // Empty line
-            "".to_string(),
-            // Text style in the beginning
-            ITALIC_CODE.to_string()
-                + UNDERLINE_CODE
-                + "this is line with multiple text style"
-                + RESET_CODE,
-            // All Possible style combined
-            BOLD_CODE.to_string()
-                + ITALIC_CODE
-                + INVERSE_CODE
-                + UNDERLINE_CODE
-                + STRIKETHROUGH_CODE
-                + RGB_FOREGROUND_CODE(255, 255, 255).as_str()
-                + RGB_BACKGROUND_CODE(255, 255, 255).as_str()
-                + "this is line with all possible styles",
-            // Empty line with style from prev line
-            "".to_string(),
-        ];
-
-        let input = input_lines.join("\n");
-
-        let tmp_file_path = get_tmp_file_path();
-
-        create_mapping_file(tmp_file_path.clone(), input.to_string());
-
-        let mapping_file_content = std::fs::read(tmp_file_path.clone()).unwrap();
-
-        let number_of_lines_in_mapping = mapping_file_content
-            // split_inclusive So last line won't be treated as empty
-            .split_inclusive(|item| *item == b'\n')
-            // -1 to remove the header
-            .count() - 1;
-
-        assert_eq!(number_of_lines_in_mapping, input_lines.len());
-    }
-
-    #[test]
-    fn file_output_should_have_correct_length() {
-        let input_lines = [
-            // Style from start of the line
-            BLACK_BACKGROUND_CODE.to_string()
-                + "Hello, "
-                + RESET_CODE
-                + CYAN_BACKGROUND_CODE
-                + BOLD_CODE
-                + "world!",
-            // Style from prev line
-            "how are you ".to_string() + DIM_CODE + "I'm fine" + RESET_CODE,
-            // No Style
-            "Great to hear".to_string(),
-            // No style in the beginning and style in the end
-            "I'm happy".to_string() + BOLD_CODE + "!" + RESET_CODE,
-            // Empty line
-            "".to_string(),
-            // Text style in the beginning
-            ITALIC_CODE.to_string()
-                + UNDERLINE_CODE
-                + "this is line with multiple text style"
-                + RESET_CODE,
-            // All Possible style combined
-            BOLD_CODE.to_string()
-                + ITALIC_CODE
-                + INVERSE_CODE
-                + UNDERLINE_CODE
-                + STRIKETHROUGH_CODE
-                + RGB_FOREGROUND_CODE(255, 255, 255).as_str()
-                + RGB_BACKGROUND_CODE(255, 255, 255).as_str()
-                + "this is line with all possible styles",
-            // Empty line with style from prev line
-            "".to_string(),
-        ];
-
-        let input = input_lines.join("\n");
-
-        let tmp_file_path = get_tmp_file_path();
-
-        create_mapping_file(tmp_file_path.clone(), input.to_string());
-
-        let mapping_file_content = std::fs::read(tmp_file_path.clone()).unwrap();
-
-        assert_eq!(
-            mapping_file_content.len(),
-            FIRST_PART_LINE_LENGTH.to_string().len() + DELIMITER.len() + input_lines.len() * FULL_LINE_LENGTH
-        );
-    }
-
-    #[test]
-    fn file_mapping_should_include_initial_style_for_each_line() {
-        let input_lines = [
-            // Style from start of the line
-            BLACK_BACKGROUND_CODE.to_string()
-                + "Hello, "
-                + RESET_CODE
-                + CYAN_BACKGROUND_CODE
-                + BOLD_CODE
-                + "world!",
-            // Style from prev line
-            "how are you ".to_string() + DIM_CODE + "I'm fine" + RESET_CODE,
-            // No Style
-            "Great to hear".to_string(),
-            // No style in the beginning and style in the end
-            "I'm happy".to_string() + BOLD_CODE + "!" + RESET_CODE,
-            // Empty line without style
-            "".to_string(),
-            // Text style in the beginning
-            ITALIC_CODE.to_string()
-                + UNDERLINE_CODE
-                + "this is line with multiple text style"
-                + RESET_CODE,
-            // All Possible style combined
-            BOLD_CODE.to_string()
-                + ITALIC_CODE
-                + INVERSE_CODE
-                + UNDERLINE_CODE
-                + STRIKETHROUGH_CODE
-                + RGB_FOREGROUND_CODE(255, 255, 255).as_str()
-                + RGB_BACKGROUND_CODE(255, 255, 255).as_str()
-                + "this is line with all possible styles",
-            // Non-empty line with style from prev line
-            "hey".to_string(),
-        ];
-
-        let input = input_lines.join("\n");
-
-        let tmp_file_path = get_tmp_file_path();
-
-        create_mapping_file(tmp_file_path.clone(), input.to_string());
-
-        let mapping_file_content = std::fs::read(tmp_file_path.clone()).unwrap();
-
-        let mapping_output_initial_style_for_each_line = mapping_file_content
-            // split_inclusive So last line won't be treated as empty
-            .split_inclusive(|item| *item == DELIMITER.as_bytes()[0])
-            .into_iter()
-            // Skip the header
-            .skip(1)
-            .map(|line| String::from_utf8(line[0..FIRST_PART_LINE_LENGTH].to_owned()).expect("convert to string"))
-            .map(|line| {
-                parse_text_matching_single_span(line.as_str())
-                    // Reset string as it's not irrelevant here
-                    .with_text("".to_string())
-            })
-            .collect::<Vec<Span>>();
-
-        let expected = [
-            Span::empty().with_bg_color(Color::Black),
-            Span::empty()
-                .with_bg_color(Color::Cyan)
-                .with_brightness(Brightness::Bold),
-            Span::empty(), // No style at all
-            Span::empty(), // No style at the beginning
-            Span::empty(), // No style at all
-            Span::empty().with_text_style(TextStyle::Italic | TextStyle::Underline),
-            Span::empty()
-                .with_brightness(Brightness::Bold)
-                .with_text_style(
-                    TextStyle::Italic
-                        | TextStyle::Inverse
-                        | TextStyle::Underline
-                        | TextStyle::Strikethrough,
-                )
-                .with_color(Color::Rgb(255, 255, 255))
-                .with_bg_color(Color::Rgb(255, 255, 255)),
-            // Same style from prev line
-            Span::empty()
-                .with_brightness(Brightness::Bold)
-                .with_text_style(
-                    TextStyle::Italic
-                        | TextStyle::Inverse
-                        | TextStyle::Underline
-                        | TextStyle::Strikethrough,
-                )
-                .with_color(Color::Rgb(255, 255, 255))
-                .with_bg_color(Color::Rgb(255, 255, 255)),
-        ];
-
-        assert_eq!(mapping_output_initial_style_for_each_line, expected);
-    }
-
     // ---------------------------------------------
     // Create mapping text file from input file path
     // ---------------------------------------------
 
-    #[test]
-    fn file_input_and_output_should_have_line_length_before_first_delimiter() {
+    #[tokio::test]
+    async fn file_input_and_output_should_have_line_length_before_first_delimiter() {
         let input = [
             // Style from start of the line
             BLACK_BACKGROUND_CODE.to_string()
@@ -336,7 +55,7 @@ mod tests {
         
         std::fs::write(tmp_input_file_path.clone(), input.to_string()).expect("write input file failed");
 
-        create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
+        create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone()).await;
 
         let mapping_file_content = std::fs::read_to_string(tmp_mapping_file_path.clone()).unwrap();
 
@@ -352,8 +71,8 @@ mod tests {
         assert_eq!(first_line, expected);
     }
 
-    #[test]
-    fn file_input_and_output_should_have_same_number_of_lines_when_calculated_by_line_length() {
+    #[tokio::test]
+    async fn file_input_and_output_should_have_same_number_of_lines_when_calculated_by_line_length() {
         let input_lines = [
             // Style from start of the line
             BLACK_BACKGROUND_CODE.to_string()
@@ -395,7 +114,7 @@ mod tests {
 
         std::fs::write(tmp_input_file_path.clone(), input.to_string()).expect("write input file failed");
 
-        create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
+        create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone()).await;
 
         let mapping_file_content = std::fs::read(tmp_mapping_file_path.clone()).unwrap();
         let number_of_lines_in_mapping =
@@ -404,8 +123,8 @@ mod tests {
         assert_eq!(number_of_lines_in_mapping, input_lines.len());
     }
 
-    #[test]
-    fn file_input_and_output_should_have_same_number_of_lines_when_calculated_by_line_numbers() {
+    #[tokio::test]
+    async fn file_input_and_output_should_have_same_number_of_lines_when_calculated_by_line_numbers() {
         let input_lines = [
             // Style from start of the line
             BLACK_BACKGROUND_CODE.to_string()
@@ -448,8 +167,7 @@ mod tests {
 
         std::fs::write(tmp_input_file_path.clone(), input.to_string()).expect("write input file failed");
 
-        create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
-
+        create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone()).await;
 
         let mapping_file_content = std::fs::read(tmp_mapping_file_path.clone()).unwrap();
 
@@ -458,8 +176,8 @@ mod tests {
         assert_eq!(number_of_lines_in_mapping, input_lines.len());
     }
 
-    #[test]
-    fn file_input_and_output_should_have_correct_length() {
+    #[tokio::test]
+    async fn file_input_and_output_should_have_correct_length() {
         let input_lines = [
             // Style from start of the line
             BLACK_BACKGROUND_CODE.to_string()
@@ -502,7 +220,7 @@ mod tests {
 
         std::fs::write(tmp_input_file_path.clone(), input.to_string()).expect("write input file failed");
 
-        create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
+        create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone()).await;
 
 
         let mapping_file_content = std::fs::read(tmp_mapping_file_path.clone()).unwrap();
@@ -513,8 +231,8 @@ mod tests {
         );
     }
 
-    #[test]
-    fn file_input_and_output_mapping_should_include_initial_style_for_each_line() {
+    #[tokio::test]
+    async fn file_input_and_output_mapping_should_include_initial_style_for_each_line() {
         let input_lines = [
             // Style from start of the line
             BLACK_BACKGROUND_CODE.to_string()
@@ -557,7 +275,7 @@ mod tests {
 
         std::fs::write(tmp_input_file_path.clone(), input.to_string()).expect("write input file failed");
 
-        create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
+        create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone()).await;
 
         let mapping_file_content = std::fs::read(tmp_mapping_file_path.clone()).unwrap();
 
@@ -569,7 +287,6 @@ mod tests {
             .skip(1)
             .map(|line| String::from_utf8(line[0..FIRST_PART_LINE_LENGTH].to_owned()).expect("convert to string"))
             .map(|line| {
-
                 parse_text_matching_single_span(line.as_str())
                     // Reset string as it's not irrelevant here
                     .with_text("".to_string())
@@ -616,8 +333,8 @@ mod tests {
     // Consume Mapping file
     // ---------------------
 
-    #[test]
-    fn file_path_should_return_initial_span_for_text_with_one_line() {
+    #[tokio::test]
+    async fn file_path_should_return_initial_span_for_text_with_one_line() {
         let input = BLACK_BACKGROUND_CODE.to_string()
             + "Hello, "
             + RESET_CODE
@@ -625,19 +342,22 @@ mod tests {
             + BOLD_CODE
             + "world!";
 
-        let tmp_file_path = get_tmp_file_path();
+        let tmp_input_file_path = get_tmp_file_path();
+        let tmp_mapping_file_path = get_tmp_file_path();
 
-        create_mapping_file(tmp_file_path.clone(), input.to_string());
+        std::fs::write(tmp_input_file_path.clone(), input.to_string()).expect("write input file failed");
 
-        let line_metadata = get_line_metadata_from_file_path(tmp_file_path.clone(), 1);
+        create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone()).await;
+        
+        let line_metadata = get_line_metadata_from_file_path(tmp_mapping_file_path.clone(), 1);
 
         let expected = Span::empty().with_bg_color(Color::Black);
 
         assert_eq!(line_metadata, Some(MappingItem {initial_span: expected, location_in_original_file: 0}));
     }
-    
-    #[test]
-    fn file_path_should_return_initial_span_for_line_in_the_middle() {
+
+    #[tokio::test]
+    async fn file_path_should_return_initial_span_for_line_in_the_middle() {
         let input_lines = [
             // Style from start of the line
             BLACK_BACKGROUND_CODE.to_string()
@@ -652,11 +372,14 @@ mod tests {
 
         let input = input_lines.join("\n");
 
-        let tmp_file_path = get_tmp_file_path();
+        let tmp_input_file_path = get_tmp_file_path();
+        let tmp_mapping_file_path = get_tmp_file_path();
 
-        create_mapping_file(tmp_file_path.clone(), input.to_string());
+        std::fs::write(tmp_input_file_path.clone(), input.to_string()).expect("write input file failed");
 
-        let line_metadata = get_line_metadata_from_file_path(tmp_file_path.clone(), 2);
+        create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone()).await;
+
+        let line_metadata = get_line_metadata_from_file_path(tmp_mapping_file_path.clone(), 2);
 
         let expected = Span::empty().with_bg_color(Color::Cyan).with_brightness(Brightness::Bold);
 
@@ -666,8 +389,8 @@ mod tests {
         }));
     }
 
-    #[test]
-    fn file_path_should_return_correct_initial_style_for_each_line() {
+    #[tokio::test]
+    async fn file_path_should_return_correct_initial_style_for_each_line() {
         let input_lines = [
             // Style from start of the line
             BLACK_BACKGROUND_CODE.to_string()
@@ -704,14 +427,18 @@ mod tests {
 
         let input = input_lines.join("\n");
 
-        let tmp_file_path = get_tmp_file_path();
+        let tmp_input_file_path = get_tmp_file_path();
+        let tmp_mapping_file_path = get_tmp_file_path();
 
-        create_mapping_file(tmp_file_path.clone(), input.to_string());
+        std::fs::write(tmp_input_file_path.clone(), input.to_string()).expect("write input file failed");
+
+        create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone()).await;
+
 
         let mut all_lines_metadata: Vec<Option<MappingItem>> = vec![];
 
         for i in 0..input_lines.len() {
-            let line_metadata = get_line_metadata_from_file_path(tmp_file_path.clone(), i + 1);
+            let line_metadata = get_line_metadata_from_file_path(tmp_mapping_file_path.clone(), i + 1);
 
             all_lines_metadata.push(line_metadata);
         }
@@ -776,8 +503,8 @@ mod tests {
         assert_eq!(all_lines_metadata, expected);
     }
 
-    #[test]
-    fn file_path_should_return_correct_initial_style_for_each_line_when_requesting_from_end_to_start() {
+    #[tokio::test]
+    async fn file_path_should_return_correct_initial_style_for_each_line_when_requesting_from_end_to_start() {
         let input_lines = [
             // Style from start of the line
             BLACK_BACKGROUND_CODE.to_string()
@@ -814,14 +541,17 @@ mod tests {
 
         let input = input_lines.join("\n");
 
-        let tmp_file_path = get_tmp_file_path();
+        let tmp_input_file_path = get_tmp_file_path();
+        let tmp_mapping_file_path = get_tmp_file_path();
 
-        create_mapping_file(tmp_file_path.clone(), input.to_string());
+        std::fs::write(tmp_input_file_path.clone(), input.to_string()).expect("write input file failed");
+
+        create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone()).await;
 
         let mut all_lines_metadata: Vec<Option<MappingItem>> = vec![];
 
         for i in (0..input_lines.len()).rev() {
-            let line_metadata = get_line_metadata_from_file_path(tmp_file_path.clone(), i + 1);
+            let line_metadata = get_line_metadata_from_file_path(tmp_mapping_file_path.clone(), i + 1);
 
             all_lines_metadata.push(line_metadata.clone());
         }
@@ -893,8 +623,8 @@ mod tests {
     // Consume Mapping file with open file
     // -----------------------------------
 
-    #[test]
-    fn file_should_return_correct_initial_style_for_each_line() {
+    #[tokio::test]
+    async fn file_should_return_correct_initial_style_for_each_line() {
         let input_lines = [
             // Style from start of the line
             BLACK_BACKGROUND_CODE.to_string()
@@ -931,13 +661,16 @@ mod tests {
 
         let input = input_lines.join("\n");
 
-        let tmp_file_path = get_tmp_file_path();
+        let tmp_input_file_path = get_tmp_file_path();
+        let tmp_mapping_file_path = get_tmp_file_path();
 
-        create_mapping_file(tmp_file_path.clone(), input.to_string());
+        std::fs::write(tmp_input_file_path.clone(), input.to_string()).expect("write input file failed");
+
+        create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone()).await;
 
         let mut initial_style_for_each_line: Vec<Option<MappingItem>> = vec![];
 
-        let ready_data_for_reading_file= get_mapping_file_ready_to_read(tmp_file_path.clone());
+        let ready_data_for_reading_file= get_mapping_file_ready_to_read(tmp_mapping_file_path.clone());
 
         assert_eq!(ready_data_for_reading_file.is_none(), false);
 
@@ -1009,8 +742,8 @@ mod tests {
         assert_eq!(initial_style_for_each_line, expected);
     }
 
-    #[test]
-    fn file_should_return_correct_initial_style_for_each_line_from_end_to_start() {
+    #[tokio::test]
+    async fn file_should_return_correct_initial_style_for_each_line_from_end_to_start() {
         let input_lines = [
             // Style from start of the line
             BLACK_BACKGROUND_CODE.to_string()
@@ -1047,13 +780,17 @@ mod tests {
 
         let input = input_lines.join("\n");
 
-        let tmp_file_path = get_tmp_file_path();
 
-        create_mapping_file(tmp_file_path.clone(), input.to_string());
+        let tmp_input_file_path = get_tmp_file_path();
+        let tmp_mapping_file_path = get_tmp_file_path();
+
+        std::fs::write(tmp_input_file_path.clone(), input.to_string()).expect("write input file failed");
+
+        create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone()).await;
 
         let mut initial_style_for_each_line: Vec<Option<MappingItem>> = vec![];
 
-        let ready_data_for_reading_file= get_mapping_file_ready_to_read(tmp_file_path.clone());
+        let ready_data_for_reading_file= get_mapping_file_ready_to_read(tmp_mapping_file_path.clone());
 
         assert_eq!(ready_data_for_reading_file.is_none(), false);
 

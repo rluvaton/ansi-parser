@@ -359,6 +359,7 @@ pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output>>
                             location_in_file: start_of_line,
                         };
                     }
+                    
                     continue;
                 }
                 Output::Escape(seq) => {
@@ -458,24 +459,13 @@ pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output>>
                     }
                 }
             }
-
-            // if current_span.text.len() > 0 {
-            //     let span = current_span.clone();
-            //     current_span = Span::empty();
-            // 
-            //     line.as_mut().unwrap().push(span);
-            // 
-            //     let new_line = line.clone().unwrap();
-            // 
-            //     line = Some(vec![]);
-            // 
-            //     yield Line {
-            //         spans: new_line,
-            //         location_in_file: last_line_index,
-            //     };
-            // }
         }
         
+        if current_span != Span::empty() {
+            let span = current_span.clone();
+            
+            line.get_or_insert(vec![]).push(span);
+        }
         if line.is_some() {
             yield Line {
                 spans: line.unwrap(),

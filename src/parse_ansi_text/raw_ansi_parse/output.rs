@@ -13,8 +13,6 @@ pub struct Text {
 ///an ANSI escape sequence.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Output {
-    // TODO - remove
-    IgnoreMe,
     TextBlock(Text),
     Escape(AnsiSequence),
 }
@@ -23,7 +21,6 @@ impl<'a> Display for Output {
     fn fmt(&self, formatter: &mut Formatter) -> DisplayResult {
         use Output::*;
         match self {
-            IgnoreMe => write!(formatter, "IgnoreMe"),
             TextBlock(txt) => write!(formatter, "{}", txt.text),
             Escape(seq) => write!(formatter, "{}", seq),
         }

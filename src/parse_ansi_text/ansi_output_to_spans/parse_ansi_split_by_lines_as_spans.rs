@@ -32,7 +32,6 @@ pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output>>
 
         for await output in input {
             match output {
-                Output::IgnoreMe => {}
                 Output::TextBlock(text) => {
                     current_span.text.push_str(text.text.as_str());
                     let mut from_index = text.location_in_text;

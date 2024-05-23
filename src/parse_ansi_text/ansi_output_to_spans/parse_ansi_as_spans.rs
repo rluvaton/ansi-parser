@@ -18,7 +18,6 @@ pub async fn convert_ansi_output_to_spans<'a, S: Stream<Item = Output>>(input: S
 
         for await output in input {
             match output {
-                Output::IgnoreMe => {}
                 Output::TextBlock(text) => {
                     current_span.text.push_str(text.text.as_str());
                 }

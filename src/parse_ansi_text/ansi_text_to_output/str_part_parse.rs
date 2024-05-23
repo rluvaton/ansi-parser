@@ -1,15 +1,16 @@
 use std::fmt::Display;
+use std::sync::Arc;
 
 use crate::parse_ansi_text::raw_ansi_parse::{AnsiSequence, Output, parse_escape, Text};
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct ParseSingleAnsiResult {
-    pub(crate) output: Vec<Output>,
-    pub(crate)current_location_until_pending_string: usize,
+pub struct ParseSingleAnsiResult<'a> {
+    pub(crate) output: Vec<Output<'a>>,
+    pub(crate) current_location_until_pending_string: usize,
     pub(crate) pending_string: String,
 }
 
-pub fn parse_single_ansi<'a>(value: &'a str, mut current_location_until_pending_string: usize) -> ParseSingleAnsiResult {
+pub fn parse_single_ansi<'a>(value: &'a str, mut current_location_until_pending_string: usize) -> ParseSingleAnsiResult<'a> {
     let mut output: Vec<Output> = Vec::new();
     let mut buf = value;
     loop {
@@ -52,6 +53,10 @@ pub fn parse_single_ansi<'a>(value: &'a str, mut current_location_until_pending_
     }
 }
 
+// pub fn parse_single_ansi_from_box_str<'a>(value: &'a String, current_location_until_pending_string: usize) -> ParseSingleAnsiResult<'a> {
+//     return parse_single_ansi(value.as_str(), current_location_until_pending_string);
+// }
+
 #[cfg(test)]
 mod tests {
     use heapless::Vec as HeaplessVec;
@@ -66,12 +71,12 @@ mod tests {
     fn should_get_the_pending_string_to_next_slice_after_finish_parsing_existing_escape_codes_when_stopping_in_middle_of_escape() {
         let input = RED_FOREGROUND_CODE.to_string() + "abc\x1B";
 
-        let result = parse_single_ansi(&input, 0);
+        let result = parse_single_ansi(input.as_str(), 0);
 
         let output = vec![
             Output::Escape(AnsiSequence::SetGraphicsMode(HeaplessVec::from_slice(&[31]).unwrap())),
             Output::TextBlock(Text {
-                text: "abc".to_string(),
+                text: "abc",
                 location_in_text: input.find("abc").unwrap(),
             }),
         ];
@@ -88,12 +93,12 @@ mod tests {
     fn should_not_get_pending_state_when_not_ending_with_any_starting_of_possible_escape_code() {
         let input = RED_FOREGROUND_CODE.to_string() + "abc";
 
-        let result = parse_single_ansi(&input, 0);
+        let result = parse_single_ansi(input.as_str(), 0);
 
         let output = vec![
             Output::Escape(AnsiSequence::SetGraphicsMode(HeaplessVec::from_slice(&[31]).unwrap())),
             Output::TextBlock(Text {
-                text: "abc".to_string(),
+                text: "abc",
                 location_in_text: input.find("abc").unwrap(),
             }),
         ];

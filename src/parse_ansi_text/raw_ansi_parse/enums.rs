@@ -2,9 +2,9 @@
 
 ///The following are the implemented ANSI escape sequences. More to be added.
 #[derive(Debug, PartialEq, Clone)]
-pub enum AnsiSequence {
+pub enum AnsiSequence<'a> {
     // TODO - change to &str?
-    Text(String),
+    Text(&'a str),
     // Escape,
     CursorPos(u32, u32),
     CursorUp(u32),
@@ -57,7 +57,7 @@ pub enum AnsiSequence {
 }
 
 use core::fmt::{Display, Formatter, Result as DisplayResult};
-impl Display for AnsiSequence {
+impl Display for AnsiSequence<'_> {
     fn fmt(&self, formatter: &mut Formatter) -> DisplayResult {
         write!(formatter, "\u{1b}")?;
 

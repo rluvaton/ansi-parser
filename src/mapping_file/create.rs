@@ -66,6 +66,6 @@ fn create_line_map(line: Line) -> Vec<u8> {
     let first_part_padding = " ".repeat(FIRST_PART_LINE_LENGTH - ansi_len);
 
     let location_in_file = line.location_in_file.to_ne_bytes();
-    
+
     return [initial_style_for_line_ansi_string.as_bytes(), first_part_padding.as_bytes(), location_in_file.as_slice(), DELIMITER.as_bytes()].concat();
 }

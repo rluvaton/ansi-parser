@@ -17,7 +17,7 @@ pub struct Line {
     pub(crate) location_in_file: usize,
 }
 
-pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output>>(
+pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output<'a>>>(
     input: S,
     options: ParseOptions,
 ) -> impl Stream<Item = Line> {
@@ -33,7 +33,7 @@ pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output>>
         for await output in input {
             match output {
                 Output::TextBlock(text) => {
-                    current_span.text.push_str(text.text.as_str());
+                    current_span.text.push_str(text.text);
                     let mut from_index = text.location_in_text;
 
                     // If have new line than get

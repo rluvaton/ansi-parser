@@ -12,9 +12,9 @@ pub enum AnsiSequenceType {
     TextStyle(TextStyle),
 }
 
-pub fn old_ansi_sequence_to_new(seq: ansi_parser::AnsiSequence) -> AnsiSequence {
+pub fn old_ansi_sequence_to_new<'a>(seq: ansi_parser::AnsiSequence) -> AnsiSequence<'a> {
     match seq {
-        ansi_parser::AnsiSequence::Escape => AnsiSequence::Text("\u{1b}".to_string()),
+        ansi_parser::AnsiSequence::Escape => AnsiSequence::Text("\u{1b}"),
         ansi_parser::AnsiSequence::CursorPos(a, b) => AnsiSequence::CursorPos(a, b),
         ansi_parser::AnsiSequence::CursorUp(a) => AnsiSequence::CursorUp(a),
         ansi_parser::AnsiSequence::CursorDown(a) => AnsiSequence::CursorDown(a),

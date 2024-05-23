@@ -2,7 +2,7 @@ use async_stream::stream;
 use futures_core::Stream;
 use crate::parse_ansi_text::raw_ansi_parse::{Output, Text};
 
-pub async fn merge_text_output<S: Stream<Item = Output>>(input: S) -> impl Stream<Item = Output> {
+pub async fn merge_text_output<'a, S: Stream<Item = Output<'a>>>(input: S) -> impl Stream<Item = Output<'a>> {
     stream! {
         let mut text_blocks_vec: Vec<Text> = Vec::new();
 
@@ -14,7 +14,8 @@ pub async fn merge_text_output<S: Stream<Item = Output>>(input: S) -> impl Strea
                 _ => {
                     if !text_blocks_vec.is_empty() {
                         yield Output::TextBlock(Text {
-                            text: text_blocks_vec.iter().map(|x| x.text.as_str()).collect::<String>(),
+                            // TODO - avoid leak
+                            text: text_blocks_vec.iter().map(|x| x.text).collect::<String>().leak(),
                             location_in_text: text_blocks_vec.first().unwrap().location_in_text,
                         });
                         text_blocks_vec.clear();
@@ -28,7 +29,9 @@ pub async fn merge_text_output<S: Stream<Item = Output>>(input: S) -> impl Strea
         
         if !text_blocks_vec.is_empty() {
             yield Output::TextBlock(Text {
-                text: text_blocks_vec.iter().map(|x| x.text.as_str()).collect::<String>(),
+                            // TODO - avoid leak
+                
+                text: text_blocks_vec.iter().map(|x| x.text).collect::<String>().leak(),
                 location_in_text: text_blocks_vec.first().unwrap().location_in_text,
             });
         }

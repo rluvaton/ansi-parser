@@ -48,7 +48,7 @@ fn cursor_pos(input: &str) -> IResult<&str, AnsiSequence> {
 }
 
 fn escape(input: &str) -> IResult<&str, AnsiSequence> {
-    value(AnsiSequence::Text("\u{1b}".to_string()), tag("\u{1b}"))(input)
+    value(AnsiSequence::Text("\u{1b}"), tag("\u{1b}"))(input)
 }
 
 fn cursor_up(input: &str) -> IResult<&str, AnsiSequence> {
@@ -300,14 +300,14 @@ pub fn parse_escape(input: &str, complete_string: bool) -> IResult<&str, AnsiSeq
                 let (str, matched_string) = res;
                 if !matched_string.is_empty() {
                     // TODO - avoid to string
-                    return Ok((str, AnsiSequence::Text(matched_string.to_string())));
+                    return Ok((str, AnsiSequence::Text(matched_string)));
                 }
             }
             Err(err) => {
                 
                 
                 if complete_string && matches!(err, nom::Err::Incomplete(_) ) {
-                    return Ok(("", AnsiSequence::Text(input.to_string())));
+                    return Ok(("", AnsiSequence::Text(input)));
                 }
             }
         }
@@ -329,7 +329,7 @@ pub fn parse_escape(input: &str, complete_string: bool) -> IResult<&str, AnsiSeq
                         if single_res.is_ok() {
                             let (str, matched_string) = single_res.unwrap();
                             // TODO - avoid to string
-                            return Ok((str, AnsiSequence::Text(matched_string.to_string())));
+                            return Ok((str, AnsiSequence::Text(matched_string)));
                         }
                     }
                     return Err(nom::Err::Error(sub_error));

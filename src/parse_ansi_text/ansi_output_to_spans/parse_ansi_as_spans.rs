@@ -9,7 +9,7 @@ use crate::parse_ansi_text::ansi::types::Span;
 use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::raw_ansi_parse::Output;
 
-pub async fn convert_ansi_output_to_spans<'a, S: Stream<Item = Output>>(input: S, options: ParseOptions) -> impl Stream<Item = Span> {
+pub async fn convert_ansi_output_to_spans<'a, S: Stream<Item = Output<'a>>>(input: S, options: ParseOptions) -> impl Stream<Item = Span> {
     stream! {
         let mut current_span: Span = options
                 .initial_span
@@ -19,7 +19,7 @@ pub async fn convert_ansi_output_to_spans<'a, S: Stream<Item = Output>>(input: S
         for await output in input {
             match output {
                 Output::TextBlock(text) => {
-                    current_span.text.push_str(text.text.as_str());
+                    current_span.text.push_str(text.text);
                 }
                 Output::Escape(seq) => {
                     let sequence_type = get_type_from_ansi_sequence(&seq);

@@ -43,7 +43,7 @@ mod tests {
     use crate::{compose_async_steams, compose_streams};
     use crate::parse_ansi_text::ansi::colors::*;
     use crate::parse_ansi_text::ansi::constants::RESET_CODE;
-    use crate::parse_ansi_text::ansi_text_to_output::stream_helpers::merge_text_output;
+    use crate::parse_ansi_text::ansi_text_to_output::helpers::merge_text_output;
     use crate::parse_ansi_text::raw_ansi_parse::{Output, Text};
     use crate::streams_helpers::vector_to_async_stream;
     use crate::test_utils::async_chars_stream;
@@ -70,8 +70,9 @@ mod tests {
 
         let lines: Vec<Output> = compose_async_steams!(
             || async_chars_stream(input.clone()),
-            parse_ansi,
-            merge_text_output
+            parse_ansi
+            // TODO
+            // merge_text_output,
         )
             .await
             .filter(|item| match item {
@@ -112,8 +113,9 @@ mod tests {
 
         let lines: Vec<Output> = compose_async_steams!(
             || vector_to_async_stream(vec![input.clone().as_bytes().to_vec()]),
-            parse_ansi,
-            merge_text_output
+            parse_ansi
+            // TODO
+            // merge_text_output,
         )
             .await
             .filter(|item| match item {
@@ -149,8 +151,9 @@ mod tests {
 
         let lines: Vec<Output> = compose_async_steams!(
             || async_chars_stream(input.clone()),
-            parse_ansi,
-            merge_text_output
+            parse_ansi
+            // TODO
+            // merge_text_output,
         )
             .await
             .filter(|item| match item {

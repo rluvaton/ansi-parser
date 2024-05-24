@@ -11,7 +11,7 @@ use crate::cli::parse_temp::tmp_parse;
 use crate::compose_async_steams;
 use crate::files::streams::{read_file_by_chunks, read_file_by_chunks_from_to_locations};
 use crate::mapping_file::read::{get_line_metadata_from_file, get_mapping_file_ready_to_read};
-use crate::parse_ansi_text::ansi_text_to_output::stream_helpers::merge_text_output;
+use crate::parse_ansi_text::ansi_text_to_output::helpers::merge_text_output;
 use crate::parse_ansi_text::ansi_text_to_output::stream_parse::parse_ansi;
 use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_as_spans::*;
 use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_split_by_lines_as_spans::{
@@ -142,7 +142,8 @@ async fn get_spans_in_range_if_needed_from_file_path<'a>(
                 || read_file_by_chunks(&file_path.to_str().unwrap(), 1024),
                 unwrap_items,
                 parse_ansi,
-                merge_text_output,
+                // TODO
+                // merge_text_output,
                 |output| convert_ansi_output_to_lines_of_spans(output, ParseOptions::default())
             )
             .await,
@@ -218,7 +219,9 @@ async fn get_spans_in_range_if_needed_from_file_path<'a>(
             ),
             unwrap_items,
             parse_ansi,
-            merge_text_output,
+            
+            // TODO
+            // merge_text_output,
             |output| convert_ansi_output_to_lines_of_spans(
                 output,
                 ParseOptions::default().with_initial_span(from_line_metadata.unwrap().initial_span)
@@ -239,7 +242,8 @@ async fn get_spans_in_range_without_mapping_file<'a>(
         || read_file_by_chunks(&file_path.to_str().unwrap(), 1024),
         unwrap_items,
         parse_ansi,
-        merge_text_output,
+        // TODO
+        // merge_text_output,
         |output| convert_ansi_output_to_lines_of_spans(output, ParseOptions::default())
     )
     .await;

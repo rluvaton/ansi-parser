@@ -11,7 +11,7 @@ use crate::files::file_reader::{FileReader, FileReaderOptions};
 use crate::mapping_file::constants::*;
 use crate::parse_ansi_text::ansi::types::Span;
 use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_split_by_lines_as_spans::{convert_ansi_output_to_lines_of_spans, Line};
-use crate::parse_ansi_text::ansi_text_to_output::stream_helpers::merge_text_output;
+use crate::parse_ansi_text::ansi_text_to_output::helpers::merge_text_output;
 use crate::parse_ansi_text::ansi_text_to_output::stream_parse::parse_ansi;
 use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::streams_helpers::iterator_to_async_stream;
@@ -41,7 +41,8 @@ pub async fn create_mapping_file_from_input_path(output_mapping_file_path: PathB
     let output = compose_async_steams!(
         || iterator_to_async_stream(file_reader),
         parse_ansi,
-        merge_text_output,
+        // TODO -
+        // merge_text_output,
         |output| convert_ansi_output_to_lines_of_spans(output, ParseOptions::default())
     ).await;
 

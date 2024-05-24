@@ -1,5 +1,5 @@
 pub mod definition;
 pub mod parse_command;
 pub mod mapping_file_command;
-mod format;
+pub mod format;
 mod parse_temp;

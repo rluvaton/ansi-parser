@@ -71,19 +71,19 @@ mod tests {
     fn should_get_the_pending_string_to_next_slice_after_finish_parsing_existing_escape_codes_when_stopping_in_middle_of_escape() {
         let input = RED_FOREGROUND_CODE.to_string() + "abc\x1B";
 
-        let result = parse_single_ansi(input.as_str(), 0);
+        let result = parse_single_ansi(input.as_bytes(), 0);
 
         let output = vec![
             Output::Escape(AnsiSequence::SetGraphicsMode(HeaplessVec::from_slice(&[31]).unwrap())),
             Output::TextBlock(Text {
-                text: "abc",
+                text: "abc".as_bytes(),
                 location_in_text: input.find("abc").unwrap(),
             }),
         ];
 
         let expected = ParseSingleAnsiResult {
             output,
-            pending_string: "\x1B".to_string(),
+            pending_string: "\x1B".to_string().into_bytes(),
             current_location_until_pending_string: input.find("abc").unwrap() + 3,
         };
 
@@ -93,19 +93,19 @@ mod tests {
     fn should_not_get_pending_state_when_not_ending_with_any_starting_of_possible_escape_code() {
         let input = RED_FOREGROUND_CODE.to_string() + "abc";
 
-        let result = parse_single_ansi(input.as_str(), 0);
+        let result = parse_single_ansi(input.as_bytes(), 0);
 
         let output = vec![
             Output::Escape(AnsiSequence::SetGraphicsMode(HeaplessVec::from_slice(&[31]).unwrap())),
             Output::TextBlock(Text {
-                text: "abc",
+                text: "abc".as_bytes(),
                 location_in_text: input.find("abc").unwrap(),
             }),
         ];
 
         let expected = ParseSingleAnsiResult {
             output,
-            pending_string: "".to_string(),
+            pending_string: "".to_string().into_bytes(),
             current_location_until_pending_string: input.find("abc").unwrap() + 3,
         };
 

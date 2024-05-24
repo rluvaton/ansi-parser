@@ -24,14 +24,14 @@ mod tests {
     #[tokio::test]
     async fn single_text_without_ansi_codes_should_return_array_with_one_unstyled_span() {
         let input = "Hello, world!";
-        let expected = vec![Span::empty().with_text("Hello, world!".to_string())];
+        let expected = vec![Span::empty().with_text("Hello, world!".to_string().into_bytes())];
         assert_eq!(parse_ansi_text(input).await, expected);
     }
 
     #[tokio::test]
     async fn multiline_text_without_ansi_codes_should_return_array_with_one_unstyled_span() {
         let input = "Hello, world!\nhow are you";
-        let expected = vec![Span::empty().with_text("Hello, world!\nhow are you".to_string())];
+        let expected = vec![Span::empty().with_text("Hello, world!\nhow are you".to_string().into_bytes())];
         assert_eq!(parse_ansi_text(input).await, expected);
     }
 
@@ -62,7 +62,7 @@ mod tests {
         let input = [color_code, "Hello, world!", RESET_CODE].join("");
         let expected = vec![Span::empty()
             .with_color(expected_color)
-            .with_text("Hello, world!".to_string())];
+            .with_text("Hello, world!".to_string().into_bytes())];
         assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
@@ -86,7 +86,7 @@ mod tests {
         let input = [color_code, "Hello, world!", RESET_CODE].join("");
         let expected = vec![Span::empty()
             .with_bg_color(expected_color)
-            .with_text("Hello, world!".to_string())];
+            .with_text("Hello, world!".to_string().into_bytes())];
         assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
@@ -101,7 +101,7 @@ mod tests {
         let input = [text_style_code, "Hello, world!", RESET_CODE].join("");
         let expected = vec![Span::empty()
             .with_text_style(expected_text_style)
-            .with_text("Hello, world!".to_string())];
+            .with_text("Hello, world!".to_string().into_bytes())];
         assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
@@ -114,7 +114,7 @@ mod tests {
         let input = [brightness_code, "Hello, world!", RESET_CODE].join("");
         let expected = vec![Span::empty()
             .with_brightness(expected_brightness)
-            .with_text("Hello, world!".to_string())];
+            .with_text("Hello, world!".to_string().into_bytes())];
         assert_eq!(parse_ansi_text(&input).await, expected);
     }
 
@@ -134,7 +134,7 @@ mod tests {
         let expected = vec![Span {
             color: Color::Red,
 
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().into_bytes(),
             bg_color: Color::None,
             brightness: Brightness::None,
             text_style: TextStyle::None,
@@ -155,7 +155,7 @@ mod tests {
             bg_color: Color::Red,
 
             color: Color::None,
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().into_bytes(),
             brightness: Brightness::None,
             text_style: TextStyle::None,
         }];
@@ -170,7 +170,7 @@ mod tests {
 
             color: Color::None,
             bg_color: Color::None,
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().into_bytes(),
             text_style: TextStyle::None,
         }];
         assert_eq!(parse_ansi_text(&input).await, expected);
@@ -193,7 +193,7 @@ mod tests {
         let expected = vec![Span {
             color: Color::Red,
 
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().into_bytes(),
             bg_color: Color::None,
             brightness: Brightness::None,
             text_style: TextStyle::None,
@@ -215,7 +215,7 @@ mod tests {
             bg_color: Color::Red,
 
             color: Color::None,
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().into_bytes(),
             brightness: Brightness::None,
             text_style: TextStyle::None,
         }];
@@ -230,7 +230,7 @@ mod tests {
 
             color: Color::None,
             bg_color: Color::None,
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().into_bytes(),
             text_style: TextStyle::None,
         }];
         assert_eq!(parse_ansi_text(&input).await, expected);
@@ -252,7 +252,7 @@ mod tests {
             color: Color::None,
             bg_color: Color::None,
             brightness: Brightness::None,
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().into_bytes(),
         }];
         assert_eq!(parse_ansi_text(&input).await, expected);
     }
@@ -276,7 +276,7 @@ mod tests {
             Span {
                 color: Color::Black,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 bg_color: Color::None,
                 brightness: Brightness::None,
                 text_style: TextStyle::None,
@@ -284,7 +284,7 @@ mod tests {
             Span {
                 color: Color::Red,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 bg_color: Color::None,
                 brightness: Brightness::None,
                 text_style: TextStyle::None,
@@ -308,7 +308,7 @@ mod tests {
             Span {
                 color: Color::Rgb(188, 29, 68),
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 bg_color: Color::None,
                 brightness: Brightness::None,
                 text_style: TextStyle::None,
@@ -316,7 +316,7 @@ mod tests {
             Span {
                 color: Color::Rgb(255, 19, 94),
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 bg_color: Color::None,
                 brightness: Brightness::None,
                 text_style: TextStyle::None,
@@ -340,7 +340,7 @@ mod tests {
             Span {
                 bg_color: Color::Black,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 color: Color::None,
                 brightness: Brightness::None,
                 text_style: TextStyle::None,
@@ -348,7 +348,7 @@ mod tests {
             Span {
                 bg_color: Color::Red,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 color: Color::None,
                 brightness: Brightness::None,
                 text_style: TextStyle::None,
@@ -372,7 +372,7 @@ mod tests {
             Span {
                 bg_color: Color::Rgb(188, 29, 68),
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 color: Color::None,
                 brightness: Brightness::None,
                 text_style: TextStyle::None,
@@ -380,7 +380,7 @@ mod tests {
             Span {
                 bg_color: Color::Rgb(255, 19, 94),
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 color: Color::None,
                 brightness: Brightness::None,
                 text_style: TextStyle::None,
@@ -404,7 +404,7 @@ mod tests {
             Span {
                 brightness: Brightness::Bold,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 color: Color::None,
                 bg_color: Color::None,
                 text_style: TextStyle::None,
@@ -412,7 +412,7 @@ mod tests {
             Span {
                 brightness: Brightness::Dim,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 color: Color::None,
                 bg_color: Color::None,
                 text_style: TextStyle::None,
@@ -436,7 +436,7 @@ mod tests {
             Span {
                 text_style: TextStyle::Italic,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 bg_color: Color::None,
                 brightness: Brightness::None,
                 color: Color::None,
@@ -444,7 +444,7 @@ mod tests {
             Span {
                 text_style: TextStyle::Italic | TextStyle::Underline,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 bg_color: Color::None,
                 brightness: Brightness::None,
                 color: Color::None,
@@ -475,7 +475,7 @@ mod tests {
             Span {
                 color: Color::Black,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 bg_color: Color::White,
                 brightness: Brightness::Bold,
                 text_style: TextStyle::Italic,
@@ -483,7 +483,7 @@ mod tests {
             Span {
                 color: Color::Red,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 bg_color: Color::White,
                 brightness: Brightness::Bold,
                 text_style: TextStyle::Italic,
@@ -510,7 +510,7 @@ mod tests {
             Span {
                 bg_color: Color::Black,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 color: Color::White,
                 brightness: Brightness::Bold,
                 text_style: TextStyle::Italic,
@@ -518,7 +518,7 @@ mod tests {
             Span {
                 bg_color: Color::Red,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 color: Color::White,
                 brightness: Brightness::Bold,
                 text_style: TextStyle::Italic,
@@ -545,7 +545,7 @@ mod tests {
             Span {
                 brightness: Brightness::Bold,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 color: Color::White,
                 bg_color: Color::Black,
                 text_style: TextStyle::Italic,
@@ -553,7 +553,7 @@ mod tests {
             Span {
                 brightness: Brightness::Dim,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 color: Color::White,
                 bg_color: Color::Black,
                 text_style: TextStyle::Italic,
@@ -580,7 +580,7 @@ mod tests {
             Span {
                 text_style: TextStyle::Italic,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 color: Color::White,
                 bg_color: Color::Black,
                 brightness: Brightness::Bold,
@@ -588,7 +588,7 @@ mod tests {
             Span {
                 text_style: TextStyle::Italic | TextStyle::Underline,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 color: Color::White,
                 bg_color: Color::Black,
                 brightness: Brightness::Bold,
@@ -615,7 +615,7 @@ mod tests {
             Span {
                 color: Color::None,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 bg_color: Color::None,
                 brightness: Brightness::None,
                 text_style: TextStyle::None,
@@ -623,7 +623,7 @@ mod tests {
             Span {
                 color: Color::Red,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 bg_color: Color::None,
                 brightness: Brightness::None,
                 text_style: TextStyle::None,
@@ -646,7 +646,7 @@ mod tests {
             Span {
                 bg_color: Color::None,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 color: Color::None,
                 brightness: Brightness::None,
                 text_style: TextStyle::None,
@@ -654,7 +654,7 @@ mod tests {
             Span {
                 bg_color: Color::Red,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 color: Color::None,
                 brightness: Brightness::None,
                 text_style: TextStyle::None,
@@ -671,7 +671,7 @@ mod tests {
             Span {
                 brightness: Brightness::None,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 color: Color::None,
                 bg_color: Color::None,
                 text_style: TextStyle::None,
@@ -679,7 +679,7 @@ mod tests {
             Span {
                 brightness: Brightness::Dim,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 color: Color::None,
                 bg_color: Color::None,
                 text_style: TextStyle::None,
@@ -696,7 +696,7 @@ mod tests {
             Span {
                 text_style: TextStyle::None,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 bg_color: Color::None,
                 brightness: Brightness::None,
                 color: Color::None,
@@ -704,7 +704,7 @@ mod tests {
             Span {
                 text_style: TextStyle::Underline,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 bg_color: Color::None,
                 brightness: Brightness::None,
                 color: Color::None,
@@ -734,7 +734,7 @@ mod tests {
             Span {
                 color: Color::None,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 bg_color: Color::Black,
                 brightness: Brightness::Bold,
                 text_style: TextStyle::Italic,
@@ -742,7 +742,7 @@ mod tests {
             Span {
                 color: Color::Red,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 bg_color: Color::Black,
                 brightness: Brightness::Bold,
                 text_style: TextStyle::Italic,
@@ -768,7 +768,7 @@ mod tests {
             Span {
                 bg_color: Color::None,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 color: Color::Red,
                 brightness: Brightness::Bold,
                 text_style: TextStyle::Italic,
@@ -776,7 +776,7 @@ mod tests {
             Span {
                 bg_color: Color::Red,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 color: Color::Red,
                 brightness: Brightness::Bold,
                 text_style: TextStyle::Italic,
@@ -802,7 +802,7 @@ mod tests {
             Span {
                 brightness: Brightness::None,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 color: Color::Red,
                 bg_color: Color::Black,
                 text_style: TextStyle::Italic,
@@ -810,7 +810,7 @@ mod tests {
             Span {
                 brightness: Brightness::Dim,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 color: Color::Red,
                 bg_color: Color::Black,
                 text_style: TextStyle::Italic,
@@ -836,7 +836,7 @@ mod tests {
             Span {
                 text_style: TextStyle::None,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 color: Color::Red,
                 bg_color: Color::Black,
                 brightness: Brightness::Dim,
@@ -844,7 +844,7 @@ mod tests {
             Span {
                 text_style: TextStyle::Underline,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 color: Color::Red,
                 bg_color: Color::Black,
                 brightness: Brightness::Dim,
@@ -864,7 +864,7 @@ mod tests {
         let expected = vec![Span {
             color: Color::None,
 
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().into_bytes(),
             bg_color: Color::None,
             brightness: Brightness::None,
             text_style: TextStyle::None,
@@ -879,7 +879,7 @@ mod tests {
         let expected = vec![Span {
             bg_color: Color::None,
 
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().into_bytes(),
             color: Color::None,
             brightness: Brightness::None,
             text_style: TextStyle::None,
@@ -894,7 +894,7 @@ mod tests {
         let expected = vec![Span {
             brightness: Brightness::None,
 
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().into_bytes(),
             color: Color::None,
             bg_color: Color::None,
             text_style: TextStyle::None,
@@ -909,7 +909,7 @@ mod tests {
         let expected = vec![Span {
             text_style: TextStyle::None,
 
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().into_bytes(),
             bg_color: Color::None,
             brightness: Brightness::None,
             color: Color::None,
@@ -938,7 +938,7 @@ mod tests {
                 | TextStyle::Inverse
                 | TextStyle::Strikethrough,
 
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().into_bytes(),
             bg_color: Color::None,
             color: Color::None,
             brightness: Brightness::None,
@@ -966,7 +966,7 @@ mod tests {
             Span {
                 text_style: TextStyle::Italic | TextStyle::Underline,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 color: Color::None,
                 bg_color: Color::None,
                 brightness: Brightness::None,
@@ -974,7 +974,7 @@ mod tests {
             Span {
                 text_style: TextStyle::Italic | TextStyle::Underline | TextStyle::Inverse,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 color: Color::None,
                 bg_color: Color::None,
                 brightness: Brightness::None,
@@ -1003,7 +1003,7 @@ mod tests {
         let expected = vec![Span {
             text_style: TextStyle::Italic,
 
-            text: "Hello, world!How are you?".to_string(),
+            text: "Hello, world!How are you?".to_string().into_bytes(),
             color: Color::Red,
             bg_color: Color::Green,
             brightness: Brightness::Dim,
@@ -1021,7 +1021,7 @@ mod tests {
         let expected = vec![Span {
             color: Color::Red,
 
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().into_bytes(),
             bg_color: Color::None,
             brightness: Brightness::None,
             text_style: TextStyle::None,
@@ -1043,7 +1043,7 @@ mod tests {
             Span {
                 color: Color::Red,
 
-                text: "Hello, world!".to_string(),
+                text: "Hello, world!".to_string().into_bytes(),
                 bg_color: Color::None,
                 brightness: Brightness::None,
                 text_style: TextStyle::None,
@@ -1051,7 +1051,7 @@ mod tests {
             Span {
                 color: Color::None,
 
-                text: "How are you?".to_string(),
+                text: "How are you?".to_string().into_bytes(),
                 bg_color: Color::None,
                 brightness: Brightness::None,
                 text_style: TextStyle::None,
@@ -1086,7 +1086,7 @@ mod tests {
         let expected = vec![
             Line {
                 spans: vec![Span {
-                    text: "Hello, world!".to_string(),
+                    text: "Hello, world!".to_string().into_bytes(),
                     color: Color::Rgb(255, 19, 94),
                     bg_color: Color::Rgb(188, 29, 68),
                     brightness: Brightness::Bold,
@@ -1096,7 +1096,7 @@ mod tests {
             },
             Line {
                 spans: vec![Span {
-                    text: "How are you?".to_string(),
+                    text: "How are you?".to_string().into_bytes(),
                     color: Color::Rgb(255, 19, 94),
                     bg_color: Color::Rgb(188, 29, 68),
                     brightness: Brightness::Bold,
@@ -1128,7 +1128,7 @@ mod tests {
         ]
         .join("");
         let expected = vec![Span {
-            text: "Hello, world!".to_string(),
+            text: "Hello, world!".to_string().into_bytes(),
             color: Color::Rgb(255, 19, 94),
             bg_color: Color::Rgb(188, 29, 68),
             brightness: Brightness::Bold,

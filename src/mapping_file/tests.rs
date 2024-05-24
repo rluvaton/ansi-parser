@@ -289,7 +289,7 @@ mod tests {
             .map(|line| {
                 parse_text_matching_single_span(line.as_str())
                     // Reset string as it's not irrelevant here
-                    .with_text("".to_string())
+                    .with_text("".to_string().into_bytes())
             })
             .collect::<Vec<Span>>();
 

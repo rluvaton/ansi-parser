@@ -15,6 +15,7 @@ mod iterators;
 mod streams_helpers;
 mod files;
 mod test_utils;
+mod traits;
 
 
 #[tokio::main]

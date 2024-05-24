@@ -1,7 +1,9 @@
 use std::iter::Iterator;
 use async_stream::stream;
 use futures_core::Stream;
-use crate::parse_ansi_text::ansi::types::{Span, SpanJson};
+use genawaiter::{rc::gen, yield_};
+use crate::parse_ansi_text::ansi::types::{Span};
+use crate::traits::ToJson;
 
 pub struct SpansJsonLineDisplay<IteratorType> {
     iter: IteratorType,
@@ -28,10 +30,8 @@ impl<IteratorType> Iterator for SpansJsonLineDisplay<IteratorType>
 
 
             self.yielded_first_item = true;
-            let span_json = SpanJson::create_from_span(&span);
-            let span_json_str = serde_json::to_string(&span_json).unwrap();
 
-            return Some(str.to_string() + span_json_str.as_str());
+            return Some(str.to_string() + span.to_json().as_str());
         }
 
         return None;
@@ -42,10 +42,7 @@ pub async fn spans_json_line<S: Stream<Item = Span>>(input: S) -> impl Stream<It
     stream! {
         // Can replace the loop here with just json line single span, as it's the same thing
         for await span in input {
-            let span_json = SpanJson::create_from_span(&span);
-            let span_json_str = serde_json::to_string(&span_json).unwrap();
-
-            yield span_json_str;
+            yield span.to_json();
         }
     }
 }
@@ -63,3 +60,43 @@ pub trait SpansJsonLineDisplayByIterator: Iterator<Item = Span> + Sized {
 }
 
 impl<IteratorType: Iterator<Item = Span>> SpansJsonLineDisplayByIterator for IteratorType {}
+
+pub fn json_single_item_formatter<I: Iterator<Item=Span>>(iter: I) -> impl Iterator<Item = String> {
+    return gen!({
+        for span in iter {
+            yield_!(span.to_json());
+        }
+    }).into_iter();
+    
+}
+
+#[cfg(test)]
+mod tests {
+    use pretty_assertions::assert_eq;
+    use crate::parse_ansi_text::ansi::style::{Brightness, TextStyle};
+
+    use super::*;
+
+    #[test]
+    fn test_formatter_each_item_is_valid_json() {
+        let spans: Vec<Span> = vec![
+            Span::empty()
+                .with_text("Hello, World!".as_bytes().to_vec())
+                .with_brightness(Brightness::Bold),
+            Span::empty()
+                .with_text(" ".as_bytes().to_vec()),
+            Span::empty()
+                .with_text("This is another span".as_bytes().to_vec())
+                .with_text_style(TextStyle::Italic | TextStyle::Underline)
+        ];
+        
+        let outputs_iter = json_single_item_formatter(spans.into_iter());
+        
+        let outputs: Vec<String> = outputs_iter.collect();
+        
+        // parse each
+        
+        assert_eq!(outputs.len(), 3);
+    }
+
+}

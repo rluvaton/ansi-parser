@@ -7,10 +7,11 @@ use crate::files::file_reader::{FileReader, FileReaderOptions};
 use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{AnsiSequenceType, get_type_from_ansi_sequence};
 use crate::parse_ansi_text::ansi::colors::Color;
 use crate::parse_ansi_text::ansi::style::{Brightness, TextStyle};
-use crate::parse_ansi_text::ansi::types::{Span, SpanJson};
+use crate::parse_ansi_text::ansi::types::{Span};
 use crate::parse_ansi_text::ansi_text_to_output::str_part_parse::parse_single_ansi;
 use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::raw_ansi_parse::{Output, Text};
+use crate::traits::ToJson;
 
 pub fn tmp_parse(file_path: String, options: ParseOptions) {
 
@@ -64,27 +65,10 @@ pub fn tmp_parse(file_path: String, options: ParseOptions) {
                     // let string_to_output = spans_valid_json(current_span, &mut yielded_first_item);
 
                     // let span_json = SpanJson::create_from_span(&current_span);
-                    let span_json = SpanJson {
-                        text: str::from_utf8(current_span.text.deref()).unwrap(),
-
-                        // Colors
-                        color: SpanJson::get_color_str_from_color(current_span.color),
-                        bg_color: SpanJson::get_color_str_from_color(current_span.bg_color),
-
-                        // Brightness
-                        bold: current_span.brightness == Brightness::Bold,
-                        dim: current_span.brightness == Brightness::Dim,
-
-                        // Text style
-                        italic: current_span.text_style & TextStyle::Italic != TextStyle::empty(),
-                        underline: current_span.text_style & TextStyle::Underline != TextStyle::empty(),
-                        inverse: current_span.text_style & TextStyle::Inverse != TextStyle::empty(),
-                        strikethrough: current_span.text_style & TextStyle::Strikethrough != TextStyle::empty(),
-                    };
+                    let text = current_span.to_json();
 
                     // println!("{}", serde_json::to_string(&span_json).unwrap());
                     // simd_json::to_string(&span_json).unwrap();
-                    sonic_rs::to_string(&span_json).unwrap();
                     // serde_json::to_string(&span_json).unwrap();
                     // writer.write(",")
                     // serde_json::to_writer(&writer, &span_json).unwrap();
@@ -92,7 +76,7 @@ pub fn tmp_parse(file_path: String, options: ParseOptions) {
 
                     // return str.to_string() + span_json_str.as_str() + "\n";
 
-                    // print!("{}\n", sonic_rs::to_string(&span_json).unwrap());
+                    // print!("{}\n", current_span.to_json());
 
                     current_span = next_span;
                 }
@@ -130,29 +114,11 @@ pub fn tmp_parse(file_path: String, options: ParseOptions) {
 
                 // let string_to_output = spans_valid_json(current_span, &mut yielded_first_item);
                 // print!("{}", string_to_output);
-                let span_json = SpanJson {
-                    text: str::from_utf8(current_span.text.deref()).unwrap(),
-
-                    // Colors
-                    color: SpanJson::get_color_str_from_color(current_span.color),
-                    bg_color: SpanJson::get_color_str_from_color(current_span.bg_color),
-
-                    // Brightness
-                    bold: current_span.brightness == Brightness::Bold,
-                    dim: current_span.brightness == Brightness::Dim,
-
-                    // Text style
-                    italic: current_span.text_style & TextStyle::Italic != TextStyle::empty(),
-                    underline: current_span.text_style & TextStyle::Underline != TextStyle::empty(),
-                    inverse: current_span.text_style & TextStyle::Inverse != TextStyle::empty(),
-                    strikethrough: current_span.text_style & TextStyle::Strikethrough != TextStyle::empty(),
-                };
-
                 // writer.write(",")
                 // serde_json::to_string(&span_json).unwrap();
                 // simd_json::to_string(&span_json).unwrap();
-                sonic_rs::to_string(&span_json).unwrap();
-                // println!("{}", sonic_rs::to_string(&span_json).unwrap());
+                current_span.to_json();
+                // println!("{}", current_span.to_json());
             },
             (_) => {}
         }
@@ -274,10 +240,8 @@ pub fn spans_valid_json(span: Span, mut yielded_first_item: &bool) -> String {
 
 
             yielded_first_item = &true;
-            let span_json = SpanJson::create_from_span(&span);
-            let span_json_str = serde_json::to_string(&span_json).unwrap();
 
-            return str.to_string() + span_json_str.as_str() + "\n";
+            return str.to_string() + span.to_json().as_str() + "\n";
         // }
 
         // yield "\n]".to_string();

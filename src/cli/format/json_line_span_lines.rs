@@ -8,8 +8,8 @@ use futures_core::Stream;
 
 
 use crate::cli::format::json_single_span::{SpansJsonDisplay};
-use crate::parse_ansi_text::ansi::types::SpanJson;
 use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_split_by_lines_as_spans::Line;
+use crate::traits::ToJson;
 
 pub struct SpansLineJsonLineDisplay<'a, IteratorType> {
     iter: IteratorType,
@@ -68,9 +68,7 @@ pub async fn spans_lines_json_lines<S: Stream<Item = Line>>(input: S) -> impl St
     stream! {
         for await line in input {
             let str = line.spans.iter().map(|span| {
-                let span_json = SpanJson::create_from_span(&span);
-                let span_json_str = serde_json::to_string(&span_json).unwrap();
-                span_json_str
+                span.to_json()
             }).collect::<Vec<String>>().join(",");
             
             yield "[".to_string() + str.as_str() + "]";

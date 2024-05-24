@@ -1,12 +1,12 @@
 // Span consumer iterator that get a span and just print it, making sure the entire iterator is output correctly in JSON 
 
-// this means that should support both Vec<Span> and Vec<Vec<Span>>
-
 use std::iter::Iterator;
 use async_stream::stream;
 use futures_core::Stream;
+use next_gen::generator;
 use crate::parse_ansi_text::ansi::types::{Span};
 use crate::traits::ToJson;
+
 
 pub struct SpansJsonDisplay<IteratorType> {
     iter: IteratorType,
@@ -58,6 +58,28 @@ impl<IteratorType> Iterator for SpansJsonDisplay<IteratorType>
     }
 }
 
+#[generator(yield(String))]
+pub fn json_formatter<I: Iterator<Item=Span>>(iter: I) {
+    let mut yielded_first_item = false;
+    yield_!("[\n".to_string());
+
+    // Can replace the loop here with just json line single span, as it's the same thing
+    for span in iter {
+        let mut str: &str = "";
+
+        if yielded_first_item {
+        // Print from prev object
+            str = ",";
+        }
+
+
+        yielded_first_item = true;
+
+        yield_!(str.to_string() + span.to_json().as_str());
+    }
+
+    yield_!("\n]".to_string());
+}
 
 pub async fn spans_valid_json<S: Stream<Item = Span>>(input: S) -> impl Stream<Item = String> {
     stream! {

@@ -8,7 +8,6 @@ use futures_core::Stream;
 use futures_util::stream::StreamExt;
 
 use crate::cli::format::flat_json_line_span_lines::*;
-use crate::cli::format::json_line_single_span::*;
 use crate::cli::format::json_line_span_lines::*;
 use crate::cli::format::json_single_span::spans_valid_json;
 use crate::cli::format::json_span_lines::*;

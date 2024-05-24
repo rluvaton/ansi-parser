@@ -5,6 +5,7 @@ use std::str;
 use crate::parse_ansi_text::ansi::colors::{Color, convert_color_type_to_ansi_code, get_rgb_values_from_8_bit};
 use crate::parse_ansi_text::ansi::colors::ColorType::{Background, Foreground};
 use crate::parse_ansi_text::ansi::style::{BOLD_CODE, Brightness, DIM_CODE, INVERSE_CODE, ITALIC_CODE, STRIKETHROUGH_CODE, TextStyle, UNDERLINE_CODE};
+use crate::traits::ToJson;
 
 
 #[derive(Debug, PartialEq, Clone)]
@@ -19,7 +20,7 @@ pub struct Span {
 
 // TODO - find a better way to create a new struct for json
 #[derive(Debug, PartialEq, Clone, Serialize)]
-pub struct SpanJson<'a> {
+struct SpanJson<'a> {
     // Always serialize
     pub text: &'a str,
 
@@ -152,6 +153,39 @@ impl Span {
 
             self
     }
+
+
+    fn get_color_str_from_color(color: Color) -> Option<String> {
+        match color {
+            Color::Default => None,
+            Color::None => None,
+            Color::Black => Some("black".to_string()),
+            Color::Red => Some("red".to_string()),
+            Color::Green => Some("green".to_string()),
+            Color::Yellow => Some("yellow".to_string()),
+            Color::Blue => Some("blue".to_string()),
+            Color::Magenta => Some("magenta".to_string()),
+            Color::Cyan => Some("cyan".to_string()),
+            Color::White => Some("white".to_string()),
+
+            // TODO - maybe make the bright color return RGB instead of the name?
+            Color::BrightBlack => Some("brightBlack".to_string()),
+            Color::BrightRed => Some("brightRed".to_string()),
+            Color::BrightGreen => Some("brightGreen".to_string()),
+            Color::BrightYellow => Some("brightYellow".to_string()),
+            Color::BrightBlue => Some("brightBlue".to_string()),
+            Color::BrightMagenta => Some("brightMagenta".to_string()),
+            Color::BrightCyan => Some("brightCyan".to_string()),
+            Color::BrightWhite => Some("brightWhite".to_string()),
+
+            Color::EightBit(eight_bit) => {
+                let (r, g, b) = get_rgb_values_from_8_bit(eight_bit);
+
+                Some(format!("rgb({}, {}, {})", r, g, b))
+            },
+            Color::Rgb(r, g, b) => Some(format!("rgb({}, {}, {})", r, g, b)),
+        }
+    }
 }
 
 impl SpanJson<'_> {
@@ -205,6 +239,30 @@ impl SpanJson<'_> {
             },
             Color::Rgb(r, g, b) => Some(format!("rgb({}, {}, {})", r, g, b)),
         }
+    }
+}
+
+impl ToJson for Span {
+    fn to_json(&self) -> String {
+        let span_json = SpanJson {
+            text: str::from_utf8(self.text.deref()).unwrap(),
+
+            // Colors
+            color: Self::get_color_str_from_color(self.color),
+            bg_color: Self::get_color_str_from_color(self.bg_color),
+
+            // Brightness
+            bold: self.brightness == Brightness::Bold,
+            dim: self.brightness == Brightness::Dim,
+
+            // Text style
+            italic: self.text_style & TextStyle::Italic != TextStyle::empty(),
+            underline: self.text_style & TextStyle::Underline != TextStyle::empty(),
+            inverse: self.text_style & TextStyle::Inverse != TextStyle::empty(),
+            strikethrough: self.text_style & TextStyle::Strikethrough != TextStyle::empty(),
+        };
+
+        return sonic_rs::to_string(&span_json).unwrap();
     }
 }
 

@@ -2,7 +2,7 @@ use std::ops::Deref;
 use nom::AsBytes;
 use sonic_rs::{Serialize, Deserialize, Error};
 use std::str;
-use serde::Deserializer;
+use serde::{Deserializer, Serializer};
 use crate::parse_ansi_text::ansi::colors::{Color, convert_color_type_to_ansi_code, get_rgb_values_from_8_bit};
 use crate::parse_ansi_text::ansi::colors::ColorType::{Background, Foreground};
 use crate::parse_ansi_text::ansi::style::{BOLD_CODE, Brightness, DIM_CODE, INVERSE_CODE, ITALIC_CODE, STRIKETHROUGH_CODE, TextStyle, UNDERLINE_CODE};
@@ -50,6 +50,30 @@ struct SpanJson<'a> {
     pub inverse: bool,
     #[serde(skip_serializing_if = "std::ops::Not::not", default = "bool::default")]
     pub strikethrough: bool,
+}
+
+impl Serialize for Span {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+    {
+        let span_json = SpanJson::create_from_span(self);
+
+        return span_json.serialize(serializer);
+    }
+}
+
+
+
+impl<'de> Deserialize<'de> for Span {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>
+    {
+        let span_json = SpanJson::deserialize(deserializer)?;
+
+        return Ok(Span::from_span_json(span_json));
+    }
 }
 
 
@@ -199,7 +223,7 @@ impl Span {
 
         return Ok(json.iter().map(|item| Span::from_span_json(item.clone())).collect());
     }
-    
+
     pub fn from_span_json(json: SpanJson) -> Span {
         return Span::empty()
             .with_text(json.text.as_bytes().to_vec())
@@ -430,6 +454,6 @@ mod tests {
             brightness: Brightness::None,
         });
     }
-    
+
     // TODO - add test for from json and to json with combinations and missing values
 }

@@ -1,12 +1,9 @@
-use std::ffi::OsString;
 use std::ops::Deref;
-use std::path::PathBuf;
 use std::str;
 
-use get_chunk::ChunkSize;
-use get_chunk::iterator::FileIter;
 use nom::AsBytes;
 
+use crate::files::file_reader::{FileReader, FileReaderOptions};
 use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{AnsiSequenceType, get_type_from_ansi_sequence};
 use crate::parse_ansi_text::ansi::colors::Color;
 use crate::parse_ansi_text::ansi::style::{Brightness, TextStyle};
@@ -17,12 +14,15 @@ use crate::parse_ansi_text::raw_ansi_parse::{Output, Text};
 
 pub fn tmp_parse(file_path: String, options: ParseOptions) {
 
-    let input_file_path = PathBuf::from(OsString::from(file_path));
-    let input_file = std::fs::File::open(input_file_path).expect("opening input file path failed");
-
-    let file_iter = FileIter::try_from(input_file).expect("create input file iterator failed");
-    let file_iter = file_iter.set_mode(ChunkSize::Bytes(1024 * 1024 * 10));
-
+    let file_reader = FileReader::new(FileReaderOptions {
+        file_path: file_path.clone(),
+        chunk_size_in_bytes: Some(1024 * 1024 * 10), // 10MB
+        
+        // Start from location
+        from_bytes: None,
+        to_bytes: None,
+    });
+    
     let mut current_location_until_pending_string: usize = 0;
     let mut pending_string: Vec<u8> = "".to_string().as_bytes().to_vec();
 
@@ -34,8 +34,7 @@ pub fn tmp_parse(file_path: String, options: ParseOptions) {
     let mut yielded_first_item = false;
     print!("[\n");
 
-    for item in file_iter.into_iter() {
-        let item = item.expect("Failed to get file chunk");
+    for item in file_reader {
         let value = item;
 
         // --------- Parse

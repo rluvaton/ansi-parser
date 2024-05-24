@@ -7,14 +7,14 @@ use futures_core::Stream;
 use futures_util::StreamExt;
 
 use crate::compose_async_steams;
-use crate::files::streams::read_file_by_chunks;
+use crate::files::file_reader::{FileReader, FileReaderOptions};
 use crate::mapping_file::constants::*;
 use crate::parse_ansi_text::ansi::types::Span;
+use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_split_by_lines_as_spans::{convert_ansi_output_to_lines_of_spans, Line};
 use crate::parse_ansi_text::ansi_text_to_output::stream_helpers::merge_text_output;
 use crate::parse_ansi_text::ansi_text_to_output::stream_parse::parse_ansi;
-use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_split_by_lines_as_spans::{convert_ansi_output_to_lines_of_spans, Line};
 use crate::parse_ansi_text::parse_options::ParseOptions;
-use crate::streams_helpers::unwrap_items;
+use crate::streams_helpers::iterator_to_async_stream;
 
 // The format for the mapping is
 // <line-length>
@@ -28,10 +28,18 @@ use crate::streams_helpers::unwrap_items;
 pub async fn create_mapping_file_from_input_path(output_mapping_file_path: PathBuf, input_file_path: PathBuf) {
     let mut file = File::create(output_mapping_file_path).expect("create mapping file failed");
 
+
+    let file_reader = FileReader::new(FileReaderOptions {
+        file_path: input_file_path.to_str().expect("input file path is not valid").to_string(),
+        chunk_size_in_bytes: Some(1024 * 1024 * 10), // 10MB
+
+        // Read whole file
+        from_bytes: None,
+        to_bytes: None,
+    });
+    
     let output = compose_async_steams!(
-        // TODO - change this chunks
-        || read_file_by_chunks(&input_file_path.to_str().unwrap(), 1024),
-        unwrap_items,
+        || iterator_to_async_stream(file_reader),
         parse_ansi,
         merge_text_output,
         |output| convert_ansi_output_to_lines_of_spans(output, ParseOptions::default())

@@ -88,3 +88,13 @@ pub async fn vector_to_async_stream<I>(input: Vec<I>)
         }
     }
 }
+
+pub async fn iterator_to_async_stream<IteratorItem, I: Iterator<Item=IteratorItem>>(iterator: I)
+                                       -> impl Stream<Item=IteratorItem>
+{
+    stream! {
+        for value in iterator {
+            yield value;
+        }
+    }
+}

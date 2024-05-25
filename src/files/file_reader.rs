@@ -89,7 +89,7 @@ mod tests {
             .to_string();
     }
 
-    fn create_tmp_file(input: &str) -> String {
+    fn create_tmp_file(input: &[u8]) -> String {
         let file_path = get_tmp_file_path();
 
         std::fs::write(file_path.clone(), input).expect("Failed to write to file");
@@ -108,7 +108,7 @@ mod tests {
 
     #[test]
     fn test_read_file_contain_the_whole_file() {
-        let expected_file_string = "Hello, World!";
+        let expected_file_string = b"Hello, World!";
         let tmp_file_path = create_tmp_file(expected_file_string);
 
         let options = FileReaderOptions::builder()
@@ -119,12 +119,12 @@ mod tests {
 
         let result = read_all_file_from_iterator(file_reader);
 
-        assert_eq!(result, expected_file_string.as_bytes());
+        assert_eq!(result, expected_file_string);
     }
     
     #[test]
     fn test_read_file_contain_the_whole_file_with_chunks() {
-        let expected_file_string = "Hello, World!";
+        let expected_file_string = b"Hello, World!";
         let tmp_file_path = create_tmp_file(expected_file_string);
 
         let options = FileReaderOptions::builder()
@@ -136,13 +136,13 @@ mod tests {
 
         let result = read_all_file_from_iterator(file_reader);
 
-        assert_eq!(result, expected_file_string.as_bytes());
+        assert_eq!(result, expected_file_string);
     }
 
     #[test]
     fn test_read_file_start_from_the_starting_position() {
         let expected_file_string = "Hello, World!";
-        let tmp_file_path = create_tmp_file(expected_file_string);
+        let tmp_file_path = create_tmp_file(expected_file_string.as_bytes());
 
         let options = FileReaderOptions::builder()
             //
@@ -153,13 +153,13 @@ mod tests {
         
         let result = read_all_file_from_iterator(file_reader);
         
-        assert_eq!(result, "World!".as_bytes());
+        assert_eq!(result, b"World!");
     }
 
     #[test]
     fn test_read_file_ends_in_ending_position() {
         let expected_file_string = "Hello, World!";
-        let tmp_file_path = create_tmp_file(expected_file_string);
+        let tmp_file_path = create_tmp_file(expected_file_string.as_bytes());
 
         let options = FileReaderOptions::builder()
             //
@@ -170,13 +170,13 @@ mod tests {
 
         let result = read_all_file_from_iterator(file_reader);
 
-        assert_eq!(result, "Hello".as_bytes());
+        assert_eq!(result, b"Hello");
     }
 
     #[test]
     fn test_read_file_start_and_ends_in_ending_position() {
         let expected_file_string = "Hello, World!";
-        let tmp_file_path = create_tmp_file(expected_file_string);
+        let tmp_file_path = create_tmp_file(expected_file_string.as_bytes());
 
         let options = FileReaderOptions::builder()
             //
@@ -188,13 +188,13 @@ mod tests {
 
         let result = read_all_file_from_iterator(file_reader);
 
-        assert_eq!(result, "World".as_bytes());
+        assert_eq!(result, b"World");
     }
 
     #[test]
     fn test_read_file_start_from_the_starting_position_with_chunks() {
         let expected_file_string = "Hello, World!";
-        let tmp_file_path = create_tmp_file(expected_file_string);
+        let tmp_file_path = create_tmp_file(expected_file_string.as_bytes());
 
         let options = FileReaderOptions::builder()
             //
@@ -206,13 +206,13 @@ mod tests {
 
         let result = read_all_file_from_iterator(file_reader);
 
-        assert_eq!(result, "World!".as_bytes());
+        assert_eq!(result, b"World!");
     }
 
     #[test]
     fn test_read_file_ends_in_ending_position_with_chunks() {
         let expected_file_string = "Hello, World!";
-        let tmp_file_path = create_tmp_file(expected_file_string);
+        let tmp_file_path = create_tmp_file(expected_file_string.as_bytes());
 
         let options = FileReaderOptions::builder()
             //
@@ -224,13 +224,13 @@ mod tests {
 
         let result = read_all_file_from_iterator(file_reader);
 
-        assert_eq!(result, "Hello,".as_bytes());
+        assert_eq!(result, b"Hello,");
     }
 
     #[test]
     fn test_read_file_start_and_ends_in_ending_position_with_chunks() {
         let expected_file_string = "Hello, World!";
-        let tmp_file_path = create_tmp_file(expected_file_string);
+        let tmp_file_path = create_tmp_file(expected_file_string.as_bytes());
 
         let options = FileReaderOptions::builder()
             //
@@ -243,12 +243,12 @@ mod tests {
 
         let result = read_all_file_from_iterator(file_reader);
 
-        assert_eq!(result, "World".as_bytes());
+        assert_eq!(result, b"World");
     }
 
     #[test]
     fn test_get_requested_chunk_size_single_byte() {
-        let expected_file_string = "Hello, World!";
+        let expected_file_string = b"Hello, World!";
         let tmp_file_path = create_tmp_file(expected_file_string);
 
         let options = FileReaderOptions::builder()
@@ -264,12 +264,12 @@ mod tests {
             result.extend(chunk);
         }
 
-        assert_eq!(result, expected_file_string.as_bytes());
+        assert_eq!(result, expected_file_string);
     }
     
     #[test]
     fn test_get_requested_chunk_size_smaller_than_file_size() {
-        let expected_file_string = "Hello, World!";
+        let expected_file_string = b"Hello, World!";
         let tmp_file_path = create_tmp_file(expected_file_string);
 
         let options = FileReaderOptions::builder()
@@ -295,12 +295,12 @@ mod tests {
         
         assert_eq!(sizes, expected_sizes);
 
-        assert_eq!(result.into_iter().flatten().collect::<Vec<u8>>(), expected_file_string.as_bytes());
+        assert_eq!(result.into_iter().flatten().collect::<Vec<u8>>(), expected_file_string);
     }
 
     #[test]
     fn test_get_requested_chunk_size_exactly_file_size() {
-        let expected_file_string = "Hello, World!";
+        let expected_file_string = b"Hello, World!";
         let tmp_file_path = create_tmp_file(expected_file_string);
 
         let options = FileReaderOptions::builder()
@@ -315,12 +315,12 @@ mod tests {
             result.push(chunk);
         }
 
-        assert_eq!(result, vec![expected_file_string.as_bytes()]);
+        assert_eq!(result, vec![expected_file_string]);
     }
 
     #[test]
     fn test_get_requested_chunk_size_greater_than_file_size() {
-        let expected_file_string = "Hello, World!";
+        let expected_file_string = b"Hello, World!";
         let tmp_file_path = create_tmp_file(expected_file_string);
 
         let options = FileReaderOptions::builder()
@@ -335,6 +335,6 @@ mod tests {
             result.push(chunk);
         }
 
-        assert_eq!(result, vec![expected_file_string.as_bytes()]);
+        assert_eq!(result, vec![expected_file_string]);
     }
 }

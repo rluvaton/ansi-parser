@@ -42,12 +42,12 @@ mod tests {
     fn test_formatter_combined_output_is_valid_json() {
         let spans: Vec<Span> = vec![
             Span::empty()
-                .with_text("Hello, World!".as_bytes().to_vec())
+                .with_text(b"Hello, World!".to_vec())
                 .with_brightness(Brightness::Bold),
             Span::empty()
-                .with_text(" ".as_bytes().to_vec()),
+                .with_text(b" ".to_vec()),
             Span::empty()
-                .with_text("This is another span".as_bytes().to_vec())
+                .with_text(b"This is another span".to_vec())
                 .with_text_style(TextStyle::Italic | TextStyle::Underline)
         ];
 

@@ -52,11 +52,11 @@ mod tests {
     fn should_merge_text_output_to_one() {
         let outputs: Vec<Output> = vec![
             Output::TextBlock(Text {
-                text: "Hello, World!".as_bytes(),
+                text: b"Hello, World!",
                 location_in_text: 0,
             }),
             Output::TextBlock(Text {
-                text: "How are you".as_bytes(),
+                text: b"How are you",
                 location_in_text: 10,
             })
         ];
@@ -67,7 +67,7 @@ mod tests {
 
         assert_eq!(merged_outputs, vec![
             Output::TextBlock(Text {
-                text: "Hello, World!How are you".as_bytes(),
+                text: b"Hello, World!How are you",
                 location_in_text: 0,
             })
         ]);
@@ -77,21 +77,21 @@ mod tests {
     fn should_merge_text_output() {
         let outputs: Vec<Output> = vec![
             Output::TextBlock(Text {
-                text: "Hello, World!".as_bytes(),
+                text: b"Hello, World!",
                 location_in_text: 0,
             }),
             Output::TextBlock(Text {
-                text: "How are you".as_bytes(),
+                text: b"How are you",
                 location_in_text: 10,
             }),
             Output::Escape(AnsiSequence::SetMode(0)),
 
             Output::TextBlock(Text {
-                text: "Im good".as_bytes(),
+                text: b"Im good",
                 location_in_text: 13,
             }),
             Output::TextBlock(Text {
-                text: "Great".as_bytes(),
+                text: b"Great",
                 location_in_text: 16,
             }),
             Output::Escape(AnsiSequence::SetMode(1)),
@@ -103,12 +103,12 @@ mod tests {
 
         assert_eq!(merged_outputs, vec![
             Output::TextBlock(Text {
-                text: "Hello, World!How are you".as_bytes(),
+                text: b"Hello, World!How are you",
                 location_in_text: 0,
             }),
             Output::Escape(AnsiSequence::SetMode(0)),
             Output::TextBlock(Text {
-                text: "Im goodGreat".as_bytes(),
+                text: b"Im goodGreat",
                 location_in_text: 13,
             }),
             Output::Escape(AnsiSequence::SetMode(1)),
@@ -119,12 +119,12 @@ mod tests {
     fn should_not_merge_non_text_outputs() {
         let outputs: Vec<Output> = vec![
             Output::TextBlock(Text {
-                text: "Hello, World!".as_bytes(),
+                text: b"Hello, World!",
                 location_in_text: 0,
             }),
             Output::Escape(AnsiSequence::SetMode(0)),
             Output::TextBlock(Text {
-                text: "How are you".as_bytes(),
+                text: b"How are you",
                 location_in_text: 10,
             })
         ];

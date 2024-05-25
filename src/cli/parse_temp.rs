@@ -25,7 +25,7 @@ pub fn tmp_parse(file_path: String, options: ParseOptions) {
     });
     
     let mut current_location_until_pending_string: usize = 0;
-    let mut pending_string: Vec<u8> = "".to_string().as_bytes().to_vec();
+    let mut pending_string: Vec<u8> = vec![];
 
     let mut current_span: Span = options
             .initial_span
@@ -168,7 +168,7 @@ pub fn convert_ansi_output_to_spans<'a>(output: Output<'a>, current_span: &'a mu
                     if current_span.text.len() > 0 && current_span.color != color {
                         return ResultType::Parse(current_span
                             .clone()
-                            .with_text("".to_string().as_bytes().to_vec())
+                            .with_text(vec![])
                             // Apply the color
                             .with_color(color));
                     }
@@ -185,7 +185,7 @@ pub fn convert_ansi_output_to_spans<'a>(output: Output<'a>, current_span: &'a mu
                     if current_span.text.len() > 0 && current_span.bg_color != color {
                         return ResultType::Parse(current_span
                             .clone()
-                            .with_text("".to_string().as_bytes().to_vec())
+                            .with_text(vec![])
                              // Apply the background color
                              .with_bg_color(color)
                         );
@@ -198,7 +198,7 @@ pub fn convert_ansi_output_to_spans<'a>(output: Output<'a>, current_span: &'a mu
                     if current_span.text.len() > 0 && current_span.brightness != brightness {
                         return ResultType::Parse(current_span
                             .clone()
-                            .with_text("".to_string().as_bytes().to_vec())
+                            .with_text(vec![])
                             // Apply the background color
                             .with_brightness(brightness)
                         );
@@ -210,7 +210,7 @@ pub fn convert_ansi_output_to_spans<'a>(output: Output<'a>, current_span: &'a mu
                     if current_span.text.len() > 0 && current_span.text_style != style {
                         return ResultType::Parse(current_span
                             .clone()
-                            .with_text("".to_string().as_bytes().to_vec())
+                            .with_text(vec![])
                             // Merge the style
                             .with_text_style(current_span.text_style | style)
                         );

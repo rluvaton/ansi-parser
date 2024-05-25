@@ -81,7 +81,7 @@ impl Span {
     
     pub fn empty() -> Span {
         Span {
-            text: "".as_bytes().to_vec(),
+            text: vec![],
             color: Color::None,
             bg_color: Color::None,
             text_style: TextStyle::None,
@@ -126,7 +126,7 @@ impl Span {
     
     pub fn clone_without_text(span: &Span) -> Span {
         Span {
-            text: "".as_bytes().to_vec(),
+            text: vec![],
             color: span.color,
             bg_color: span.bg_color,
             brightness: span.brightness,
@@ -403,9 +403,9 @@ mod tests {
 
     #[test]
     fn create_span_with_no_styling_have_no_styles_and_only_text() {
-        let span = Span::empty().with_text("Hello, world!".to_string().as_bytes().to_vec());
+        let span = Span::empty().with_text(b"Hello, world!".to_vec());
         assert_eq!(span, Span {
-            text: "Hello, world!".to_string().as_bytes().to_vec(),
+            text: b"Hello, world!".to_vec(),
 
             color: Color::None,
             bg_color: Color::None,
@@ -424,9 +424,9 @@ mod tests {
             text_style: TextStyle::None,
             brightness: Brightness::None,
         };
-        let span = original_span.clone().with_text("".to_string().as_bytes().to_vec());
+        let span = original_span.clone().with_text(vec![]);
         assert_eq!(span, Span {
-            text: "".to_string().as_bytes().to_vec(),
+            text: vec![],
 
             color: Color::Red,
             bg_color: Color::None,

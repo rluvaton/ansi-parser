@@ -46,12 +46,12 @@ mod tests {
                 location_in_file: 0,
                 spans: vec![
                     Span::empty()
-                        .with_text("Hello, World!".as_bytes().to_vec())
+                        .with_text(b"Hello, World!".to_vec())
                         .with_brightness(Brightness::Bold),
                     Span::empty()
-                        .with_text(" ".as_bytes().to_vec()),
+                        .with_text(b" ".to_vec()),
                     Span::empty()
-                        .with_text("This is another span".as_bytes().to_vec())
+                        .with_text(b"This is another span".to_vec())
                         .with_text_style(TextStyle::Italic | TextStyle::Underline)
                 ]
             },
@@ -59,12 +59,12 @@ mod tests {
                 location_in_file: 10,
                 spans: vec![
                     Span::empty()
-                        .with_text("how are you".as_bytes().to_vec())
+                        .with_text(b"how are you".to_vec())
                         .with_brightness(Brightness::Dim),
                     Span::empty()
-                        .with_text(" ".as_bytes().to_vec()),
+                        .with_text(b" ".to_vec()),
                     Span::empty()
-                        .with_text("good".as_bytes().to_vec())
+                        .with_text(b"good".to_vec())
                         .with_text_style(TextStyle::Strikethrough)
                 ]
             }

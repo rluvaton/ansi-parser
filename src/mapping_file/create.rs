@@ -66,7 +66,7 @@ async fn write_mapping_file(file: &mut File, input: impl Stream<Item = Line>)
 
 
 fn create_line_map(line: Line) -> Vec<u8> {
-    let initial_span_for_line = if line.spans.is_empty() { Span::empty() } else { line.spans[0].clone().with_text("".to_string().as_bytes().to_vec()) };
+    let initial_span_for_line = if line.spans.is_empty() { Span::empty() } else { line.spans[0].clone().with_text(vec![]) };
 
     let initial_style_for_line_ansi_string = initial_span_for_line.serialize_to_ansi_string();
 

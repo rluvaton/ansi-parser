@@ -84,7 +84,7 @@ mod tests {
 
         let output: Span = parse_text_matching_single_span(input_str);
 
-        let expected = Span::empty().with_text("Hello world".to_string().as_bytes().to_vec());
+        let expected = Span::empty().with_text(b"Hello world".to_vec());
         assert_eq!(output, expected);
     }
 
@@ -94,7 +94,7 @@ mod tests {
 
         let output: Span = parse_text_matching_single_span(input_str.as_str());
 
-        let expected = Span::empty().with_bg_color(Color::Red).with_text("Hello world".to_string().as_bytes().to_vec());
+        let expected = Span::empty().with_bg_color(Color::Red).with_text(b"Hello world".to_vec());
         assert_eq!(output, expected);
     }
 

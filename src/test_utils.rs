@@ -1,7 +1,7 @@
 use async_stream::stream;
 use futures_core::Stream;
-use futures_util::stream;
 
+use genawaiter::{rc::gen, yield_};
 pub fn chars_stream(str: String) -> impl Stream<Item=String> {
     stream! {
         let chars = str.chars();
@@ -9,6 +9,23 @@ pub fn chars_stream(str: String) -> impl Stream<Item=String> {
             yield c.to_string();
         }
     }
+}
+pub fn chars_iterator(str: String) -> impl Iterator<Item=Vec<u8>> {
+    return gen!({
+        let chars = str.chars();
+        for c in chars {
+            yield_!(c.to_string().into_bytes());
+        }
+    }).into_iter();
+}
+
+pub fn chars_iterator2(str: String) -> impl Iterator<Item=&'static [u8]> {
+    return gen!({
+        let chars = str.chars();
+        for c in chars {
+            yield_!(c.to_string().leak().as_bytes());
+        }
+    }).into_iter();
 }
 
 pub async fn async_chars_stream(str: String) -> impl Stream<Item=Vec<u8>> {

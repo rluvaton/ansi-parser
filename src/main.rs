@@ -16,6 +16,9 @@ mod streams_helpers;
 mod files;
 mod test_utils;
 mod traits;
+mod parse_file;
+pub mod format;
+mod output;
 
 
 #[tokio::main]

@@ -102,10 +102,6 @@ pub fn parse_ansi_continues(
     }
 }
 
-// pub fn parse_single_ansi_from_box_str<'a>(value: &'a String, current_location_until_pending_string: usize) -> ParseSingleAnsiResult<'a> {
-//     return parse_single_ansi(value.as_str(), current_location_until_pending_string);
-// }
-
 #[cfg(test)]
 mod tests {
     use heapless::Vec as HeaplessVec;

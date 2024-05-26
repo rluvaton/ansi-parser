@@ -1,4 +1,3 @@
-use std::ops::Deref;
 use std::str;
 
 use nom::AsBytes;
@@ -6,9 +5,8 @@ use nom::AsBytes;
 use crate::files::file_reader::{FileReader, FileReaderOptions};
 use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{AnsiSequenceType, get_type_from_ansi_sequence};
 use crate::parse_ansi_text::ansi::colors::Color;
-use crate::parse_ansi_text::ansi::style::{Brightness, TextStyle};
-use crate::parse_ansi_text::ansi::types::{Span};
-use crate::parse_ansi_text::ansi_text_to_output::str_part_parse::parse_single_ansi;
+use crate::parse_ansi_text::ansi::types::Span;
+use crate::parse_ansi_text::ansi_text_to_output::str_part_parse::{parse_ansi_continues, ParseAnsiResult};
 use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::raw_ansi_parse::{Output, Text};
 use crate::traits::ToJson;
@@ -36,25 +34,20 @@ pub fn tmp_parse(file_path: String, options: ParseOptions) {
     print!("[\n");
 
     for item in file_reader {
-        let value = item;
+        let mut value = item;
 
         // --------- Parse
-        pending_string = [pending_string, value].concat();
-        // pending_string.push_str(value.as_ref());
+        // pending_string = [pending_string, value].concat();
+        pending_string.append(value.as_mut());
 
 
-        let result = parse_single_ansi(pending_string.as_bytes(), current_location_until_pending_string);
+        let mut result: ParseAnsiResult = parse_ansi_continues(&pending_string, current_location_until_pending_string);
         current_location_until_pending_string = result.current_location_until_pending_string;
-        //
-        // for output in result.output {
-        //     yield item;
-        // }
 
         // ------------ until here parsed
 
         // ------ Merge
-        for output in result.output {
-            let ready_output = output;
+        while let Some(ready_output) = result.output {
 
             let span_result = convert_ansi_output_to_spans(ready_output, &mut current_span);
 
@@ -87,6 +80,9 @@ pub fn tmp_parse(file_path: String, options: ParseOptions) {
                     // Do nothing with the current span
                 }
             }
+
+            result = parse_ansi_continues(&pending_string, current_location_until_pending_string);
+            current_location_until_pending_string = result.current_location_until_pending_string;
         }
 
         // ------------ until here merge

@@ -1,5 +1,7 @@
 // Taken from ansi_parse and modify
 
+use memchr::memchr;
+
 use atoi::atoi;
 use heapless::Vec;
 use nom::branch::alt;
@@ -7,7 +9,7 @@ use nom::bytes::streaming::{tag, take, take_until};
 use nom::character::streaming::{digit0, digit1};
 use nom::combinator::{map, map_res, opt, value};
 use nom::error::ErrorKind;
-use nom::{AsBytes, error, IResult};
+use nom::{AsBytes, error, FindToken, IResult};
 use nom::sequence::{delimited, preceded, tuple};
 
 use crate::parse_ansi_text::raw_ansi_parse::enums::AnsiSequence;
@@ -286,14 +288,18 @@ fn escape_codes(input: &[u8]) -> IResult<&[u8], AnsiSequence> {
     combined(input)
 }
 
-fn until_escape(s: &[u8]) -> IResult<&[u8], &[u8]> {
-    take_until(ESCAPE_AS_BYTES)(s)
-}
-
 fn take_single(s: &[u8]) -> IResult<&[u8], &[u8]> {
     take(1usize)(s)
 }
 
+fn until_escape(s: &[u8]) -> IResult<&[u8], &[u8]> {
+    let a = memchr(b'\x1b', s);
+
+    return match a {
+        Some(i) => Ok((&s[i..], &s[..i])),
+        None => Err(nom::Err::Incomplete(nom::Needed::Unknown)),
+    }
+}
 
 pub fn parse_escape(input: &[u8], complete_string: bool) -> IResult<&[u8], AnsiSequence> {
     if input.is_empty() {
@@ -303,11 +309,11 @@ pub fn parse_escape(input: &[u8], complete_string: bool) -> IResult<&[u8], AnsiS
     // If not starting with the escape code then the matching string shouldn't be empty, I think
     if !input.starts_with(ESCAPE_AS_BYTES) {
         let res = until_escape(input);
+        
         match res {
             Ok(res) => {
                 let (str, matched_string) = res;
                 if !matched_string.is_empty() {
-                    // TODO - avoid to string
                     return Ok((str, AnsiSequence::Text(matched_string)));
                 }
             }
@@ -334,7 +340,6 @@ pub fn parse_escape(input: &[u8], complete_string: bool) -> IResult<&[u8], AnsiS
 
                         if single_res.is_ok() {
                             let (str, matched_string) = single_res.unwrap();
-                            // TODO - avoid to string
                             return Ok((str, AnsiSequence::Text(matched_string)));
                         }
                     }

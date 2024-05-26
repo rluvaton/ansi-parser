@@ -10,12 +10,8 @@ use crate::parse_ansi_text::ansi::colors::Color;
 use crate::parse_ansi_text::ansi::types::Span;
 use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::raw_ansi_parse::Output;
+use crate::types::Line;
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Line {
-    pub(crate) spans: Vec<Span>,
-    pub(crate) location_in_file: usize,
-}
 
 pub async fn convert_ansi_output_to_lines_of_spans<'a, S: Stream<Item = Output<'a>>>(
     input: S,

@@ -8,10 +8,10 @@ use crate::parse_ansi_text::ansi::colors::*;
 use crate::parse_ansi_text::ansi::constants::*;
 use crate::parse_ansi_text::ansi::style::*;
 use crate::parse_ansi_text::ansi::types::*;
-use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_split_by_lines_as_spans::Line;
 use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::*;
 use crate::parse_file::file_to_spans::{read_ansi_file_to_spans, ReadAnsiFileOptions};
+use crate::types::Line;
 
 fn get_tmp_file_path() -> String {
     return NamedTempFile::new()

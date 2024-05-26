@@ -1,8 +1,8 @@
 use std::iter::Iterator;
 
 use genawaiter::{rc::gen, yield_};
+use crate::types::Line;
 
-use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_split_by_lines_as_spans::Line;
 
 pub fn json_lines_formatter<I: Iterator<Item=Line>>(iter: I) -> impl Iterator<Item = String> {
     return gen!({

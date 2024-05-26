@@ -3,8 +3,8 @@ use std::iter::Iterator;
 use genawaiter::{rc::gen, yield_};
 use serde::{Deserialize, Serialize};
 use crate::parse_ansi_text::ansi::types::Span;
-use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_split_by_lines_as_spans::Line;
 use crate::traits::ToJson;
+use crate::types::Line;
 
 // Just to have a struct for the type in the tests
 

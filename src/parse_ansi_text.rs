@@ -2,8 +2,8 @@ use futures::stream::StreamExt;
 
 use ansi::types::Span;
 
-use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_split_by_lines_as_spans::Line;
 use crate::parse_ansi_text::parse_options::ParseOptions;
+use crate::types::Line;
 
 pub mod parse_options;
 pub mod parse_text_matching_single_span;

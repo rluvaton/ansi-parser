@@ -3,7 +3,7 @@ use crate::format::lines_formatters::{
     json_formatter::json_lines_formatter,
     single_item_json_formatter::json_lines_single_item_formatter,
 };
-use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_split_by_lines_as_spans::Line;
+use crate::types::Line;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum LineFormat {

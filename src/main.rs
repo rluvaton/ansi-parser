@@ -19,6 +19,7 @@ mod traits;
 mod parse_file;
 pub mod format;
 mod output;
+mod types;
 
 
 #[tokio::main]

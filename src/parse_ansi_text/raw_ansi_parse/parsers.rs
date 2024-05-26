@@ -39,15 +39,7 @@ fn parse_u8(input: &[u8]) -> IResult<&[u8], u8> {
 // TODO kind of ugly, would prefer to pass in the default so we could use it for
 // all escapes with defaults (not just those that default to 1).
 fn parse_def_cursor_int(input: &[u8]) -> IResult<&[u8], u32> {
-    map_res(digit1, |s: &[u8]| -> Result<u32, error::Error<&[u8]>> {
-        let result = atoi::<u32>(s);
-
-        if result.is_none() {
-            return Ok(1);
-        }
-
-        return Ok(result.unwrap());
-    })(input)
+    map(digit0, |s: &[u8]| atoi::<u32>(s).unwrap_or(1))(input)
 }
 
 fn cursor_pos(input: &[u8]) -> IResult<&[u8], AnsiSequence> {

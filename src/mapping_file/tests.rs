@@ -34,8 +34,8 @@ fn calculate_chars_until_line(lines: Vec<String>, line_number: usize) -> usize {
 // Create mapping text file from input file path
 // ---------------------------------------------
 
-#[tokio::test]
-async fn file_input_and_output_should_have_line_length_before_first_delimiter() {
+#[test]
+fn file_input_and_output_should_have_line_length_before_first_delimiter() {
     let input = [
         // Style from start of the line
         BLACK_BACKGROUND_CODE.to_string()
@@ -57,8 +57,7 @@ async fn file_input_and_output_should_have_line_length_before_first_delimiter() 
     std::fs::write(tmp_input_file_path.clone(), input.to_string())
         .expect("write input file failed");
 
-    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone())
-        .await;
+    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
 
     let mapping_file_content = std::fs::read_to_string(tmp_mapping_file_path.clone()).unwrap();
 
@@ -74,8 +73,8 @@ async fn file_input_and_output_should_have_line_length_before_first_delimiter() 
     assert_eq!(first_line, expected);
 }
 
-#[tokio::test]
-async fn file_input_and_output_should_have_same_number_of_lines_when_calculated_by_line_length() {
+#[test]
+fn file_input_and_output_should_have_same_number_of_lines_when_calculated_by_line_length() {
     let input_lines = [
         // Style from start of the line
         BLACK_BACKGROUND_CODE.to_string()
@@ -118,8 +117,7 @@ async fn file_input_and_output_should_have_same_number_of_lines_when_calculated_
     std::fs::write(tmp_input_file_path.clone(), input.to_string())
         .expect("write input file failed");
 
-    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone())
-        .await;
+    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
 
     let mapping_file_content = std::fs::read(tmp_mapping_file_path.clone()).unwrap();
     let number_of_lines_in_mapping = (mapping_file_content.len()
@@ -132,8 +130,8 @@ async fn file_input_and_output_should_have_same_number_of_lines_when_calculated_
     assert_eq!(number_of_lines_in_mapping, input_lines.len());
 }
 
-#[tokio::test]
-async fn file_input_and_output_should_have_same_number_of_lines_when_calculated_by_line_numbers() {
+#[test]
+fn file_input_and_output_should_have_same_number_of_lines_when_calculated_by_line_numbers() {
     let input_lines = [
         // Style from start of the line
         BLACK_BACKGROUND_CODE.to_string()
@@ -176,8 +174,7 @@ async fn file_input_and_output_should_have_same_number_of_lines_when_calculated_
     std::fs::write(tmp_input_file_path.clone(), input.to_string())
         .expect("write input file failed");
 
-    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone())
-        .await;
+    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
 
     let mapping_file_content = std::fs::read(tmp_mapping_file_path.clone()).unwrap();
 
@@ -186,8 +183,8 @@ async fn file_input_and_output_should_have_same_number_of_lines_when_calculated_
     assert_eq!(number_of_lines_in_mapping, input_lines.len());
 }
 
-#[tokio::test]
-async fn file_input_and_output_should_have_correct_length() {
+#[test]
+fn file_input_and_output_should_have_correct_length() {
     let input_lines = [
         // Style from start of the line
         BLACK_BACKGROUND_CODE.to_string()
@@ -230,8 +227,7 @@ async fn file_input_and_output_should_have_correct_length() {
     std::fs::write(tmp_input_file_path.clone(), input.to_string())
         .expect("write input file failed");
 
-    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone())
-        .await;
+    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
 
     let mapping_file_content = std::fs::read(tmp_mapping_file_path.clone()).unwrap();
 
@@ -243,8 +239,8 @@ async fn file_input_and_output_should_have_correct_length() {
     );
 }
 
-#[tokio::test]
-async fn file_input_and_output_mapping_should_include_initial_style_for_each_line() {
+#[test]
+fn file_input_and_output_mapping_should_include_initial_style_for_each_line() {
     let input_lines = [
         // Style from start of the line
         BLACK_BACKGROUND_CODE.to_string()
@@ -287,8 +283,7 @@ async fn file_input_and_output_mapping_should_include_initial_style_for_each_lin
     std::fs::write(tmp_input_file_path.clone(), input.to_string())
         .expect("write input file failed");
 
-    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone())
-        .await;
+    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
 
     let mapping_file_content = std::fs::read(tmp_mapping_file_path.clone()).unwrap();
 
@@ -348,8 +343,8 @@ async fn file_input_and_output_mapping_should_include_initial_style_for_each_lin
 // Consume Mapping file
 // ---------------------
 
-#[tokio::test]
-async fn file_path_should_return_initial_span_for_text_with_one_line() {
+#[test]
+fn file_path_should_return_initial_span_for_text_with_one_line() {
     let input = BLACK_BACKGROUND_CODE.to_string()
         + "Hello, "
         + RESET_CODE
@@ -363,8 +358,7 @@ async fn file_path_should_return_initial_span_for_text_with_one_line() {
     std::fs::write(tmp_input_file_path.clone(), input.to_string())
         .expect("write input file failed");
 
-    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone())
-        .await;
+    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
 
     let line_metadata = get_line_metadata_from_file_path(tmp_mapping_file_path.clone(), 1);
 
@@ -379,8 +373,8 @@ async fn file_path_should_return_initial_span_for_text_with_one_line() {
     );
 }
 
-#[tokio::test]
-async fn file_path_should_return_initial_span_for_line_in_the_middle() {
+#[test]
+fn file_path_should_return_initial_span_for_line_in_the_middle() {
     let input_lines = [
         // Style from start of the line
         BLACK_BACKGROUND_CODE.to_string()
@@ -401,8 +395,7 @@ async fn file_path_should_return_initial_span_for_line_in_the_middle() {
     std::fs::write(tmp_input_file_path.clone(), input.to_string())
         .expect("write input file failed");
 
-    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone())
-        .await;
+    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
 
     let line_metadata = get_line_metadata_from_file_path(tmp_mapping_file_path.clone(), 2);
 
@@ -419,8 +412,8 @@ async fn file_path_should_return_initial_span_for_line_in_the_middle() {
     );
 }
 
-#[tokio::test]
-async fn file_path_should_return_correct_initial_style_for_each_line() {
+#[test]
+fn file_path_should_return_correct_initial_style_for_each_line() {
     let input_lines = [
         // Style from start of the line
         BLACK_BACKGROUND_CODE.to_string()
@@ -463,8 +456,7 @@ async fn file_path_should_return_correct_initial_style_for_each_line() {
     std::fs::write(tmp_input_file_path.clone(), input.to_string())
         .expect("write input file failed");
 
-    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone())
-        .await;
+    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
 
     let mut all_lines_metadata: Vec<Option<MappingItem>> = vec![];
 
@@ -533,8 +525,8 @@ async fn file_path_should_return_correct_initial_style_for_each_line() {
     assert_eq!(all_lines_metadata, expected);
 }
 
-#[tokio::test]
-async fn file_path_should_return_correct_initial_style_for_each_line_when_requesting_from_end_to_start(
+#[test]
+fn file_path_should_return_correct_initial_style_for_each_line_when_requesting_from_end_to_start(
 ) {
     let input_lines = [
         // Style from start of the line
@@ -578,8 +570,7 @@ async fn file_path_should_return_correct_initial_style_for_each_line_when_reques
     std::fs::write(tmp_input_file_path.clone(), input.to_string())
         .expect("write input file failed");
 
-    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone())
-        .await;
+    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
 
     let mut all_lines_metadata: Vec<Option<MappingItem>> = vec![];
 
@@ -655,8 +646,8 @@ async fn file_path_should_return_correct_initial_style_for_each_line_when_reques
 // Consume Mapping file with open file
 // -----------------------------------
 
-#[tokio::test]
-async fn file_should_return_correct_initial_style_for_each_line() {
+#[test]
+fn file_should_return_correct_initial_style_for_each_line() {
     let input_lines = [
         // Style from start of the line
         BLACK_BACKGROUND_CODE.to_string()
@@ -699,8 +690,7 @@ async fn file_should_return_correct_initial_style_for_each_line() {
     std::fs::write(tmp_input_file_path.clone(), input.to_string())
         .expect("write input file failed");
 
-    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone())
-        .await;
+    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
 
     let mut initial_style_for_each_line: Vec<Option<MappingItem>> = vec![];
 
@@ -776,8 +766,8 @@ async fn file_should_return_correct_initial_style_for_each_line() {
     assert_eq!(initial_style_for_each_line, expected);
 }
 
-#[tokio::test]
-async fn file_should_return_correct_initial_style_for_each_line_from_end_to_start() {
+#[test]
+fn file_should_return_correct_initial_style_for_each_line_from_end_to_start() {
     let input_lines = [
         // Style from start of the line
         BLACK_BACKGROUND_CODE.to_string()
@@ -820,8 +810,7 @@ async fn file_should_return_correct_initial_style_for_each_line_from_end_to_star
     std::fs::write(tmp_input_file_path.clone(), input.to_string())
         .expect("write input file failed");
 
-    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone())
-        .await;
+    create_mapping_file_from_input_path(tmp_mapping_file_path.clone(), tmp_input_file_path.clone());
 
     let mut initial_style_for_each_line: Vec<Option<MappingItem>> = vec![];
 

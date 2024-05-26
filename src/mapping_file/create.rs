@@ -17,7 +17,7 @@ use crate::types::Line;
 // ...
 // <initial-style-for-line-n><padding until reach line-length?>
 
-pub async fn create_mapping_file_from_input_path(
+pub fn create_mapping_file_from_input_path(
     output_mapping_file_path: PathBuf,
     input_file_path: PathBuf,
 ) {

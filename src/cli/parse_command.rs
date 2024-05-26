@@ -20,7 +20,7 @@ use crate::parse_file::types::ReadAnsiFileOptions;
 //        currently, the parse_ansi lib is not designed to work with iterators
 //        so we need to yield the current span and the next span
 
-pub async fn run_parse_command(matches: &clap::ArgMatches) {
+pub fn run_parse_command(matches: &clap::ArgMatches) {
     let split_by_lines = *matches.get_one::<bool>("split-lines").unwrap();
 
     let from_line = matches.get_one::<usize>("from-line");

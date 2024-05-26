@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
+use itertools::Itertools;
 
 use crate::files::file_reader::FileReaderOptions;
 use crate::mapping_file::constants::*;
@@ -28,7 +29,6 @@ pub fn create_mapping_file_from_input_path(
     file.write_all(header.as_bytes())
         .expect("write header to file failed");
 
-
     let output = read_ansi_file_to_lines(ReadAnsiFileOptions {
         file_options: FileReaderOptions {
             file_path: input_file_path
@@ -40,13 +40,16 @@ pub fn create_mapping_file_from_input_path(
             to_bytes: None,
         },
         parse_options: ParseOptions::default(),
-    });
+    })
+        .map(create_line_map)
+        .into_iter()
+        .chunks(1024 * 1024 * 10); // 10MB
     
-    output.for_each(|value| {
-        // append line to file
-        file.write_all(&create_line_map(value))
+    for chunk in &output {
+        let merged = chunk.concat();
+        file.write_all(&merged)
             .expect("write line to file failed");
-    });
+    }
 }
 
 
@@ -61,9 +64,8 @@ fn create_line_map(line: Line) -> Vec<u8> {
 
     let ansi_len = initial_style_for_line_ansi_string.len();
 
-    let first_part_padding = " "
+    let first_part_padding = b" "
         .repeat(FIRST_PART_LINE_LENGTH - ansi_len)
-        .as_bytes()
         .to_vec();
 
     let location_in_file = line.location_in_file.to_ne_bytes();

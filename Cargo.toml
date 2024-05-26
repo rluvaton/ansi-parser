@@ -35,3 +35,4 @@ const_typed_builder = "0.3.0"
 genawaiter = "0.99.1"
 peak_alloc = "0.2.1"
 memchr = { version = "2", default-features = false }
+itertools = "0.13.0"

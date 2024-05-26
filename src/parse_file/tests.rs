@@ -1,16 +1,17 @@
-use crate::files::file_reader::FileReaderOptions;
 #[cfg(test)]
 use pretty_assertions::assert_eq;
 use tempfile::NamedTempFile;
 use test_case::test_case;
 
+use crate::files::file_reader::FileReaderOptions;
 use crate::parse_ansi_text::ansi::colors::*;
 use crate::parse_ansi_text::ansi::constants::*;
 use crate::parse_ansi_text::ansi::style::*;
 use crate::parse_ansi_text::ansi::types::*;
 use crate::parse_ansi_text::parse_options::ParseOptions;
-use crate::parse_ansi_text::*;
-use crate::parse_file::file_to_spans::{read_ansi_file_to_spans, ReadAnsiFileOptions};
+use crate::parse_file::file_to_lines_of_spans::read_ansi_file_to_lines;
+use crate::parse_file::file_to_spans::read_ansi_file_to_spans;
+use crate::parse_file::types::ReadAnsiFileOptions;
 use crate::types::Line;
 
 fn get_tmp_file_path() -> String {
@@ -48,6 +49,26 @@ fn parse_ansi_text_with_options(input: &str, parse_options: ParseOptions) -> Vec
 
 fn parse_ansi_text(input: &str) -> Vec<Span> {
     return parse_ansi_text_with_options(input, ParseOptions::default());
+}
+
+fn parse_ansi_text_split_by_lines_with_options(input: &str, parse_options: ParseOptions) -> Vec<Line> {
+    let tmp_file_path = create_tmp_file(input.to_string());
+    let lines_iterator = read_ansi_file_to_lines(ReadAnsiFileOptions {
+        parse_options,
+        file_options: FileReaderOptions {
+            file_path: tmp_file_path,
+
+            chunk_size_in_bytes: None,
+            from_bytes: None,
+            to_bytes: None,
+        },
+    });
+
+    return lines_iterator.collect();
+}
+
+fn parse_ansi_text_split_by_lines(input: &str) -> Vec<Line> {
+    return parse_ansi_text_split_by_lines_with_options(input, ParseOptions::default());
 }
 
 #[test]
@@ -1151,7 +1172,7 @@ fn spans_should_have_same_style_when_split_by_line() {
         ParseOptions::default().with_initial_span(Span::empty().with_color(Color::Red));
 
     assert_eq!(
-        parse_ansi_text_split_by_lines(&input, parse_options),
+        parse_ansi_text_split_by_lines_with_options(&input, parse_options),
         expected
     );
 }

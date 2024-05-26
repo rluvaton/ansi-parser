@@ -11,8 +11,9 @@ use crate::output::{
 };
 use crate::parse_ansi_text::ansi::types::Span;
 use crate::parse_ansi_text::parse_options::ParseOptions;
-use crate::parse_file::file_to_spans::{read_ansi_file_to_spans, ReadAnsiFileOptions};
+use crate::parse_file::file_to_spans::{read_ansi_file_to_spans};
 use crate::parse_file::from_middle_of_file::get_from_middle_of_the_file_info;
+use crate::parse_file::types::ReadAnsiFileOptions;
 
 // TODO - in order to save memory and not read the entire file to memory
 //        we should have a way to have an iterator over the file that yield the spans

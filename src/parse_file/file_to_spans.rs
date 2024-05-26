@@ -1,20 +1,14 @@
 use genawaiter::{rc::gen, yield_};
-use crate::files::file_reader::{FileReader, FileReaderOptions};
+
+use crate::files::file_reader::FileReader;
 use crate::parse_ansi_text::ansi::types::Span;
-use crate::parse_ansi_text::ansi_text_to_output::str_part_parse::{ParseAnsiResult};
-use crate::parse_ansi_text::ansi_text_to_output::str_part_parse::parse_ansi_continues;
 use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_as_spans::convert_ansi_output_to_spans_continues;
 use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_as_spans::ResultType;
-use crate::parse_ansi_text::parse_options::ParseOptions;
+use crate::parse_ansi_text::ansi_text_to_output::str_part_parse::parse_ansi_continues;
+use crate::parse_ansi_text::ansi_text_to_output::str_part_parse::ParseAnsiResult;
 use crate::parse_ansi_text::raw_ansi_parse::Output;
 use crate::parse_ansi_text::raw_ansi_parse::Text;
-
-pub struct ReadAnsiFileOptions {
-    pub(crate) file_options: FileReaderOptions,
-    pub(crate) parse_options: ParseOptions,
-}
-
-
+use crate::parse_file::types::ReadAnsiFileOptions;
 
 pub fn read_ansi_file_to_spans(options: ReadAnsiFileOptions) -> impl Iterator<Item = Span> {
 

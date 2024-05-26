@@ -1,3 +1,4 @@
+use memchr::memchr;
 use std::iter::Iterator;
 
 use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{
@@ -31,13 +32,9 @@ pub fn convert_ansi_output_lines_of_spans_continues<'a>(
         .sum::<usize>();
     let current_span = current_spans.last_mut().unwrap();
 
-    if current_span.text.contains(&b'\n') {
-        let new_line_index = current_span
-            .text
-            .iter()
-            .position(|item| *item == b'\n')
-            .unwrap();
-        let before_new_line = current_span.text[..new_line_index].to_vec();
+    let new_line_location = memchr(b'\n', current_span.text.as_slice());
+
+    if let Some(new_line_index) = new_line_location {
         let after_new_line = current_span.text[(new_line_index + 1)..].to_vec();
 
         let next_line = Line {
@@ -45,6 +42,7 @@ pub fn convert_ansi_output_lines_of_spans_continues<'a>(
             location_in_file: current_line.location_in_file + size_before + new_line_index + 1,
         };
 
+        let before_new_line = current_span.text[..new_line_index].to_vec();
         current_span.text = before_new_line;
 
         if current_span.text.is_empty() {
@@ -65,13 +63,9 @@ pub fn convert_ansi_output_lines_of_spans_continues<'a>(
             current_span.text = [current_span.text.as_slice(), text.text].concat();
             let from_index = text.location_in_text;
 
-            if current_span.text.contains(&b'\n') {
-                let new_line_index = current_span
-                    .text
-                    .iter()
-                    .position(|item| *item == b'\n')
-                    .unwrap();
-                let before_new_line = current_span.text[..new_line_index].to_vec();
+            let new_line_location = memchr(b'\n', current_span.text.as_slice());
+
+            if let Some(new_line_index) = new_line_location {
                 let after_new_line = current_span.text[(new_line_index + 1)..].to_vec();
 
                 let next_line = Line {
@@ -79,6 +73,7 @@ pub fn convert_ansi_output_lines_of_spans_continues<'a>(
                     location_in_file: from_index + new_line_index + 1,
                 };
 
+                let before_new_line = current_span.text[..new_line_index].to_vec();
                 current_span.text = before_new_line;
 
                 if current_span.text.is_empty() {

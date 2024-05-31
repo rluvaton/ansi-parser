@@ -25,7 +25,6 @@ pub fn flat_json_line_formatter<I: Iterator<Item=Line>>(iter: I) -> impl Iterato
             yield_!(NEW_LINE_MARKER.to_string());
         }
     }).into_iter();
-
 }
 
 #[cfg(test)]

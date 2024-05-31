@@ -11,3 +11,5 @@ TODO
 - [ ] Fix warnings
 - [ ] Add coverage report in CI
 - [ ] Run lint and format in CI
+- [ ] Add badges
+- [ ] add licensing from the ansi_parser crate to this repo where applicable

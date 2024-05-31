@@ -96,7 +96,7 @@ mod tests {
 
         return file_path;
     }
-    
+
     fn read_all_file_from_iterator(mut reader: FileReader) -> Vec<u8> {
         let mut result = Vec::new();
         while let Some(chunk) = reader.next() {
@@ -121,7 +121,7 @@ mod tests {
 
         assert_eq!(result, expected_file_string);
     }
-    
+
     #[test]
     fn test_read_file_contain_the_whole_file_with_chunks() {
         let expected_file_string = b"Hello, World!";
@@ -150,9 +150,9 @@ mod tests {
             .from_bytes(expected_file_string.find("World!"))
             .build();
         let file_reader = FileReader::new(options);
-        
+
         let result = read_all_file_from_iterator(file_reader);
-        
+
         assert_eq!(result, b"World!");
     }
 
@@ -266,7 +266,7 @@ mod tests {
 
         assert_eq!(result, expected_file_string);
     }
-    
+
     #[test]
     fn test_get_requested_chunk_size_smaller_than_file_size() {
         let expected_file_string = b"Hello, World!";
@@ -283,8 +283,12 @@ mod tests {
         while let Some(chunk) = file_reader.next() {
             result.push(chunk);
         }
-        
-        let sizes: Vec<usize> = result.clone().into_iter().map(|chunk| chunk.len()).collect();
+
+        let sizes: Vec<usize> = result
+            .clone()
+            .into_iter()
+            .map(|chunk| chunk.len())
+            .collect();
         let expected_sizes = vec![
             3, // Hel
             3, // lo,
@@ -292,10 +296,13 @@ mod tests {
             3, // rld,
             1, // !
         ];
-        
+
         assert_eq!(sizes, expected_sizes);
 
-        assert_eq!(result.into_iter().flatten().collect::<Vec<u8>>(), expected_file_string);
+        assert_eq!(
+            result.into_iter().flatten().collect::<Vec<u8>>(),
+            expected_file_string
+        );
     }
 
     #[test]

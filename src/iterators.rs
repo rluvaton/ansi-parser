@@ -1,2 +1,2 @@
-pub mod split_to_lines;
 pub mod compose;
+pub mod split_to_lines;

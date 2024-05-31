@@ -11,7 +11,7 @@ use crate::output::{
 };
 use crate::parse_ansi_text::ansi::types::Span;
 use crate::parse_ansi_text::parse_options::ParseOptions;
-use crate::parse_file::file_to_spans::{read_ansi_file_to_spans};
+use crate::parse_file::file_to_spans::read_ansi_file_to_spans;
 use crate::parse_file::from_middle_of_file::get_from_middle_of_the_file_info;
 use crate::parse_file::types::ReadAnsiFileOptions;
 
@@ -47,7 +47,8 @@ pub fn run_parse_command(matches: &clap::ArgMatches) {
         panic!("'flat-json-line' option is only available when 'split-lines' is enabled");
     }
 
-    let middle_of_file_info = get_from_middle_of_the_file_info(input_file_path, from_line, to_line, mapping_file);
+    let middle_of_file_info =
+        get_from_middle_of_the_file_info(input_file_path, from_line, to_line, mapping_file);
 
     let file_reader_options = FileReaderOptions {
         file_path: file_path.clone(),
@@ -85,4 +86,3 @@ fn run_for_spans(
         .compose(|iter| format_spans(Box::new(iter), span_format))
         .for_each(get_output_destination(output_dest));
 }
-

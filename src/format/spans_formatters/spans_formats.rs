@@ -19,7 +19,6 @@ pub fn format_spans(
     }
 }
 
-
 pub fn get_span_format_from_string(output_format: &str) -> Option<SpanFormat> {
     if output_format == "json" {
         return Some(SpanFormat::JSON);
@@ -28,7 +27,6 @@ pub fn get_span_format_from_string(output_format: &str) -> Option<SpanFormat> {
     if output_format == "json-line" {
         return Some(SpanFormat::SingleJsonItem);
     }
-
 
     return None;
 }

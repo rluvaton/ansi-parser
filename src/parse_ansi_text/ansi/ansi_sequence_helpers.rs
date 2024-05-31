@@ -1,8 +1,8 @@
 // use ansi_parser::AnsiSequence;
 use crate::parse_ansi_text::ansi::colors::*;
-use crate::parse_ansi_text::raw_ansi_parse::{AnsiSequence};
 use crate::parse_ansi_text::ansi::style::*;
 use crate::parse_ansi_text::raw_ansi_parse::parsers::ESCAPE_AS_BYTES;
+use crate::parse_ansi_text::raw_ansi_parse::AnsiSequence;
 
 pub enum AnsiSequenceType {
     Unsupported,
@@ -100,11 +100,9 @@ pub fn get_type_from_ansi_sequence(seq: &AnsiSequence) -> AnsiSequenceType {
                 }
                 ColorType::Background(color) => {
                     return AnsiSequenceType::BackgroundColor(color);
-
                 }
                 _ => {}
             }
-
 
             let brightness = get_brightness_type(vec[0]);
 
@@ -119,7 +117,7 @@ pub fn get_type_from_ansi_sequence(seq: &AnsiSequence) -> AnsiSequenceType {
             }
 
             println!("Unrecognized graphics mode: {:?}", vec);
-        },
+        }
 
         _ => {
             // Should not be here

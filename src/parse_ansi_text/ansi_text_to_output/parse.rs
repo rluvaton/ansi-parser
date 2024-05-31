@@ -41,7 +41,6 @@ pub fn parse_ansi<'a, I: Iterator<Item = Vec<u8>> + 'a>(
     .into_iter();
 }
 
-
 #[cfg(test)]
 mod tests {
     use pretty_assertions::assert_eq;

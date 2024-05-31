@@ -51,7 +51,10 @@ fn parse_ansi_text(input: &str) -> Vec<Span> {
     return parse_ansi_text_with_options(input, ParseOptions::default());
 }
 
-fn parse_ansi_text_split_by_lines_with_options(input: &str, parse_options: ParseOptions) -> Vec<Line> {
+fn parse_ansi_text_split_by_lines_with_options(
+    input: &str,
+    parse_options: ParseOptions,
+) -> Vec<Line> {
     let tmp_file_path = create_tmp_file(input.to_string());
     let lines_iterator = read_ansi_file_to_lines(ReadAnsiFileOptions {
         parse_options,

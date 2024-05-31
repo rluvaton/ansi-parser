@@ -1,13 +1,12 @@
 use std::iter::Iterator;
 
-
 // https://stackoverflow.com/a/78533644/5923666
 pub trait ComposeByIterator: Iterator {
     fn compose<F, OutputItem, OutputIterator>(self, f: F) -> OutputIterator
-        where
-            Self: Sized,
-            OutputIterator: Iterator<Item = OutputItem>,
-            F: Fn(Self) -> OutputIterator,
+    where
+        Self: Sized,
+        OutputIterator: Iterator<Item = OutputItem>,
+        F: Fn(Self) -> OutputIterator,
     {
         f(self)
     }
@@ -16,9 +15,9 @@ impl<I: Iterator> ComposeByIterator for I {}
 
 #[cfg(test)]
 mod tests {
-    use pretty_assertions::assert_eq;
-    use genawaiter::{rc::gen, yield_};
     use super::*;
+    use genawaiter::{rc::gen, yield_};
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn should_allow_changing_the_input_type() {
@@ -92,7 +91,9 @@ mod tests {
 
     #[test]
     fn should_support_gen() {
-        fn wrap_with_option<Input, I: Iterator<Item = Input>>(iter: I) -> impl Iterator<Item = Option<Input>> {
+        fn wrap_with_option<Input, I: Iterator<Item = Input>>(
+            iter: I,
+        ) -> impl Iterator<Item = Option<Input>> {
             return gen!({
                 for item in iter {
                     yield_!(Some(item));
@@ -102,19 +103,9 @@ mod tests {
         }
 
         let input: Vec<i32> = vec![1, 2, 3, 4, 5];
-        let output: Vec<Option<&i32>> = input
-            .iter()
-            .compose(wrap_with_option)
-            .collect();
+        let output: Vec<Option<&i32>> = input.iter().compose(wrap_with_option).collect();
 
-        let expected = vec![
-            Some(&1),
-            Some(&2),
-            Some(&3),
-            Some(&4),
-            Some(&5)
-        ];
+        let expected = vec![Some(&1), Some(&2), Some(&3), Some(&4), Some(&5)];
         assert_eq!(output, expected);
-
     }
 }

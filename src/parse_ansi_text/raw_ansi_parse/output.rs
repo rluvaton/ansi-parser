@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter, Result as DisplayResult};
 
-use crate::parse_ansi_text::raw_ansi_parse::{AnsiSequence};
+use crate::parse_ansi_text::raw_ansi_parse::AnsiSequence;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Text<'a> {
@@ -21,9 +21,12 @@ impl<'a> Display for Output<'a> {
     fn fmt(&self, formatter: &mut Formatter) -> DisplayResult {
         use Output::*;
         match self {
-            TextBlock(txt) => write!(formatter, "{}", String::from_utf8(txt.text.to_vec()).unwrap()),
+            TextBlock(txt) => write!(
+                formatter,
+                "{}",
+                String::from_utf8(txt.text.to_vec()).unwrap()
+            ),
             Escape(seq) => write!(formatter, "{}", seq),
         }
     }
 }
-

@@ -1,5 +1,4 @@
-use heapless::{Vec};
-
+use heapless::Vec;
 
 #[allow(dead_code)]
 pub const BLACK_FOREGROUND_CODE: &str = "\x1B[30m";
@@ -83,7 +82,7 @@ pub const BRIGHT_WHITE_BACKGROUND_CODE: &str = "\x1B[107m";
 
 #[allow(dead_code)]
 pub fn EIGHT_BIT_FOREGROUND_CODE(byte: u8) -> String {
-    // \x1B[38;2;R;G;Bm	
+    // \x1B[38;2;R;G;Bm
     format!("\x1B[38;5;{}m", byte)
 }
 
@@ -124,63 +123,63 @@ pub enum Color {
     // Foreground color: \x1B[30m
     // Background color: \x1B[40m
     Black,
-    
+
     // Foreground color: \x1B[31m
     // Background color: \x1B[41m
     Red,
-    
+
     // Foreground color: \x1B[32m
     // Background color: \x1B[42m
     Green,
-    
+
     // Foreground color: \x1B[33m
     // Background color: \x1B[43m
     Yellow,
-    
+
     // Foreground color: \x1B[34m
     // Background color: \x1B[44m
     Blue,
-    
+
     // Foreground color: \x1B[35m
     // Background color: \x1B[45m
     Magenta,
-    
+
     // Foreground color: \x1B[36m
     // Background color: \x1B[46m
     Cyan,
-    
+
     // Foreground color: \x1B[37m
     // Background color: \x1B[47m
     White,
-    
+
     // Foreground color: \x1B[90m
     // Background color: \x1B[100m
     BrightBlack,
-    
+
     // Foreground color: \x1B[91m
     // Background color: \x1B[101m
     BrightRed,
-    
+
     // Foreground color: \x1B[92m
     // Background color: \x1B[102m
     BrightGreen,
-    
+
     // Foreground color: \x1B[93m
     // Background color: \x1B[103m
     BrightYellow,
-    
+
     // Foreground color: \x1B[94m
     // Background color: \x1B[104m
     BrightBlue,
-    
+
     // Foreground color: \x1B[95m
     // Background color: \x1B[105m
     BrightMagenta,
-    
+
     // Foreground color: \x1B[96m
     // Background color: \x1B[106m
     BrightCyan,
-    
+
     // Foreground color: \x1B[97m
     // Background color: \x1B[107m
     BrightWhite,
@@ -198,7 +197,6 @@ pub enum Color {
     // Background color: \x1B[49m
     Default,
 }
-
 
 pub fn get_color_type(vec: &Vec<u8, 5>) -> ColorType {
     if vec.len() == 0 {
@@ -257,7 +255,7 @@ pub fn get_color_type(vec: &Vec<u8, 5>) -> ColorType {
                     },
                     _ => panic!("Unknown color code {}, it should be either 2 for 8bit color or 5 for RGB color. vec is: {:?}", color_type, vec)
                 }
-            },
+            }
             9 => Color::Default,
             _ => panic!("Invalid color code: {:?}", vec),
         };
@@ -296,7 +294,7 @@ pub fn get_color_type(vec: &Vec<u8, 5>) -> ColorType {
             return ColorType::Background(color);
         }
     }
-    
+
     return ColorType::None;
 }
 
@@ -815,69 +813,64 @@ pub fn get_rgb_values_from_8_bit(eight_bit_color: u8) -> (u8, u8, u8) {
         254 => (228, 228, 228),
         // Grey93
         255 => (238, 238, 238),
-        _ => panic!("Unknown 8-bit color {}", eight_bit_color)
-    }
+        _ => panic!("Unknown 8-bit color {}", eight_bit_color),
+    };
 }
 
 pub fn convert_color_type_to_ansi_code(color_type: ColorType) -> String {
     let ansi_code = match color_type {
         ColorType::None => "".to_string(),
-        ColorType::Foreground(color) => {
-            match color {
-                Color::None => "".to_string(),
-                Color::Default => DEFAULT_FOREGROUND_CODE.to_string(),
-                
-                Color::Black => BLACK_FOREGROUND_CODE.to_string(),
-                Color::Red => RED_FOREGROUND_CODE.to_string(),
-                Color::Green => GREEN_FOREGROUND_CODE.to_string(),
-                Color::Yellow => YELLOW_FOREGROUND_CODE.to_string(),
-                Color::Blue => BLUE_FOREGROUND_CODE.to_string(),
-                Color::Magenta => MAGENTA_FOREGROUND_CODE.to_string(),
-                Color::Cyan => CYAN_FOREGROUND_CODE.to_string(),
-                Color::White => WHITE_FOREGROUND_CODE.to_string(),
-                
-                Color::BrightBlack => BRIGHT_BLACK_FOREGROUND_CODE.to_string(),
-                Color::BrightRed => BRIGHT_RED_FOREGROUND_CODE.to_string(),
-                Color::BrightGreen => BRIGHT_GREEN_FOREGROUND_CODE.to_string(),
-                Color::BrightYellow => BRIGHT_YELLOW_FOREGROUND_CODE.to_string(),
-                Color::BrightBlue => BRIGHT_BLUE_FOREGROUND_CODE.to_string(),
-                Color::BrightMagenta => BRIGHT_MAGENTA_FOREGROUND_CODE.to_string(),
-                Color::BrightCyan => BRIGHT_CYAN_FOREGROUND_CODE.to_string(),
-                Color::BrightWhite => BRIGHT_WHITE_FOREGROUND_CODE.to_string(),
-                
-                Color::EightBit(c) => EIGHT_BIT_FOREGROUND_CODE(c),
-                Color::Rgb(r, g, b) => RGB_FOREGROUND_CODE(r, g, b)
-            }
-        }
-        ColorType::Background(color) => {
-            match color {
-                Color::None => "".to_string(),
-                Color::Default => DEFAULT_BACKGROUND_CODE.to_string(),
-                
-                Color::Black => BLACK_BACKGROUND_CODE.to_string(),
-                Color::Red => RED_BACKGROUND_CODE.to_string(),
-                Color::Green => GREEN_BACKGROUND_CODE.to_string(),
-                Color::Yellow => YELLOW_BACKGROUND_CODE.to_string(),
-                Color::Blue => BLUE_BACKGROUND_CODE.to_string(),
-                Color::Magenta => MAGENTA_BACKGROUND_CODE.to_string(),
-                Color::Cyan => CYAN_BACKGROUND_CODE.to_string(),
-                Color::White => WHITE_BACKGROUND_CODE.to_string(),
+        ColorType::Foreground(color) => match color {
+            Color::None => "".to_string(),
+            Color::Default => DEFAULT_FOREGROUND_CODE.to_string(),
 
-                Color::BrightBlack => BRIGHT_BLACK_BACKGROUND_CODE.to_string(),
-                Color::BrightRed => BRIGHT_RED_BACKGROUND_CODE.to_string(),
-                Color::BrightGreen => BRIGHT_GREEN_BACKGROUND_CODE.to_string(),
-                Color::BrightYellow => BRIGHT_YELLOW_BACKGROUND_CODE.to_string(),
-                Color::BrightBlue => BRIGHT_BLUE_BACKGROUND_CODE.to_string(),
-                Color::BrightMagenta => BRIGHT_MAGENTA_BACKGROUND_CODE.to_string(),
-                Color::BrightCyan => BRIGHT_CYAN_BACKGROUND_CODE.to_string(),
-                Color::BrightWhite => BRIGHT_WHITE_BACKGROUND_CODE.to_string(),
-                
-                Color::EightBit(b) => EIGHT_BIT_BACKGROUND_CODE(b),
-                Color::Rgb(r, g, b) => RGB_BACKGROUND_CODE(r, g, b)
-            }
-        }
+            Color::Black => BLACK_FOREGROUND_CODE.to_string(),
+            Color::Red => RED_FOREGROUND_CODE.to_string(),
+            Color::Green => GREEN_FOREGROUND_CODE.to_string(),
+            Color::Yellow => YELLOW_FOREGROUND_CODE.to_string(),
+            Color::Blue => BLUE_FOREGROUND_CODE.to_string(),
+            Color::Magenta => MAGENTA_FOREGROUND_CODE.to_string(),
+            Color::Cyan => CYAN_FOREGROUND_CODE.to_string(),
+            Color::White => WHITE_FOREGROUND_CODE.to_string(),
+
+            Color::BrightBlack => BRIGHT_BLACK_FOREGROUND_CODE.to_string(),
+            Color::BrightRed => BRIGHT_RED_FOREGROUND_CODE.to_string(),
+            Color::BrightGreen => BRIGHT_GREEN_FOREGROUND_CODE.to_string(),
+            Color::BrightYellow => BRIGHT_YELLOW_FOREGROUND_CODE.to_string(),
+            Color::BrightBlue => BRIGHT_BLUE_FOREGROUND_CODE.to_string(),
+            Color::BrightMagenta => BRIGHT_MAGENTA_FOREGROUND_CODE.to_string(),
+            Color::BrightCyan => BRIGHT_CYAN_FOREGROUND_CODE.to_string(),
+            Color::BrightWhite => BRIGHT_WHITE_FOREGROUND_CODE.to_string(),
+
+            Color::EightBit(c) => EIGHT_BIT_FOREGROUND_CODE(c),
+            Color::Rgb(r, g, b) => RGB_FOREGROUND_CODE(r, g, b),
+        },
+        ColorType::Background(color) => match color {
+            Color::None => "".to_string(),
+            Color::Default => DEFAULT_BACKGROUND_CODE.to_string(),
+
+            Color::Black => BLACK_BACKGROUND_CODE.to_string(),
+            Color::Red => RED_BACKGROUND_CODE.to_string(),
+            Color::Green => GREEN_BACKGROUND_CODE.to_string(),
+            Color::Yellow => YELLOW_BACKGROUND_CODE.to_string(),
+            Color::Blue => BLUE_BACKGROUND_CODE.to_string(),
+            Color::Magenta => MAGENTA_BACKGROUND_CODE.to_string(),
+            Color::Cyan => CYAN_BACKGROUND_CODE.to_string(),
+            Color::White => WHITE_BACKGROUND_CODE.to_string(),
+
+            Color::BrightBlack => BRIGHT_BLACK_BACKGROUND_CODE.to_string(),
+            Color::BrightRed => BRIGHT_RED_BACKGROUND_CODE.to_string(),
+            Color::BrightGreen => BRIGHT_GREEN_BACKGROUND_CODE.to_string(),
+            Color::BrightYellow => BRIGHT_YELLOW_BACKGROUND_CODE.to_string(),
+            Color::BrightBlue => BRIGHT_BLUE_BACKGROUND_CODE.to_string(),
+            Color::BrightMagenta => BRIGHT_MAGENTA_BACKGROUND_CODE.to_string(),
+            Color::BrightCyan => BRIGHT_CYAN_BACKGROUND_CODE.to_string(),
+            Color::BrightWhite => BRIGHT_WHITE_BACKGROUND_CODE.to_string(),
+
+            Color::EightBit(b) => EIGHT_BIT_BACKGROUND_CODE(b),
+            Color::Rgb(r, g, b) => RGB_BACKGROUND_CODE(r, g, b),
+        },
     };
 
     return ansi_code.to_string();
 }
-

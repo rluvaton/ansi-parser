@@ -1,7 +1,7 @@
+use itertools::Itertools;
 use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
-use itertools::Itertools;
 
 use crate::files::file_reader::FileReaderOptions;
 use crate::mapping_file::constants::*;
@@ -41,17 +41,15 @@ pub fn create_mapping_file_from_input_path(
         },
         parse_options: ParseOptions::default(),
     })
-        .map(create_line_map)
-        .into_iter()
-        .chunks(1024 * 1024 * 10); // 10MB
-    
+    .map(create_line_map)
+    .into_iter()
+    .chunks(1024 * 1024 * 10); // 10MB
+
     for chunk in &output {
         let merged = chunk.concat();
-        file.write_all(&merged)
-            .expect("write line to file failed");
+        file.write_all(&merged).expect("write line to file failed");
     }
 }
-
 
 fn create_line_map(line: Line) -> Vec<u8> {
     let initial_span_for_line = if line.spans.is_empty() {
@@ -64,9 +62,7 @@ fn create_line_map(line: Line) -> Vec<u8> {
 
     let ansi_len = initial_style_for_line_ansi_string.len();
 
-    let first_part_padding = b" "
-        .repeat(FIRST_PART_LINE_LENGTH - ansi_len)
-        .to_vec();
+    let first_part_padding = b" ".repeat(FIRST_PART_LINE_LENGTH - ansi_len).to_vec();
 
     let location_in_file = line.location_in_file.to_ne_bytes();
 

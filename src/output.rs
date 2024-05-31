@@ -1,6 +1,6 @@
 pub enum OutputDestination {
     Stdout,
-    
+
     // Does not output anything
     Sink,
 }
@@ -20,7 +20,6 @@ fn to_sink(_output: String) {
     // Do nothing
 }
 
-
 pub fn get_output_destination_from_string(output_dest: &str) -> Option<OutputDestination> {
     if output_dest == "stdout" {
         return Some(OutputDestination::Stdout);
@@ -29,7 +28,6 @@ pub fn get_output_destination_from_string(output_dest: &str) -> Option<OutputDes
     if output_dest == "sink" {
         return Some(OutputDestination::Sink);
     }
-
 
     return None;
 }

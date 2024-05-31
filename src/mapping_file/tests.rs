@@ -526,8 +526,7 @@ fn file_path_should_return_correct_initial_style_for_each_line() {
 }
 
 #[test]
-fn file_path_should_return_correct_initial_style_for_each_line_when_requesting_from_end_to_start(
-) {
+fn file_path_should_return_correct_initial_style_for_each_line_when_requesting_from_end_to_start() {
     let input_lines = [
         // Style from start of the line
         BLACK_BACKGROUND_CODE.to_string()

@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::parse_ansi_text::raw_ansi_parse::{AnsiSequence, Output, parse_escape, Text};
+use crate::parse_ansi_text::raw_ansi_parse::{parse_escape, AnsiSequence, Output, Text};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ParseSingleAnsiResult<'a> {
@@ -9,7 +9,10 @@ pub struct ParseSingleAnsiResult<'a> {
     pub pending_string: Vec<u8>,
 }
 
-pub fn parse_single_ansi<'a>(value: &'a [u8], mut current_location_until_pending_string: usize) -> ParseSingleAnsiResult<'a> {
+pub fn parse_single_ansi<'a>(
+    value: &'a [u8],
+    mut current_location_until_pending_string: usize,
+) -> ParseSingleAnsiResult<'a> {
     let mut output: Vec<Output> = Vec::new();
     let mut buf = value;
     loop {
@@ -24,24 +27,19 @@ pub fn parse_single_ansi<'a>(value: &'a [u8], mut current_location_until_pending
 
                 match seq {
                     AnsiSequence::Text(str) => {
-                        output.push(
-                            Output::TextBlock(Text {
-                                text: str,
-                                location_in_text: text_location,
-                            })
-                        );
-                    },
+                        output.push(Output::TextBlock(Text {
+                            text: str,
+                            location_in_text: text_location,
+                        }));
+                    }
                     _ => {
-                        output.push(
-                            Output::Escape(seq)
-                        );
-
-                    },
+                        output.push(Output::Escape(seq));
+                    }
                 }
             }
             Err(_) => {
                 break;
-            },
+            }
         }
     }
 
@@ -49,9 +47,8 @@ pub fn parse_single_ansi<'a>(value: &'a [u8], mut current_location_until_pending
         output,
         current_location_until_pending_string,
         pending_string: buf.to_vec(),
-    }
+    };
 }
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ParseAnsiResult<'a> {
@@ -77,21 +74,19 @@ pub fn parse_ansi_continues(
             current_location_until_pending_string += pending_text_size_before - buf.len();
 
             match seq {
-                AnsiSequence::Text(str) => {
-                    ParseAnsiResult {
-                        output: Some(Output::TextBlock(Text {
-                            text: str,
-                            location_in_text: text_location,
-                        })),
-                        current_location_until_pending_string,
-                        pending_string: buf,
-                    }
-                }
+                AnsiSequence::Text(str) => ParseAnsiResult {
+                    output: Some(Output::TextBlock(Text {
+                        text: str,
+                        location_in_text: text_location,
+                    })),
+                    current_location_until_pending_string,
+                    pending_string: buf,
+                },
                 _ => ParseAnsiResult {
                     output: Some(Output::Escape(seq)),
                     current_location_until_pending_string,
                     pending_string: buf,
-                }
+                },
             }
         }
         Err(_) => ParseAnsiResult {
@@ -99,7 +94,7 @@ pub fn parse_ansi_continues(
             current_location_until_pending_string,
             pending_string: buf,
         },
-    }
+    };
 }
 
 #[cfg(test)]
@@ -113,14 +108,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn should_get_the_pending_string_to_next_slice_after_finish_parsing_existing_escape_codes_when_stopping_in_middle_of_escape() {
+    fn should_get_the_pending_string_to_next_slice_after_finish_parsing_existing_escape_codes_when_stopping_in_middle_of_escape(
+    ) {
         let input = RED_FOREGROUND_CODE.to_string() + "abc\x1B";
 
         let vec = input.clone().into_bytes();
         let result = parse_single_ansi(&vec, 0);
 
         let output = vec![
-            Output::Escape(AnsiSequence::SetGraphicsMode(HeaplessVec::from_slice(&[31]).unwrap())),
+            Output::Escape(AnsiSequence::SetGraphicsMode(
+                HeaplessVec::from_slice(&[31]).unwrap(),
+            )),
             Output::TextBlock(Text {
                 text: "abc".as_bytes(),
                 location_in_text: input.find("abc").unwrap(),
@@ -143,7 +141,9 @@ mod tests {
         let result = parse_single_ansi(&vec, 0);
 
         let output = vec![
-            Output::Escape(AnsiSequence::SetGraphicsMode(HeaplessVec::from_slice(&[31]).unwrap())),
+            Output::Escape(AnsiSequence::SetGraphicsMode(
+                HeaplessVec::from_slice(&[31]).unwrap(),
+            )),
             Output::TextBlock(Text {
                 text: "abc".as_bytes(),
                 location_in_text: input.find("abc").unwrap(),
@@ -158,5 +158,4 @@ mod tests {
 
         assert_eq!(result, expected);
     }
-
 }

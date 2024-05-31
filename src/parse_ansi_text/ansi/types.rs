@@ -1,13 +1,17 @@
-use std::ops::Deref;
-use nom::AsBytes;
-use sonic_rs::{Serialize, Deserialize, Error};
-use std::str;
-use serde::{Deserializer, Serializer};
-use crate::parse_ansi_text::ansi::colors::{Color, convert_color_type_to_ansi_code, get_rgb_values_from_8_bit};
 use crate::parse_ansi_text::ansi::colors::ColorType::{Background, Foreground};
-use crate::parse_ansi_text::ansi::style::{BOLD_CODE, Brightness, DIM_CODE, INVERSE_CODE, ITALIC_CODE, STRIKETHROUGH_CODE, TextStyle, UNDERLINE_CODE};
+use crate::parse_ansi_text::ansi::colors::{
+    convert_color_type_to_ansi_code, get_rgb_values_from_8_bit, Color,
+};
+use crate::parse_ansi_text::ansi::style::{
+    Brightness, TextStyle, BOLD_CODE, DIM_CODE, INVERSE_CODE, ITALIC_CODE, STRIKETHROUGH_CODE,
+    UNDERLINE_CODE,
+};
 use crate::traits::ToJson;
-
+use nom::AsBytes;
+use serde::{Deserializer, Serializer};
+use sonic_rs::{Deserialize, Error, Serialize};
+use std::ops::Deref;
+use std::str;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Span {
@@ -31,17 +35,15 @@ struct SpanJson<'a> {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bg_color: Option<String>,
-    
+
     // Brightness
-    
     #[serde(skip_serializing_if = "std::ops::Not::not", default = "bool::default")]
     pub bold: bool,
-    
+
     #[serde(skip_serializing_if = "std::ops::Not::not", default = "bool::default")]
     pub dim: bool,
-    
+
     // Text Style
-    
     #[serde(skip_serializing_if = "std::ops::Not::not", default = "bool::default")]
     pub italic: bool,
     #[serde(skip_serializing_if = "std::ops::Not::not", default = "bool::default")]
@@ -54,8 +56,8 @@ struct SpanJson<'a> {
 
 impl Serialize for Span {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
+    where
+        S: Serializer,
     {
         let span_json = SpanJson::create_from_span(self);
 
@@ -63,12 +65,10 @@ impl Serialize for Span {
     }
 }
 
-
-
 impl<'de> Deserialize<'de> for Span {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         let span_json = SpanJson::deserialize(deserializer)?;
 
@@ -76,9 +76,7 @@ impl<'de> Deserialize<'de> for Span {
     }
 }
 
-
 impl Span {
-    
     pub fn empty() -> Span {
         Span {
             text: vec![],
@@ -88,12 +86,12 @@ impl Span {
             brightness: Brightness::None,
         }
     }
-    
+
     pub fn with_text(mut self, text: Vec<u8>) -> Span {
         self.text = text;
         self
     }
-    
+
     pub fn with_color(mut self, color: Color) -> Span {
         // Set default color as none
         if matches!(color, Color::Default) {
@@ -103,7 +101,7 @@ impl Span {
         }
         self
     }
-    
+
     pub fn with_bg_color(mut self, bg_color: Color) -> Span {
         // Default color is None
         if matches!(bg_color, Color::Default) {
@@ -113,17 +111,17 @@ impl Span {
         }
         self
     }
-    
+
     pub fn with_brightness(mut self, brightness: Brightness) -> Span {
         self.brightness = brightness;
         self
     }
-    
+
     pub fn with_text_style(mut self, text_style: TextStyle) -> Span {
         self.text_style = text_style;
         self
     }
-    
+
     pub fn clone_without_text(span: &Span) -> Span {
         Span {
             text: vec![],
@@ -133,7 +131,6 @@ impl Span {
             text_style: span.text_style,
         }
     }
-
 
     // TODO - add tests
     pub fn create_css_string(&self) -> String {
@@ -151,7 +148,9 @@ impl Span {
         if self.text_style & TextStyle::Italic != TextStyle::empty() {
             css = format!("{}font-style: italic;", css);
         }
-        if self.text_style & (TextStyle::Underline | TextStyle::Strikethrough) == TextStyle::Underline | TextStyle::Strikethrough {
+        if self.text_style & (TextStyle::Underline | TextStyle::Strikethrough)
+            == TextStyle::Underline | TextStyle::Strikethrough
+        {
             css = format!("{}text-decoration: line-through underline;", css);
         } else if self.text_style & TextStyle::Underline != TextStyle::empty() {
             css = format!("{}text-decoration: underline;", css);
@@ -160,20 +159,28 @@ impl Span {
         }
 
         // Color
-        if !matches!(self.color, Color::None){
-            css = format!("{}color: {};", css, Self::get_color_str_from_color(self.color).unwrap());
+        if !matches!(self.color, Color::None) {
+            css = format!(
+                "{}color: {};",
+                css,
+                Self::get_color_str_from_color(self.color).unwrap()
+            );
         }
 
-        if !matches!(self.bg_color, Color::None){
-            css = format!("{}background-color: {};", css, Self::get_color_str_from_color(self.bg_color).unwrap());
+        if !matches!(self.bg_color, Color::None) {
+            css = format!(
+                "{}background-color: {};",
+                css,
+                Self::get_color_str_from_color(self.bg_color).unwrap()
+            );
         }
 
         return css;
     }
-    
+
     pub fn serialize_to_ansi_string(self) -> Vec<u8> {
         let mut ansi_string = vec![];
-        
+
         // Brightness
         if matches!(self.brightness, Brightness::Bold) {
             ansi_string = [ansi_string, BOLD_CODE.as_bytes().to_vec()].concat();
@@ -194,27 +201,39 @@ impl Span {
         if self.text_style & TextStyle::Strikethrough != TextStyle::empty() {
             ansi_string = [ansi_string, STRIKETHROUGH_CODE.as_bytes().to_vec()].concat();
         }
-        
+
         // Color
-        ansi_string = [ansi_string, convert_color_type_to_ansi_code(Foreground(self.color)).as_bytes().to_vec()].concat();
-        ansi_string = [ansi_string, convert_color_type_to_ansi_code(Background(self.bg_color)).as_bytes().to_vec()].concat();
-        
+        ansi_string = [
+            ansi_string,
+            convert_color_type_to_ansi_code(Foreground(self.color))
+                .as_bytes()
+                .to_vec(),
+        ]
+        .concat();
+        ansi_string = [
+            ansi_string,
+            convert_color_type_to_ansi_code(Background(self.bg_color))
+                .as_bytes()
+                .to_vec(),
+        ]
+        .concat();
+
         // Text
         ansi_string = [ansi_string, self.text].concat();
 
         return ansi_string;
     }
-    
+
     pub fn replace_default_color_with_none(mut self) -> Span {
-            if matches!(self.color, Color::Default) {
-                self.color = Color::None;
-            }
+        if matches!(self.color, Color::Default) {
+            self.color = Color::None;
+        }
 
-            if matches!(self.bg_color, Color::Default) {
-                self.bg_color = Color::None;
-            }
+        if matches!(self.bg_color, Color::Default) {
+            self.bg_color = Color::None;
+        }
 
-            self
+        self
     }
 
     fn get_color_str_from_color(color: Color) -> Option<String> {
@@ -244,7 +263,7 @@ impl Span {
                 let (r, g, b) = get_rgb_values_from_8_bit(eight_bit);
 
                 Some(format!("rgb({}, {}, {})", r, g, b))
-            },
+            }
             Color::Rgb(r, g, b) => Some(format!("rgb({}, {}, {})", r, g, b)),
         }
     }
@@ -257,7 +276,10 @@ impl Span {
     pub fn from_json_array(text: &str) -> Result<Vec<Span>, Error> {
         let json = sonic_rs::from_str::<Vec<SpanJson>>(text)?;
 
-        return Ok(json.iter().map(|item| Span::from_span_json(item.clone())).collect());
+        return Ok(json
+            .iter()
+            .map(|item| Span::from_span_json(item.clone()))
+            .collect());
     }
 
     pub fn from_span_json(json: SpanJson) -> Span {
@@ -268,30 +290,24 @@ impl Span {
                     TextStyle::Italic
                 } else {
                     TextStyle::None
-                }
-                    |
-                    if json.underline {
-                        TextStyle::Underline
-                    } else {
-                        TextStyle::None
-                    }
-                    |
-                    if json.inverse {
-                        TextStyle::Inverse
-                    } else {
-                        TextStyle::None
-                    }
-                    |
-                    if json.strikethrough {
-                        TextStyle::Strikethrough
-                    } else {
-                        TextStyle::None
-                    }
+                } | if json.underline {
+                    TextStyle::Underline
+                } else {
+                    TextStyle::None
+                } | if json.inverse {
+                    TextStyle::Inverse
+                } else {
+                    TextStyle::None
+                } | if json.strikethrough {
+                    TextStyle::Strikethrough
+                } else {
+                    TextStyle::None
+                },
             )
             .with_bg_color(
                 // TODO - move this to a function
-                json.bg_color.map_or(Color::None, |color| {
-                    match color.as_str() {
+                json.bg_color
+                    .map_or(Color::None, |color| match color.as_str() {
                         "black" => Color::Black,
                         "red" => Color::Red,
                         "green" => Color::Green,
@@ -309,13 +325,12 @@ impl Span {
                         "brightCyan" => Color::BrightCyan,
                         "brightWhite" => Color::BrightWhite,
                         _ => Color::None,
-                    }
-                })
+                    }),
             )
             .with_color(
                 // TODO - move this to a function
-                json.color.map_or(Color::None, |color| {
-                    match color.as_str() {
+                json.color
+                    .map_or(Color::None, |color| match color.as_str() {
                         "black" => Color::Black,
                         "red" => Color::Red,
                         "green" => Color::Green,
@@ -333,18 +348,15 @@ impl Span {
                         "brightCyan" => Color::BrightCyan,
                         "brightWhite" => Color::BrightWhite,
                         _ => Color::None,
-                    }
-                })
+                    }),
             )
-            .with_brightness(
-                if json.bold {
-                    Brightness::Bold
-                } else if json.dim {
-                    Brightness::Dim
-                } else {
-                    Brightness::None
-                }
-            );
+            .with_brightness(if json.bold {
+                Brightness::Bold
+            } else if json.dim {
+                Brightness::Dim
+            } else {
+                Brightness::None
+            });
     }
 }
 
@@ -352,15 +364,15 @@ impl SpanJson<'_> {
     pub fn create_from_span(span: &Span) -> SpanJson<'_> {
         SpanJson {
             text: str::from_utf8(span.text.deref()).unwrap(),
-            
+
             // Colors
             color: Self::get_color_str_from_color(span.color),
             bg_color: Self::get_color_str_from_color(span.bg_color),
-            
+
             // Brightness
             bold: span.brightness == Brightness::Bold,
             dim: span.brightness == Brightness::Dim,
-            
+
             // Text style
             italic: span.text_style & TextStyle::Italic != TextStyle::empty(),
             underline: span.text_style & TextStyle::Underline != TextStyle::empty(),
@@ -391,12 +403,12 @@ impl SpanJson<'_> {
             Color::BrightMagenta => Some("brightMagenta".to_string()),
             Color::BrightCyan => Some("brightCyan".to_string()),
             Color::BrightWhite => Some("brightWhite".to_string()),
-            
+
             Color::EightBit(eight_bit) => {
                 let (r, g, b) = get_rgb_values_from_8_bit(eight_bit);
-                    
+
                 Some(format!("rgb({}, {}, {})", r, g, b))
-            },
+            }
             Color::Rgb(r, g, b) => Some(format!("rgb({}, {}, {})", r, g, b)),
         }
     }
@@ -426,11 +438,10 @@ impl ToJson for Span {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use pretty_assertions::{assert_eq};
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn it_works() {
@@ -440,14 +451,17 @@ mod tests {
     #[test]
     fn create_span_with_no_styling_have_no_styles_and_only_text() {
         let span = Span::empty().with_text(b"Hello, world!".to_vec());
-        assert_eq!(span, Span {
-            text: b"Hello, world!".to_vec(),
+        assert_eq!(
+            span,
+            Span {
+                text: b"Hello, world!".to_vec(),
 
-            color: Color::None,
-            bg_color: Color::None,
-            text_style: TextStyle::None,
-            brightness: Brightness::None,
-        });
+                color: Color::None,
+                bg_color: Color::None,
+                text_style: TextStyle::None,
+                brightness: Brightness::None,
+            }
+        );
     }
 
     #[test]
@@ -461,14 +475,17 @@ mod tests {
             brightness: Brightness::None,
         };
         let span = original_span.clone().with_text(vec![]);
-        assert_eq!(span, Span {
-            text: vec![],
+        assert_eq!(
+            span,
+            Span {
+                text: vec![],
 
-            color: Color::Red,
-            bg_color: Color::None,
-            text_style: TextStyle::None,
-            brightness: Brightness::None,
-        });
+                color: Color::Red,
+                bg_color: Color::None,
+                text_style: TextStyle::None,
+                brightness: Brightness::None,
+            }
+        );
     }
 
     #[test]
@@ -481,14 +498,17 @@ mod tests {
             text_style: TextStyle::None,
             brightness: Brightness::None,
         };
-        assert_eq!(original_span, Span {
-            text: "Hello, world!".to_string().as_bytes().to_vec(),
+        assert_eq!(
+            original_span,
+            Span {
+                text: "Hello, world!".to_string().as_bytes().to_vec(),
 
-            color: Color::Red,
-            bg_color: Color::None,
-            text_style: TextStyle::None,
-            brightness: Brightness::None,
-        });
+                color: Color::Red,
+                bg_color: Color::None,
+                text_style: TextStyle::None,
+                brightness: Brightness::None,
+            }
+        );
     }
 
     // TODO - add test for from json and to json with combinations and missing values

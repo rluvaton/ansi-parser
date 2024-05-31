@@ -1,5 +1,3 @@
-use futures::stream::StreamExt;
-
 use ansi::types::Span;
 
 use crate::parse_ansi_text::parse_options::ParseOptions;

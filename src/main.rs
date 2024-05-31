@@ -13,7 +13,6 @@ mod parse_ansi_text;
 mod mapping_file;
 mod cli;
 mod iterators;
-mod streams_helpers;
 mod files;
 mod test_utils;
 mod traits;

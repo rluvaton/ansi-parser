@@ -133,6 +133,43 @@ impl Span {
             text_style: span.text_style,
         }
     }
+
+
+    // TODO - add tests
+    pub fn create_css_string(&self) -> String {
+        let mut css = "".to_string();
+
+        // Brightness
+        if matches!(self.brightness, Brightness::Bold) {
+            css = format!("{}font-weight: bold;", css);
+        } else if matches!(self.brightness, Brightness::Dim) {
+            css = format!("{}font-weight: lighter;", css);
+        }
+
+        // Text style
+        // TODO - support inverse
+        if self.text_style & TextStyle::Italic != TextStyle::empty() {
+            css = format!("{}font-style: italic;", css);
+        }
+        if self.text_style & (TextStyle::Underline | TextStyle::Strikethrough) == TextStyle::Underline | TextStyle::Strikethrough {
+            css = format!("{}text-decoration: line-through underline;", css);
+        } else if self.text_style & TextStyle::Underline != TextStyle::empty() {
+            css = format!("{}text-decoration: underline;", css);
+        } else if self.text_style & TextStyle::Strikethrough != TextStyle::empty() {
+            css = format!("{}text-decoration: line-through;", css);
+        }
+
+        // Color
+        if !matches!(self.color, Color::None){
+            css = format!("{}color: {};", css, Self::get_color_str_from_color(self.color).unwrap());
+        }
+
+        if !matches!(self.bg_color, Color::None){
+            css = format!("{}background-color: {};", css, Self::get_color_str_from_color(self.bg_color).unwrap());
+        }
+
+        return css;
+    }
     
     pub fn serialize_to_ansi_string(self) -> Vec<u8> {
         let mut ansi_string = vec![];
@@ -179,7 +216,6 @@ impl Span {
 
             self
     }
-
 
     fn get_color_str_from_color(color: Color) -> Option<String> {
         match color {

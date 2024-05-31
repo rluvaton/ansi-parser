@@ -9,3 +9,4 @@ TODO
 - [ ] Remove unused deps
 - [ ] Remove unused code
 - [ ] Fix warnings
+- [ ] Add coverage report in CI

@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 repository = "https://github.com/rluvaton/ansi-parser"
 readme = "README.md"
+description = "Parse ansi text with support for styling and colors"
+license = "MIT"
 
 
 #[profile.release]

@@ -38,7 +38,7 @@ dependencies = [
 
 [[package]]
 name = "ansi_parser_extended"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "ansi-parser",
  "async-stream",

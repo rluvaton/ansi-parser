@@ -1,6 +1,6 @@
 [package]
 name = "ansi_parser_extended"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 repository = "https://github.com/rluvaton/ansi-parser"
 readme = "README.md"
@@ -14,10 +14,10 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ansi-parser = "0.9.0"
+ansi-parser = "0.9.1"
 demonstrate = "0.4.5"
 bitflags = "2.5.0"
-heapless = "0.6.1"
+heapless = "0.8.0"
 test-case = "3.3.1"
 clap = { version = "4", features = ["derive"] }
 pretty_assertions = "1.4.0"

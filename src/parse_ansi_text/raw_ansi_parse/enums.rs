@@ -15,7 +15,7 @@ pub enum AnsiSequence<'a> {
     CursorRestore,
     EraseDisplay,
     EraseLine,
-    SetGraphicsMode(heapless::Vec<u8, heapless::consts::U5>),
+    SetGraphicsMode(heapless::Vec<u8, 5>),
     SetMode(u8),
     ResetMode(u8),
     HideCursor,

@@ -1,4 +1,4 @@
-use heapless::{Vec, consts::U5};
+use heapless::{Vec};
 
 
 #[allow(dead_code)]
@@ -200,7 +200,7 @@ pub enum Color {
 }
 
 
-pub fn get_color_type(vec: &Vec<u8, U5>) -> ColorType {
+pub fn get_color_type(vec: &Vec<u8, 5>) -> ColorType {
     if vec.len() == 0 {
         return ColorType::None;
     }

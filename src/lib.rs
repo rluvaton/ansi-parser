@@ -4,7 +4,6 @@ pub mod parse_ansi_text;
 pub mod mapping_file;
 pub mod cli;
 pub mod iterators;
-pub mod streams_helpers;
 pub mod files;
 pub mod test_utils;
 pub mod traits;

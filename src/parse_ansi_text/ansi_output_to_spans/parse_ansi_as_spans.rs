@@ -1,7 +1,6 @@
 use std::iter::Iterator;
 
 use genawaiter::{rc::gen, yield_};
-use tokio_stream::Stream;
 
 use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{AnsiSequenceType, get_type_from_ansi_sequence};
 use crate::parse_ansi_text::ansi::colors::Color;
@@ -154,7 +153,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn stream_should_parse_chars_iterator_correctly() {
+    fn should_parse_chars_iterator_correctly() {
         let input_str = vec![
             RED_BACKGROUND_CODE.to_string(),
             "Hello, World!".to_string(),
@@ -174,7 +173,7 @@ mod tests {
     }
 
     #[test]
-    fn stream_should_be_available_as_iterator() {
+    fn should_be_available_as_iterator() {
         let input_str = [RED_BACKGROUND_CODE, "Hello, World!", RESET_CODE].join("");
 
         let output: Vec<Span> = vec![input_str.as_bytes().to_vec()].into_iter()

@@ -37,7 +37,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ansi-parser-extended"
+name = "ansi_parser_extended"
 version = "0.1.0"
 dependencies = [
  "ansi-parser",

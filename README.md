@@ -10,3 +10,4 @@ TODO
 - [ ] Remove unused code
 - [ ] Fix warnings
 - [ ] Add coverage report in CI
+- [ ] Run lint and format in CI

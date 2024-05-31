@@ -4,9 +4,9 @@ use crate::parse_ansi_text::raw_ansi_parse::{AnsiSequence, Output, parse_escape,
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ParseSingleAnsiResult<'a> {
-    pub(crate) output: Vec<Output<'a>>,
-    pub(crate) current_location_until_pending_string: usize,
-    pub(crate) pending_string: Vec<u8>,
+    pub output: Vec<Output<'a>>,
+    pub current_location_until_pending_string: usize,
+    pub pending_string: Vec<u8>,
 }
 
 pub fn parse_single_ansi<'a>(value: &'a [u8], mut current_location_until_pending_string: usize) -> ParseSingleAnsiResult<'a> {
@@ -55,9 +55,9 @@ pub fn parse_single_ansi<'a>(value: &'a [u8], mut current_location_until_pending
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ParseAnsiResult<'a> {
-    pub(crate) output: Option<Output<'a>>,
-    pub(crate) current_location_until_pending_string: usize,
-    pub(crate) pending_string: &'a [u8],
+    pub output: Option<Output<'a>>,
+    pub current_location_until_pending_string: usize,
+    pub pending_string: &'a [u8],
 }
 
 pub fn parse_ansi_continues(

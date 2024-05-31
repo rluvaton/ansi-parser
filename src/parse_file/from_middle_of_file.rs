@@ -6,9 +6,9 @@ use crate::parse_ansi_text::ansi::types::Span;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FromMiddleOfFile {
-    pub(crate) from_bytes: Option<usize>,
-    pub(crate) to_bytes: Option<usize>,
-    pub(crate)initial_span: Option<Span>
+    pub from_bytes: Option<usize>,
+    pub to_bytes: Option<usize>,
+    pub initial_span: Option<Span>
 }
 
 pub fn get_from_middle_of_the_file_info(input_file: PathBuf, from_line: Option<&usize>, to_line: Option<&usize>, mapping_file: Option<&String>) -> FromMiddleOfFile {

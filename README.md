@@ -5,3 +5,4 @@
 TODO
 - fix tests
 - add docs
+- add CI/CD pipeline

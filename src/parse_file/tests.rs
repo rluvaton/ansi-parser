@@ -1159,51 +1159,6 @@ fn spans_should_have_same_style_when_split_by_line() {
 }
 
 #[test]
-fn simple_for_locations() {
-    let input = [
-        "Hello, world!\nHow are you?\nGood".to_string(),
-    ]
-        .join("");
-    let expected = vec![
-        Line {
-            spans: vec![ Span {
-                text: "Hello, world!".to_string().into_bytes(),
-                color: Color::None,
-                bg_color: Color::None,
-                brightness: Brightness::None,
-                text_style: TextStyle::empty(),
-            }],
-            location_in_file: 0,
-        },
-        Line {
-            spans: vec![Span {
-                text: "How are you?".to_string().into_bytes(),
-                color: Color::None,
-                bg_color: Color::None,
-                brightness: Brightness::None,
-                text_style: TextStyle::empty(),
-            }],
-            location_in_file: input.find("How are you?").unwrap(),
-        },
-        Line {
-            spans: vec![Span {
-                text: "Good".to_string().into_bytes(),
-                color: Color::None,
-                bg_color: Color::None,
-                brightness: Brightness::None,
-                text_style: TextStyle::empty(),
-            }],
-            location_in_file: input.find("Good").unwrap(),
-        },
-    ];
-
-    let parse_options = ParseOptions::default();
-
-    let actual = parse_ansi_text_split_by_lines_with_options(&input, parse_options);
-    assert_eq!(actual, expected);
-}
-
-#[test]
 fn multiple_styles() {
     let input = [
         &*RGB_BACKGROUND_CODE(188, 29, 68),
@@ -1223,4 +1178,257 @@ fn multiple_styles() {
         text_style: TextStyle::Italic | TextStyle::Underline,
     }];
     assert_eq!(parse_ansi_text(&input), expected);
+}
+
+
+// ----------------------------------
+// Location of each line
+// ----------------------------------
+
+
+#[derive(Debug, PartialEq)]
+struct LineForLocationTests {
+    text_in_line: String,
+    location_in_file: usize,
+}
+
+fn convert_line_to_line_for_location_tests(line: &Line) -> LineForLocationTests {
+    LineForLocationTests {
+        text_in_line: line.spans.iter().map(|span| String::from_utf8_lossy(&span.text).to_string()).collect::<String>(),
+        location_in_file: line.location_in_file,
+    }
+}
+
+fn convert_lines_to_location_tests_lines(lines: &Vec<Line>) -> Vec<LineForLocationTests> {
+    lines.iter().map(convert_line_to_line_for_location_tests).collect()
+}
+
+#[test]
+fn only_text_without_styles_should_have_correct_location() {
+    let input = [
+        "Hello, world!\n",
+        "How are you?\n",
+        "Good",
+    ]
+        .join("");
+    let expected = vec![
+        LineForLocationTests {
+            text_in_line: "Hello, world!".to_string(),
+            location_in_file: 0,
+        },
+        LineForLocationTests {
+            text_in_line: "How are you?".to_string(),
+            location_in_file: input.find("How are you?").unwrap(),
+        },
+        LineForLocationTests {
+            text_in_line: "Good".to_string(),
+            location_in_file: input.find("Good").unwrap(),
+        },
+    ];
+
+    let parse_options = ParseOptions::default();
+
+    let actual = parse_ansi_text_split_by_lines_with_options(&input, parse_options);
+    let actual = convert_lines_to_location_tests_lines(&actual);
+
+    assert_eq!(actual, expected);
+}
+
+#[test]
+fn only_text_without_styles_should_have_correct_location_when_having_initial_style() {
+    let input = [
+        "Hello, world!\n",
+        "How are you?\n",
+        "Good",
+    ].join("");
+    let expected = vec![
+        LineForLocationTests {
+            text_in_line: "Hello, world!".to_string(),
+            location_in_file: 0,
+        },
+        LineForLocationTests {
+            text_in_line: "How are you?".to_string(),
+            location_in_file: input.find("How are you?").unwrap(),
+        },
+        LineForLocationTests {
+            text_in_line: "Good".to_string(),
+            location_in_file: input.find("Good").unwrap(),
+        },
+    ];
+
+    let parse_options = ParseOptions::default().with_initial_span(Span::empty().with_color(Color::Red));
+
+    let actual = parse_ansi_text_split_by_lines_with_options(&input, parse_options);
+    let actual = convert_lines_to_location_tests_lines(&actual);
+
+    assert_eq!(actual, expected);
+}
+
+#[test]
+fn first_line_have_styles_before_text_should_still_have_correct_location() {
+    let input = [
+        RGB_BACKGROUND_CODE(188, 29, 68).as_str(),
+        "Hello, world!\n",
+        "How are you?\n",
+        "Good",
+    ]
+        .join("");
+    let expected = vec![
+        LineForLocationTests {
+            text_in_line: "Hello, world!".to_string(),
+            location_in_file: 0,
+        },
+        LineForLocationTests {
+            text_in_line: "How are you?".to_string(),
+            location_in_file: input.find("How are you?").unwrap(),
+        },
+        LineForLocationTests {
+            text_in_line: "Good".to_string(),
+            location_in_file: input.find("Good").unwrap(),
+        },
+    ];
+
+    let parse_options = ParseOptions::default();
+
+    let actual = parse_ansi_text_split_by_lines_with_options(&input, parse_options);
+    let actual = convert_lines_to_location_tests_lines(&actual);
+    assert_eq!(actual, expected);
+}
+
+#[test]
+fn first_line_have_conflicting_styles_before_text_should_still_have_correct_location() {
+    let input = [
+        RGB_BACKGROUND_CODE(188, 29, 68).as_str(),
+        RGB_BACKGROUND_CODE(150, 20, 10).as_str(),
+        "Hello, world!\n",
+        "How are you?\n",
+        "Good",
+    ]
+        .join("");
+    let expected = vec![
+        LineForLocationTests {
+            text_in_line: "Hello, world!".to_string(),
+            location_in_file: 0,
+        },
+        LineForLocationTests {
+            text_in_line: "How are you?".to_string(),
+            location_in_file: input.find("How are you?").unwrap(),
+        },
+        LineForLocationTests {
+            text_in_line: "Good".to_string(),
+            location_in_file: input.find("Good").unwrap(),
+        },
+    ];
+
+    let parse_options = ParseOptions::default();
+
+    let actual = parse_ansi_text_split_by_lines_with_options(&input, parse_options);
+    let actual = convert_lines_to_location_tests_lines(&actual);
+
+    assert_eq!(actual, expected);
+}
+
+#[test]
+fn first_line_have_multiple_spans_still_have_correct_locations() {
+    let input = [
+        RGB_BACKGROUND_CODE(188, 29, 68).as_str(),
+        "Hello, ",
+        ITALIC_CODE,
+        BOLD_CODE,
+        "world!\n",
+        "How are you?\n",
+        "Good",
+    ]
+        .join("");
+    let expected = vec![
+        LineForLocationTests {
+            text_in_line: "Hello, world!".to_string(),
+            location_in_file: 0,
+        },
+        LineForLocationTests {
+            text_in_line: "How are you?".to_string(),
+            location_in_file: input.find("How are you?").unwrap(),
+        },
+        LineForLocationTests {
+            text_in_line: "Good".to_string(),
+            location_in_file: input.find("Good").unwrap(),
+        },
+    ];
+
+    let parse_options = ParseOptions::default();
+
+    let actual = parse_ansi_text_split_by_lines_with_options(&input, parse_options);
+    let actual = convert_lines_to_location_tests_lines(&actual);
+
+    assert_eq!(actual, expected);
+}
+
+#[test]
+fn when_lines_start_with_style_should_have_the_styles_be_the_initial_location() {
+    let input = [
+        "Hello, world!\n",
+        BOLD_CODE,
+        "How are you?\n",
+        "Good",
+    ]
+        .join("");
+    let expected = vec![
+        LineForLocationTests {
+            text_in_line: "Hello, world!".to_string(),
+            location_in_file: 0,
+        },
+        LineForLocationTests {
+            text_in_line: "How are you?".to_string(),
+            location_in_file: input.find("How are you?").unwrap() - BOLD_CODE.len(),
+        },
+        LineForLocationTests {
+            text_in_line: "Good".to_string(),
+            location_in_file: input.find("Good").unwrap(),
+        },
+    ];
+
+    let parse_options = ParseOptions::default();
+
+    let actual = parse_ansi_text_split_by_lines_with_options(&input, parse_options);
+    let actual = convert_lines_to_location_tests_lines(&actual);
+
+    assert_eq!(actual, expected);
+}
+
+
+#[test]
+fn lines_without_any_text_or_style_should_still_have_correct_location() {
+    let input = [
+        "Hello, world!\n",
+        "\n",
+        "How are you?\n",
+        "Good",
+    ]
+        .join("");
+    let expected = vec![
+        LineForLocationTests {
+            text_in_line: "Hello, world!".to_string(),
+            location_in_file: 0,
+        },
+        LineForLocationTests {
+            text_in_line: "".to_string(),
+            // First new line + 1
+            location_in_file: input.find("\n").unwrap() + 1,
+        },
+        LineForLocationTests {
+            text_in_line: "How are you?".to_string(),
+            location_in_file: input.find("How are you?").unwrap(),
+        },
+        LineForLocationTests {
+            text_in_line: "Good".to_string(),
+            location_in_file: input.find("Good").unwrap(),
+        },
+    ];
+
+    let parse_options = ParseOptions::default();
+
+    let actual = parse_ansi_text_split_by_lines_with_options(&input, parse_options);
+    let actual = convert_lines_to_location_tests_lines(&actual);
+
+    assert_eq!(actual, expected);
 }

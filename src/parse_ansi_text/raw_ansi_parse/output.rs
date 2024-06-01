@@ -5,7 +5,6 @@ use crate::parse_ansi_text::raw_ansi_parse::AnsiSequence;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Text<'a> {
     pub text: &'a [u8],
-    pub location_in_text: usize,
 }
 
 ///This is what is outputted by the parsing iterator.

@@ -18,6 +18,7 @@ pub enum ResultType {
 pub fn convert_ansi_output_lines_of_spans_continues<'a>(
     output: Option<Output<'a>>,
     current_line: &'a mut Line,
+    end_location: usize,
 ) -> ResultType {
     let current_spans = &mut current_line.spans;
 
@@ -25,12 +26,9 @@ pub fn convert_ansi_output_lines_of_spans_continues<'a>(
         current_spans.push(Span::empty());
     }
 
-    // TODO - remove this as it's not correct and slow
-    let size_before = current_spans
-        .iter()
-        .map(|span| span.text.len())
-        .sum::<usize>();
     let current_span = current_spans.last_mut().unwrap();
+
+    let text_length = current_span.text.len();
 
     let new_line_location = memchr(b'\n', current_span.text.as_slice());
 
@@ -39,7 +37,9 @@ pub fn convert_ansi_output_lines_of_spans_continues<'a>(
 
         let next_line = Line {
             spans: vec![current_span.clone().with_text(after_new_line)],
-            location_in_file: current_line.location_in_file + size_before + new_line_index + 1,
+
+            // The end of last line include the current text, so we need to subtract the length of the text and add back the length until the new line
+            location_in_file: end_location - text_length + new_line_index + 1,
         };
 
         let before_new_line = current_span.text[..new_line_index].to_vec();
@@ -61,16 +61,18 @@ pub fn convert_ansi_output_lines_of_spans_continues<'a>(
     return match output {
         Output::TextBlock(text) => {
             current_span.text = [current_span.text.as_slice(), text.text].concat();
-            let from_index = text.location_in_text;
 
             let new_line_location = memchr(b'\n', current_span.text.as_slice());
+            let text_length = current_span.text.len();
 
             if let Some(new_line_index) = new_line_location {
                 let after_new_line = current_span.text[(new_line_index + 1)..].to_vec();
 
                 let next_line = Line {
                     spans: vec![current_span.clone().with_text(after_new_line)],
-                    location_in_file: from_index + new_line_index + 1,
+
+                    // The end of last line include the current text, so we need to subtract the length of the text and add back the length until the new line
+                    location_in_file: end_location - text_length + new_line_index + 1,
                 };
 
                 let before_new_line = current_span.text[..new_line_index].to_vec();

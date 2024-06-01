@@ -25,7 +25,6 @@ pub fn merge_text_output<'a, I: Iterator<Item = Output<'a>>>(
                                 .reduce(|a, b| [a.clone(), b.clone()].concat())
                                 .unwrap()
                                 .leak(),
-                            location_in_text: text_blocks_vec.first().unwrap().location_in_text,
                         }));
                         text_blocks_vec.clear();
                         text_blocks_vec.shrink_to_fit();
@@ -44,7 +43,6 @@ pub fn merge_text_output<'a, I: Iterator<Item = Output<'a>>>(
                     .reduce(|a, b| [a.clone(), b.clone()].concat())
                     .unwrap()
                     .leak(),
-                location_in_text: text_blocks_vec.first().unwrap().location_in_text,
             }));
         }
     })
@@ -63,11 +61,9 @@ mod tests {
         let outputs: Vec<Output> = vec![
             Output::TextBlock(Text {
                 text: b"Hello, World!",
-                location_in_text: 0,
             }),
             Output::TextBlock(Text {
                 text: b"How are you",
-                location_in_text: 10,
             }),
         ];
 
@@ -79,7 +75,6 @@ mod tests {
             merged_outputs,
             vec![Output::TextBlock(Text {
                 text: b"Hello, World!How are you",
-                location_in_text: 0,
             })]
         );
     }
@@ -89,20 +84,16 @@ mod tests {
         let outputs: Vec<Output> = vec![
             Output::TextBlock(Text {
                 text: b"Hello, World!",
-                location_in_text: 0,
             }),
             Output::TextBlock(Text {
                 text: b"How are you",
-                location_in_text: 10,
             }),
             Output::Escape(AnsiSequence::SetMode(0)),
             Output::TextBlock(Text {
                 text: b"Im good",
-                location_in_text: 13,
             }),
             Output::TextBlock(Text {
                 text: b"Great",
-                location_in_text: 16,
             }),
             Output::Escape(AnsiSequence::SetMode(1)),
         ];
@@ -116,12 +107,10 @@ mod tests {
             vec![
                 Output::TextBlock(Text {
                     text: b"Hello, World!How are you",
-                    location_in_text: 0,
                 }),
                 Output::Escape(AnsiSequence::SetMode(0)),
                 Output::TextBlock(Text {
                     text: b"Im goodGreat",
-                    location_in_text: 13,
                 }),
                 Output::Escape(AnsiSequence::SetMode(1)),
             ]
@@ -133,12 +122,10 @@ mod tests {
         let outputs: Vec<Output> = vec![
             Output::TextBlock(Text {
                 text: b"Hello, World!",
-                location_in_text: 0,
             }),
             Output::Escape(AnsiSequence::SetMode(0)),
             Output::TextBlock(Text {
                 text: b"How are you",
-                location_in_text: 10,
             }),
         ];
 

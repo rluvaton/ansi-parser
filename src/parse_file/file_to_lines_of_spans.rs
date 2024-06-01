@@ -15,7 +15,7 @@ use crate::types::Line;
 pub fn read_ansi_file_to_lines(options: ReadAnsiFileOptions) -> impl Iterator<Item = Line> {
     let file_reader = FileReader::new(options.file_options);
 
-    let mut current_location_until_pending_string: usize = 0;
+    let mut end_of_line_index: usize = 0;
 
     let current_span: Span = options
         .parse_options
@@ -40,14 +40,14 @@ pub fn read_ansi_file_to_lines(options: ReadAnsiFileOptions) -> impl Iterator<It
             }
 
             let mut pending = pending_string.as_slice();
-            let mut result: ParseAnsiResult =
-                parse_ansi_continues(pending, current_location_until_pending_string);
-            current_location_until_pending_string = result.current_location_until_pending_string;
+            let mut result: ParseAnsiResult = parse_ansi_continues(pending);
 
             while let Some(ready_output) = result.output {
+                end_of_line_index += result.size;
                 let mut lines_result = convert_ansi_output_lines_of_spans_continues(
                     Some(ready_output),
                     &mut current_line,
+                    end_of_line_index,
                 );
 
                 while let ResultType::Parse(next_line) = lines_result {
@@ -55,14 +55,15 @@ pub fn read_ansi_file_to_lines(options: ReadAnsiFileOptions) -> impl Iterator<It
 
                     current_line = next_line;
 
-                    lines_result =
-                        convert_ansi_output_lines_of_spans_continues(None, &mut current_line);
+                    lines_result = convert_ansi_output_lines_of_spans_continues(
+                        None,
+                        &mut current_line,
+                        end_of_line_index
+                    );
                 }
 
                 pending = result.pending_string;
-                result = parse_ansi_continues(pending, current_location_until_pending_string);
-                current_location_until_pending_string =
-                    result.current_location_until_pending_string;
+                result = parse_ansi_continues(pending);
             }
 
             pending_string = result.pending_string.to_vec();
@@ -70,19 +71,26 @@ pub fn read_ansi_file_to_lines(options: ReadAnsiFileOptions) -> impl Iterator<It
 
         let ready_output = Output::TextBlock(Text {
             text: pending_string.as_slice(),
-            // TODO - this may not be right
-            location_in_text: current_location_until_pending_string,
         });
 
-        let mut lines_result =
-            convert_ansi_output_lines_of_spans_continues(Some(ready_output), &mut current_line);
+        end_of_line_index += pending_string.len();
+
+        let mut lines_result = convert_ansi_output_lines_of_spans_continues(
+            Some(ready_output),
+            &mut current_line,
+            end_of_line_index
+        );
 
         while let ResultType::Parse(next_line) = lines_result {
             yield_!(current_line);
 
             current_line = next_line;
 
-            lines_result = convert_ansi_output_lines_of_spans_continues(None, &mut current_line);
+            lines_result = convert_ansi_output_lines_of_spans_continues(
+                None,
+                &mut current_line,
+                end_of_line_index
+            );
         }
 
         let last_span = current_line.spans.last();

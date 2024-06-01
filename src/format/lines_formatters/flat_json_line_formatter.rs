@@ -1,6 +1,5 @@
 use std::iter::Iterator;
 
-use crate::parse_ansi_text::ansi::types::Span;
 use crate::traits::ToJson;
 use crate::types::Line;
 use genawaiter::{rc::gen, yield_};

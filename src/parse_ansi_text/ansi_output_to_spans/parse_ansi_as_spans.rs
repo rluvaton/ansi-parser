@@ -109,49 +109,6 @@ pub fn convert_ansi_output_to_spans_continues<'a>(
     };
 }
 
-#[allow(unused_variables, unused_mut)]
-pub fn convert_ansi_output_to_spans<'a, I: Iterator<Item = Output<'a>>>(
-    mut input: I,
-    options: ParseOptions,
-) -> impl Iterator<Item = Span> {
-    #[allow(unused_variables, unused_mut)]
-    let mut current_span: Span = options
-        .initial_span
-        .clone()
-        .replace_default_color_with_none();
-
-    #[allow(clippy::needless_return)]
-    return gen!({
-        let mut current_span: Span = options
-            .initial_span
-            .clone()
-            .replace_default_color_with_none();
-
-        for output in input {
-            let span_result = convert_ansi_output_to_spans_continues(output, &mut current_span);
-
-            match span_result {
-                ResultType::Parse(next_span) => {
-                    yield_!(current_span);
-
-                    current_span = next_span;
-                }
-                ResultType::Skip => {
-                    current_span = Span::empty();
-                }
-                ResultType::WaitForNext => {
-                    // Do nothing with the current span
-                }
-            }
-        }
-
-        // Add last span if it has text
-        if current_span.text.len() > 0 {
-            yield_!(current_span);
-        }
-    })
-    .into_iter();
-}
 
 #[cfg(test)]
 mod tests {
@@ -159,45 +116,9 @@ mod tests {
     use crate::parse_ansi_text::ansi::colors::*;
     use crate::parse_ansi_text::ansi::constants::*;
     use crate::parse_ansi_text::ansi::types::Span;
-    use crate::parse_ansi_text::ansi_text_to_output::parse::parse_ansi;
     use crate::test_utils::chars_iterator;
 
     use super::*;
 
-    #[test]
-    fn should_parse_chars_iterator_correctly() {
-        let input_str = vec![
-            RED_BACKGROUND_CODE.to_string(),
-            "Hello, World!".to_string(),
-            RESET_CODE.to_string(),
-        ]
-        .join("");
-
-        let output: Vec<Span> = chars_iterator(input_str.clone())
-            .compose(parse_ansi)
-            .compose(|iter| convert_ansi_output_to_spans(iter, ParseOptions::default()))
-            .collect();
-
-        let expected = vec![Span::empty()
-            .with_text(b"Hello, World!".to_vec())
-            .with_bg_color(Color::Red)];
-        assert_eq!(output, expected);
-    }
-
-    #[test]
-    fn should_be_available_as_iterator() {
-        let input_str = [RED_BACKGROUND_CODE, "Hello, World!", RESET_CODE].join("");
-
-        let output: Vec<Span> = vec![input_str.as_bytes().to_vec()]
-            .into_iter()
-            .compose(parse_ansi)
-            .compose(|iter| convert_ansi_output_to_spans(iter, ParseOptions::default()))
-            .collect();
-
-        let expected = vec![Span::empty()
-            .with_text("Hello, World!".to_string().as_bytes().to_vec())
-            .with_bg_color(Color::Red)];
-
-        assert_eq!(output, expected);
-    }
+    // TODO - add tests
 }

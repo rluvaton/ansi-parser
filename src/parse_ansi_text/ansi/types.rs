@@ -11,9 +11,9 @@ use nom::AsBytes;
 use serde::{Deserializer, Serializer};
 use sonic_rs::{Deserialize, Error, Serialize};
 use std::ops::Deref;
-use std::str;
+use std::{fmt, str};
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub struct Span {
     pub text: Vec<u8>,
     pub color: Color,
@@ -21,6 +21,18 @@ pub struct Span {
 
     pub brightness: Brightness,
     pub text_style: TextStyle,
+}
+
+impl fmt::Debug for Span {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt.debug_struct("Span")
+            .field("text", &str::from_utf8(self.text.deref()).unwrap())
+            .field("color", &self.color)
+            .field("bg_color", &self.bg_color)
+            .field("brightness", &self.brightness)
+            .field("text_style", &self.text_style)
+            .finish()
+    }
 }
 
 // TODO - find a better way to create a new struct for json

@@ -1,13 +1,11 @@
 use std::iter::Iterator;
 
-use genawaiter::{rc::gen, yield_};
 
 use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{
     get_type_from_ansi_sequence, AnsiSequenceType,
 };
 use crate::parse_ansi_text::ansi::colors::Color;
 use crate::parse_ansi_text::ansi::types::Span;
-use crate::parse_ansi_text::parse_options::ParseOptions;
 use crate::parse_ansi_text::raw_ansi_parse::Output;
 
 pub enum ResultType {
@@ -107,18 +105,4 @@ pub fn convert_ansi_output_to_spans_continues<'a>(
             }
         }
     };
-}
-
-
-#[cfg(test)]
-mod tests {
-    use crate::iterators::compose::ComposeByIterator;
-    use crate::parse_ansi_text::ansi::colors::*;
-    use crate::parse_ansi_text::ansi::constants::*;
-    use crate::parse_ansi_text::ansi::types::Span;
-    use crate::test_utils::chars_iterator;
-
-    use super::*;
-
-    // TODO - add tests
 }

@@ -6,7 +6,6 @@ pub mod mapping_file;
 pub mod output;
 pub mod parse_ansi_text;
 pub mod parse_file;
-pub mod test_utils;
 pub mod types;
 
 

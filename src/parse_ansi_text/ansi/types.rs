@@ -6,7 +6,6 @@ use crate::parse_ansi_text::ansi::style::{
     Brightness, TextStyle, BOLD_CODE, DIM_CODE, INVERSE_CODE, ITALIC_CODE, STRIKETHROUGH_CODE,
     UNDERLINE_CODE,
 };
-use nom::AsBytes;
 use std::ops::Deref;
 use std::{fmt, str};
 

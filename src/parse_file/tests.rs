@@ -71,10 +71,6 @@ mod tests {
         return lines_iterator.collect();
     }
 
-    fn parse_ansi_text_split_by_lines(input: &str) -> Vec<Line> {
-        return parse_ansi_text_split_by_lines_with_options(input, ParseOptions::default());
-    }
-
     #[test]
     fn empty_text_should_return_empty_array() {
         let input = "";
@@ -82,9 +78,9 @@ mod tests {
         assert_eq!(parse_ansi_text(input), expected);
     }
 
-// -------------
-// No ANSI codes
-// -------------
+    // -------------
+    // No ANSI codes
+    // -------------
 
     #[test]
     fn single_text_without_ansi_codes_should_return_array_with_one_unstyled_span() {
@@ -101,12 +97,12 @@ mod tests {
         assert_eq!(parse_ansi_text(input), expected);
     }
 
-// -------------
-// Single style
-// -------------
+    // -------------
+    // Single style
+    // -------------
 
-// TODO - add tests for RGB and 8-bit colors
-// TODO - add test for default color
+    // TODO - add tests for RGB and 8-bit colors
+    // TODO - add test for default color
 
     #[test_case(Color::Red, RED_FOREGROUND_CODE; "Red foreground")]
     #[test_case(Color::Black, BLACK_FOREGROUND_CODE; "Black foreground")]
@@ -124,7 +120,7 @@ mod tests {
     #[test_case(Color::BrightMagenta, BRIGHT_MAGENTA_FOREGROUND_CODE; "Bright Magenta foreground")]
     #[test_case(Color::BrightCyan, BRIGHT_CYAN_FOREGROUND_CODE; "Bright Cyan foreground")]
     #[test_case(Color::BrightWhite, BRIGHT_WHITE_FOREGROUND_CODE; "Bright White foreground")]
-    async fn single_foreground_color_with_no_other_styles(expected_color: Color, color_code: &str) {
+    fn single_foreground_color_with_no_other_styles(expected_color: Color, color_code: &str) {
         let input = [color_code, "Hello, world!", RESET_CODE].join("");
         let expected = vec![Span::empty()
             .with_color(expected_color)
@@ -148,7 +144,7 @@ mod tests {
     #[test_case(Color::BrightMagenta, BRIGHT_MAGENTA_BACKGROUND_CODE; "Bright Magenta background")]
     #[test_case(Color::BrightCyan, BRIGHT_CYAN_BACKGROUND_CODE; "Bright Cyan background")]
     #[test_case(Color::BrightWhite, BRIGHT_WHITE_BACKGROUND_CODE; "Bright White background")]
-    async fn single_background_color_with_no_other_styles(expected_color: Color, color_code: &str) {
+    fn single_background_color_with_no_other_styles(expected_color: Color, color_code: &str) {
         let input = [color_code, "Hello, world!", RESET_CODE].join("");
         let expected = vec![Span::empty()
             .with_bg_color(expected_color)
@@ -160,7 +156,7 @@ mod tests {
     #[test_case(TextStyle::Underline, UNDERLINE_CODE; "Underline text")]
     #[test_case(TextStyle::Inverse, INVERSE_CODE; "Inverse text")]
     #[test_case(TextStyle::Strikethrough, STRIKETHROUGH_CODE; "Strikethrough text")]
-    async fn single_text_style_with_no_other_styles(
+    fn single_text_style_with_no_other_styles(
         expected_text_style: TextStyle,
         text_style_code: &str,
     ) {
@@ -173,7 +169,7 @@ mod tests {
 
     #[test_case(Brightness::Bold, BOLD_CODE; "Bold text")]
     #[test_case(Brightness::Dim, DIM_CODE; "Dim text")]
-    async fn single_brightness_with_no_other_styles(
+    fn single_brightness_with_no_other_styles(
         expected_brightness: Brightness,
         brightness_code: &str,
     ) {
@@ -184,9 +180,9 @@ mod tests {
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
-// -----------------------------------------------------------------------
-// color/brightness override when no text before and without reset
-// -----------------------------------------------------------------------
+    // -----------------------------------------------------------------------
+    // color/brightness override when no text before and without reset
+    // -----------------------------------------------------------------------
 
     #[test]
     fn foreground_color_should_replace_prev_foreground_color_when_no_text_in_between() {
@@ -242,9 +238,9 @@ mod tests {
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
-// -----------------------------------------------------------------------
-// style override when no text before and with reset
-// -----------------------------------------------------------------------
+    // -----------------------------------------------------------------------
+    // style override when no text before and with reset
+    // -----------------------------------------------------------------------
 
     #[test]
     fn foreground_color_should_replace_prev_foreground_color_after_reset_when_no_text_in_between() {
@@ -323,9 +319,9 @@ mod tests {
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
-// ---------------------------------------------------------------------------------------
-// Color/Style/Brightness changed after some text without reset and no other style before
-// ---------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------
+    // Color/Style/Brightness changed after some text without reset and no other style before
+    // ---------------------------------------------------------------------------------------
 
     #[test]
     fn when_foreground_color_change_after_some_text_without_reset_should_create_a_new_span_with_new_foreground_color() {
@@ -513,9 +509,9 @@ mod tests {
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
-// ----------------------------------------------------------------------------------------------
-// Color/Style/Brightness changed after some text without text afterward with other style before
-// ----------------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------------------------
+    // Color/Style/Brightness changed after some text without text afterward with other style before
+    // ----------------------------------------------------------------------------------------------
 
     #[test]
     fn when_foreground_color_change_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_foreground_color() {
@@ -653,9 +649,9 @@ mod tests {
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
-// ------------------------------------------------------------------------------------------
-// Color/Style/Brightness first set after some text without reset with no other style before
-// ------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------------
+    // Color/Style/Brightness first set after some text without reset with no other style before
+    // ------------------------------------------------------------------------------------------
 
     #[test]
     fn when_foreground_color_added_after_some_text_without_reset_should_create_a_new_span_with_new_foreground_color() {
@@ -765,9 +761,9 @@ mod tests {
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
-// ------------------------------------------------------------------------------------------------
-// Color/Style/Brightness first set after some text without text afterward with other style before
-// ------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------------------
+    // Color/Style/Brightness first set after some text without text afterward with other style before
+    // ------------------------------------------------------------------------------------------------
 
     #[test]
     fn when_foreground_color_added_after_some_text_without_reset_should_create_a_new_span_with_prev_style_and_new_foreground_color() {
@@ -901,9 +897,9 @@ mod tests {
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
-// --------------------------------------------------------------------------------------------
-// Color/Style/Brightness first set after some text without text afterward with no other style
-// --------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------
+    // Color/Style/Brightness first set after some text without text afterward with no other style
+    // --------------------------------------------------------------------------------------------
 
     #[test]
     fn when_foreground_color_added_after_some_text_without_reset_should_not_use_the_new_style_on_prev_span() {
@@ -961,9 +957,9 @@ mod tests {
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
-// ------------------------------------------------------------
-// Style combination
-// ------------------------------------------------------------
+    // ------------------------------------------------------------
+    // Style combination
+    // ------------------------------------------------------------
 
     #[test]
     fn should_append_text_styles() {
@@ -990,9 +986,9 @@ mod tests {
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
-// -----------------------------------------------------------------------------------------------------
-// Style added after text should create a new span with the same color/brightness and merged text style
-// -----------------------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------
+    // Style added after text should create a new span with the same color/brightness and merged text style
+    // -----------------------------------------------------------------------------------------------------
 
     #[test]
     fn style_added_after_text_should_create_new_span_and_merge_with_style_before() {
@@ -1031,7 +1027,7 @@ mod tests {
     #[test_case(GREEN_BACKGROUND_CODE; "Green background added after text again")]
     #[test_case(ITALIC_CODE; "Italic text added after text again")]
     #[test_case(DIM_CODE; "Dim text added after text again")]
-    async fn same_style_apply_after_text_should_not_create_new_span_for_next_text(
+    fn same_style_apply_after_text_should_not_create_new_span_for_next_text(
         same_style_code: &str,
     ) {
         let input = [
@@ -1057,9 +1053,9 @@ mod tests {
         assert_eq!(parse_ansi_text(&input), expected);
     }
 
-// -------------------------------
-// Parse options with initial span
-// -------------------------------
+    // -------------------------------
+    // Parse options with initial span
+    // -------------------------------
 
     #[test]
     fn span_should_have_the_same_style_as_the_initial_span() {
@@ -1113,9 +1109,9 @@ mod tests {
         );
     }
 
-// ----------------------------------
-// Parse options with split by lines
-// ----------------------------------
+    // ----------------------------------
+    // Parse options with split by lines
+    // ----------------------------------
 
     #[test]
     fn spans_should_have_same_style_when_split_by_line() {
@@ -1182,9 +1178,9 @@ mod tests {
     }
 
 
-// ----------------------------------
-// Location of each line
-// ----------------------------------
+    // ----------------------------------
+    // Lines location
+    // ----------------------------------
 
 
     #[derive(Debug, PartialEq)]

@@ -1,16 +1,15 @@
 // Taken from ansi_parse and modify
 
-use memchr::memchr;
-
 use atoi::atoi;
 use heapless::Vec;
+use memchr::memchr;
+use nom::{error, IResult};
 use nom::branch::alt;
-use nom::bytes::streaming::{tag, take, take_until};
+use nom::bytes::streaming::{tag, take};
 use nom::character::streaming::{digit0, digit1};
 use nom::combinator::{map, map_res, opt, value};
 use nom::error::ErrorKind;
 use nom::sequence::{delimited, preceded, tuple};
-use nom::{error, AsBytes, FindToken, IResult};
 
 use crate::parse_ansi_text::raw_ansi_parse::enums::AnsiSequence;
 
@@ -57,10 +56,6 @@ fn cursor_pos(input: &[u8]) -> IResult<&[u8], AnsiSequence> {
         )),
         |(_, x, _, y, _)| AnsiSequence::CursorPos(x, y),
     )(input)
-}
-
-fn escape(input: &[u8]) -> IResult<&[u8], AnsiSequence> {
-    value(AnsiSequence::Text(ESCAPE_AS_BYTES), tag(ESCAPE_AS_BYTES))(input)
 }
 
 fn cursor_up(input: &[u8]) -> IResult<&[u8], AnsiSequence> {
@@ -287,8 +282,6 @@ fn combined(input: &[u8]) -> IResult<&[u8], AnsiSequence> {
     // So we simply nest them.
     alt((
         alt((
-            // TODO - remove escape
-            // escape,
             cursor_pos,
             cursor_up,
             cursor_down,

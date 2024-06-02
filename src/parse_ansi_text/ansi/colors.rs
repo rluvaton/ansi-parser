@@ -1,103 +1,71 @@
 use heapless::Vec;
 
-#[allow(dead_code)]
 pub const BLACK_FOREGROUND_CODE: &str = "\x1B[30m";
-#[allow(dead_code)]
 pub const BLACK_BACKGROUND_CODE: &str = "\x1B[40m";
 
-#[allow(dead_code)]
 pub const RED_FOREGROUND_CODE: &str = "\x1B[31m";
-#[allow(dead_code)]
 pub const RED_BACKGROUND_CODE: &str = "\x1B[41m";
 
-#[allow(dead_code)]
 pub const GREEN_FOREGROUND_CODE: &str = "\x1B[32m";
-#[allow(dead_code)]
 pub const GREEN_BACKGROUND_CODE: &str = "\x1B[42m";
 
-#[allow(dead_code)]
 pub const YELLOW_FOREGROUND_CODE: &str = "\x1B[33m";
-#[allow(dead_code)]
 pub const YELLOW_BACKGROUND_CODE: &str = "\x1B[43m";
 
-#[allow(dead_code)]
 pub const BLUE_FOREGROUND_CODE: &str = "\x1B[34m";
-#[allow(dead_code)]
 pub const BLUE_BACKGROUND_CODE: &str = "\x1B[44m";
 
-#[allow(dead_code)]
 pub const MAGENTA_FOREGROUND_CODE: &str = "\x1B[35m";
-#[allow(dead_code)]
 pub const MAGENTA_BACKGROUND_CODE: &str = "\x1B[45m";
 
-#[allow(dead_code)]
 pub const CYAN_FOREGROUND_CODE: &str = "\x1B[36m";
-#[allow(dead_code)]
 pub const CYAN_BACKGROUND_CODE: &str = "\x1B[46m";
 
-#[allow(dead_code)]
 pub const WHITE_FOREGROUND_CODE: &str = "\x1B[37m";
-#[allow(dead_code)]
 pub const WHITE_BACKGROUND_CODE: &str = "\x1B[47m";
 
-#[allow(dead_code)]
 pub const BRIGHT_BLACK_FOREGROUND_CODE: &str = "\x1B[90m";
-#[allow(dead_code)]
 pub const BRIGHT_BLACK_BACKGROUND_CODE: &str = "\x1B[100m";
 
-#[allow(dead_code)]
 pub const BRIGHT_RED_FOREGROUND_CODE: &str = "\x1B[91m";
-#[allow(dead_code)]
 pub const BRIGHT_RED_BACKGROUND_CODE: &str = "\x1B[101m";
 
-#[allow(dead_code)]
 pub const BRIGHT_GREEN_FOREGROUND_CODE: &str = "\x1B[92m";
-#[allow(dead_code)]
 pub const BRIGHT_GREEN_BACKGROUND_CODE: &str = "\x1B[102m";
 
-#[allow(dead_code)]
 pub const BRIGHT_YELLOW_FOREGROUND_CODE: &str = "\x1B[93m";
-#[allow(dead_code)]
 pub const BRIGHT_YELLOW_BACKGROUND_CODE: &str = "\x1B[103m";
 
-#[allow(dead_code)]
 pub const BRIGHT_BLUE_FOREGROUND_CODE: &str = "\x1B[94m";
-#[allow(dead_code)]
 pub const BRIGHT_BLUE_BACKGROUND_CODE: &str = "\x1B[104m";
 
-#[allow(dead_code)]
 pub const BRIGHT_MAGENTA_FOREGROUND_CODE: &str = "\x1B[95m";
-#[allow(dead_code)]
 pub const BRIGHT_MAGENTA_BACKGROUND_CODE: &str = "\x1B[105m";
 
-#[allow(dead_code)]
 pub const BRIGHT_CYAN_FOREGROUND_CODE: &str = "\x1B[96m";
-#[allow(dead_code)]
 pub const BRIGHT_CYAN_BACKGROUND_CODE: &str = "\x1B[106m";
 
-#[allow(dead_code)]
 pub const BRIGHT_WHITE_FOREGROUND_CODE: &str = "\x1B[97m";
-#[allow(dead_code)]
 pub const BRIGHT_WHITE_BACKGROUND_CODE: &str = "\x1B[107m";
 
-#[allow(dead_code)]
+#[allow(non_snake_case)]
 pub fn EIGHT_BIT_FOREGROUND_CODE(byte: u8) -> String {
     // \x1B[38;2;R;G;Bm
     format!("\x1B[38;5;{}m", byte)
 }
 
-#[allow(dead_code)]
+#[allow(non_snake_case)]
 pub fn EIGHT_BIT_BACKGROUND_CODE(byte: u8) -> String {
     format!("\x1B[48;5;{}m", byte)
 }
 
-#[allow(dead_code)]
+#[allow(non_snake_case)]
 pub fn RGB_FOREGROUND_CODE(r: u8, g: u8, b: u8) -> String {
     // \x1B[38;2;R;G;Bm
     format!("\x1B[38;2;{};{};{}m", r, g, b)
 }
 
-#[allow(dead_code)]
+#[allow(non_snake_case)]
 pub fn RGB_BACKGROUND_CODE(r: u8, g: u8, b: u8) -> String {
     format!("\x1B[48;2;{};{};{}m", r, g, b)
 }
@@ -105,9 +73,7 @@ pub fn RGB_BACKGROUND_CODE(r: u8, g: u8, b: u8) -> String {
 pub const LARGEST_RGB_FOREGROUND_CODE: &str = "\x1B[38;2;255;255;255m";
 pub const LARGEST_RGB_BACKGROUND_CODE: &str = "\x1B[48;2;255;255;255m";
 
-#[allow(dead_code)]
 pub const DEFAULT_FOREGROUND_CODE: &str = "\x1B[39m";
-#[allow(dead_code)]
 pub const DEFAULT_BACKGROUND_CODE: &str = "\x1B[49m";
 
 pub enum ColorType {
@@ -813,7 +779,6 @@ pub fn get_rgb_values_from_8_bit(eight_bit_color: u8) -> (u8, u8, u8) {
         254 => (228, 228, 228),
         // Grey93
         255 => (238, 238, 238),
-        _ => panic!("Unknown 8-bit color {}", eight_bit_color),
     };
 }
 

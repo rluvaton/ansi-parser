@@ -1,5 +1,4 @@
 use memchr::memchr;
-use std::iter::Iterator;
 
 use crate::parse_ansi_text::ansi::ansi_sequence_helpers::{
     get_type_from_ansi_sequence, AnsiSequenceType,

@@ -1,7 +1,4 @@
-use std::fmt::Display;
-
-use crate::parse_ansi_text::raw_ansi_parse::{parse_escape, AnsiSequence, Output, Text};
-
+use crate::parse_ansi_text::raw_ansi_parse::{AnsiSequence, Output, parse_escape, Text};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ParseAnsiResult<'a> {
@@ -43,17 +40,4 @@ pub fn parse_ansi_continues(
             pending_string: buf,
         },
     };
-}
-
-#[cfg(test)]
-mod tests {
-    use heapless::Vec as HeaplessVec;
-    use pretty_assertions::assert_eq;
-
-    use crate::parse_ansi_text::ansi::colors::*;
-    use crate::parse_ansi_text::raw_ansi_parse::{AnsiSequence, Output, Text};
-
-    use super::*;
-
-    // TODO - add tests
 }

@@ -1,12 +1,11 @@
 use std::ffi::OsString;
 use std::path::PathBuf;
 use ansi_parser_extended::parse_file::types::ReadAnsiFileOptions;
-use genawaiter::stack::let_gen_using;
 use ansi_parser_extended::files::file_reader::FileReaderOptions;
 use ansi_parser_extended::parse_ansi_text::ansi::types::Span;
 use ansi_parser_extended::parse_ansi_text::parse_options::ParseOptions;
-use ansi_parser_extended::parse_file::file_to_lines_of_spans::read_ansi_file_to_lines_producer;
-use ansi_parser_extended::parse_file::file_to_spans::read_ansi_file_to_spans_producer;
+use ansi_parser_extended::parse_file::file_to_lines_of_spans::read_ansi_file_to_lines;
+use ansi_parser_extended::parse_file::file_to_spans::read_ansi_file_to_spans;
 use ansi_parser_extended::parse_file::from_middle_of_file::get_from_middle_of_the_file_info;
 
 
@@ -41,13 +40,13 @@ pub fn run_parse_command(matches: &clap::ArgMatches) {
     };
 
     if !split_by_lines {
-        let_gen_using!(spans_iterator, |co| read_ansi_file_to_spans_producer(options, co));
+        let spans_iterator = read_ansi_file_to_spans(options);
 
         spans_iterator.into_iter().for_each(|_| {
             // Noop
         });
     } else {
-        let_gen_using!(lines_iterator, |co| read_ansi_file_to_lines_producer(options, co));
+        let lines_iterator = read_ansi_file_to_lines(options);
 
         lines_iterator.into_iter().for_each(|_| {
             // Noop

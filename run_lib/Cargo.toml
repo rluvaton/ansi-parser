@@ -8,5 +8,4 @@ edition = "2021"
 [dependencies]
 clap = { version = "4", features = ["derive"] }
 ansi_parser_extended = { path = "../" }
-genawaiter = "0.99.1"
 

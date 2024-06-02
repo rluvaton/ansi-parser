@@ -21,9 +21,9 @@ pub struct FromMiddleOfFile {
 // because it will parse the lines until the max(from_line, to_line)
 pub fn get_from_middle_of_the_file_info(
     input_file: PathBuf,
-    from_line: Option<&usize>,
-    to_line: Option<&usize>,
-    mapping_file: Option<&String>,
+    from_line: Option<usize>,
+    to_line: Option<usize>,
+    mapping_file: Option<String>,
 ) -> FromMiddleOfFile {
     if mapping_file.is_none() {
         return get_from_middle_of_the_file_info_without_mapping(input_file, from_line, to_line);
@@ -41,7 +41,7 @@ pub fn get_from_middle_of_the_file_info(
     if from_line.is_some() {
         let from = get_line_metadata_from_file(
             &mut file,
-            *from_line.unwrap(),
+            from_line.unwrap(),
             content_start_offset,
             line_length,
         )
@@ -77,8 +77,8 @@ pub fn get_from_middle_of_the_file_info(
 
 pub fn get_from_middle_of_the_file_info_without_mapping(
     input_file: PathBuf,
-    from_line: Option<&usize>,
-    to_line: Option<&usize>,
+    from_line: Option<usize>,
+    to_line: Option<usize>,
 ) -> FromMiddleOfFile {
     if from_line.is_none() && to_line.is_none() {
         return FromMiddleOfFile {
@@ -105,11 +105,11 @@ pub fn get_from_middle_of_the_file_info_without_mapping(
     let mut lines_iterator: Box<dyn Iterator<Item = Line>> = Box::new(read_ansi_file_to_lines(options));
 
     if from_line.is_some() {
-        lines_iterator = Box::new(lines_iterator.skip(*from_line.unwrap()));
+        lines_iterator = Box::new(lines_iterator.skip(from_line.unwrap()));
     }
 
     if to_line.is_some() {
-        let number_of_lines = to_line.unwrap() - from_line.unwrap_or(&0);
+        let number_of_lines = to_line.unwrap() - from_line.unwrap_or(0);
 
         // + 1 to get the line after the last line to have the to bytes, if the line does not exists we are in pro
         lines_iterator = Box::new(lines_iterator.take(number_of_lines + 1));
@@ -132,7 +132,7 @@ pub fn get_from_middle_of_the_file_info_without_mapping(
     }
 
     if to_line.is_some() {
-        let got_all_lines = lines.len() == to_line.unwrap() - from_line.unwrap_or(&0) + 1;
+        let got_all_lines = lines.len() == to_line.unwrap() - from_line.unwrap_or(0) + 1;
 
         if got_all_lines {
             // the line after requested line - 1 to get the end of the requested line

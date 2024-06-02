@@ -132,7 +132,7 @@ pub fn get_from_middle_of_the_file_info_without_mapping(
     }
 
     if to_line.is_some() {
-        let got_all_lines = lines.len() == to_line.unwrap() - from_bytes.unwrap_or(0) + 1;
+        let got_all_lines = lines.len() == to_line.unwrap() - from_line.unwrap_or(&0) + 1;
 
         if got_all_lines {
             // the line after requested line - 1 to get the end of the requested line

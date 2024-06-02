@@ -103,21 +103,64 @@ pub fn get_line_metadata_from_file(
 
     // Go to the matching line position
     // TODO - should differentiate between seek problem or index out of bounds
-    file.seek(SeekFrom::Start(offset_in_text as u64))
-        .expect("Go to matching line failed");
+    let seek_result = file.seek(SeekFrom::Start(offset_in_text as u64));
 
-    file.read_exact(&mut requested_line_initial_style)
-        .expect("Read matching line failed");
+    if seek_result.is_err() {
+        let file_size = file.metadata();
+
+        if file_size.is_err() {
+            println!("Seek failed for initial style for line number: {}, tried to seek to {}", line_number, offset_in_text);
+            return None;
+        }
+
+        println!("Seek failed for initial style for line number: {}, tried to seek to {} when file size is {}", line_number, offset_in_text, file_size.unwrap().len());
+        return None;
+    }
+
+    let read_exact_result = file.read_exact(&mut requested_line_initial_style);
+
+    if read_exact_result.is_err() {
+        let file_size = file.metadata();
+
+        if file_size.is_err() {
+            println!("Read requested line for initial style when line number: {}, in {} failed", line_number, offset_in_text);
+            return None;
+        }
+
+        println!("Read requested line for initial style when line number: {}, from bytes {} to bytes {} and file size is {} failed", line_number, offset_in_text, offset_in_text + requested_line_initial_style.len(), file_size.unwrap().len());
+        return None;
+    }
+
+    let line_location_in_real_file_seek_position = offset_in_text + line_length - SECOND_PART_LINE_LENGTH;
 
     // Go to the matching line position
-    // TODO - should differentiate between seek problem or index out of bounds
-    file.seek(SeekFrom::Start(
-        (offset_in_text + line_length - SECOND_PART_LINE_LENGTH) as u64,
-    ))
-    .expect("Go to matching line failed");
+    let seek_result = file.seek(SeekFrom::Start(line_location_in_real_file_seek_position as u64));
 
-    file.read_exact(&mut requested_line_original_location)
-        .expect("Read matching line failed");
+    if seek_result.is_err() {
+        let file_size = file.metadata();
+
+        if file_size.is_err() {
+            println!("Seek failed for actual line position when line number: {}, tried to seek to {}", line_number, line_location_in_real_file_seek_position);
+            return None;
+        }
+
+        println!("Seek failed for actual line position when line number: {}, tried to seek to {} and file size is {}", line_number, line_location_in_real_file_seek_position, file_size.unwrap().len());
+        return None;
+    }
+
+    let read_exact_result = file.read_exact(&mut requested_line_original_location);
+
+    if read_exact_result.is_err() {
+        let file_size = file.metadata();
+
+        if file_size.is_err() {
+            println!("Read requested line for line position when line number: {}, in {} failed", line_number, line_location_in_real_file_seek_position);
+            return None;
+        }
+
+        println!("Read requested line for line position when line number: {}, from bytes {} to bytes {} and file size is {} failed", line_number, line_location_in_real_file_seek_position, line_location_in_real_file_seek_position + requested_line_original_location.len(), file_size.unwrap().len());
+        return None;
+    }
 
     let line_style = String::from_utf8(requested_line_initial_style)
         .expect("Converting requested line to UTF-8 string failed");

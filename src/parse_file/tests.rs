@@ -10,7 +10,7 @@ mod tests {
     use crate::parse_ansi_text::ansi::style::*;
     use crate::parse_ansi_text::ansi::types::*;
     use crate::parse_ansi_text::parse_options::ParseOptions;
-    use crate::parse_file::file_to_lines_of_spans::read_ansi_file_to_lines;
+    use crate::parse_file::file_to_lines_of_spans::{read_ansi_file_to_lines};
     use crate::parse_file::file_to_spans::read_ansi_file_to_spans;
     use crate::parse_file::types::ReadAnsiFileOptions;
     use crate::types::Line;

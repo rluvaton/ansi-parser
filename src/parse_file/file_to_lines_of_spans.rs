@@ -1,5 +1,4 @@
-use genawaiter::{rc::gen, yield_};
-
+use genawaiter::sync::{Co, Gen};
 use crate::files::file_reader::FileReader;
 use crate::parse_ansi_text::ansi::types::Span;
 use crate::parse_ansi_text::ansi_output_to_spans::parse_ansi_as_line_of_spans::{
@@ -12,7 +11,8 @@ use crate::parse_ansi_text::raw_ansi_parse::Text;
 use crate::parse_file::types::ReadAnsiFileOptions;
 use crate::types::Line;
 
-pub fn read_ansi_file_to_lines(options: ReadAnsiFileOptions) -> impl Iterator<Item = Line> {
+// Using the low level API instead of relying on the gen! or producer! macros for better editor support and debugging
+async fn read_ansi_file_to_lines_producer(options: ReadAnsiFileOptions, co: Co<Line>) {
     let file_reader = FileReader::new(options.file_options);
 
     let mut end_of_line_index: usize = 0;
@@ -28,81 +28,81 @@ pub fn read_ansi_file_to_lines(options: ReadAnsiFileOptions) -> impl Iterator<It
     };
     let mut pending_string: Vec<u8> = vec![];
 
-    #[allow(clippy::needless_return)]
-    return gen!({
-        for item in file_reader {
-            let mut value = item;
+    for item in file_reader {
+        let mut value = item;
 
-            if pending_string.is_empty() {
-                pending_string = value;
-            } else {
-                pending_string.append(value.as_mut());
-            }
+        if pending_string.is_empty() {
+            pending_string = value;
+        } else {
+            pending_string.append(value.as_mut());
+        }
 
-            let mut pending = pending_string.as_slice();
-            let mut result: ParseAnsiResult = parse_ansi_continues(pending);
+        let mut pending = pending_string.as_slice();
+        let mut result: ParseAnsiResult = parse_ansi_continues(pending);
 
-            while let Some(ready_output) = result.output {
-                end_of_line_index += result.size;
-                let mut lines_result = convert_ansi_output_lines_of_spans_continues(
-                    Some(ready_output),
+        while let Some(ready_output) = result.output {
+            end_of_line_index += result.size;
+            let mut lines_result = convert_ansi_output_lines_of_spans_continues(
+                Some(ready_output),
+                &mut current_line,
+                end_of_line_index,
+            );
+
+            while let ResultType::Parse(next_line) = lines_result {
+                co.yield_(current_line).await;
+
+                current_line = next_line;
+
+                lines_result = convert_ansi_output_lines_of_spans_continues(
+                    None,
                     &mut current_line,
                     end_of_line_index,
                 );
-
-                while let ResultType::Parse(next_line) = lines_result {
-                    yield_!(current_line);
-
-                    current_line = next_line;
-
-                    lines_result = convert_ansi_output_lines_of_spans_continues(
-                        None,
-                        &mut current_line,
-                        end_of_line_index
-                    );
-                }
-
-                pending = result.pending_string;
-                result = parse_ansi_continues(pending);
             }
 
-            pending_string = result.pending_string.to_vec();
+            pending = result.pending_string;
+            result = parse_ansi_continues(pending);
         }
 
-        let ready_output = Output::TextBlock(Text {
-            text: pending_string.as_slice(),
-        });
+        pending_string = result.pending_string.to_vec();
+    }
 
-        end_of_line_index += pending_string.len();
+    let ready_output = Output::TextBlock(Text {
+        text: pending_string.as_slice(),
+    });
 
-        let mut lines_result = convert_ansi_output_lines_of_spans_continues(
-            Some(ready_output),
+    end_of_line_index += pending_string.len();
+
+    let mut lines_result = convert_ansi_output_lines_of_spans_continues(
+        Some(ready_output),
+        &mut current_line,
+        end_of_line_index,
+    );
+
+    while let ResultType::Parse(next_line) = lines_result {
+        co.yield_(current_line).await;
+
+        current_line = next_line;
+
+        lines_result = convert_ansi_output_lines_of_spans_continues(
+            None,
             &mut current_line,
-            end_of_line_index
+            end_of_line_index,
         );
+    }
 
-        while let ResultType::Parse(next_line) = lines_result {
-            yield_!(current_line);
+    let last_span = current_line.spans.last();
 
-            current_line = next_line;
-
-            lines_result = convert_ansi_output_lines_of_spans_continues(
-                None,
-                &mut current_line,
-                end_of_line_index
-            );
+    if let Some(last_span) = last_span {
+        if last_span.text.is_empty() {
+            current_line.spans.pop();
         }
+    }
 
-        let last_span = current_line.spans.last();
+    // Yielding the last line
+    co.yield_(current_line).await;
+}
 
-        if let Some(last_span) = last_span {
-            if last_span.text.is_empty() {
-                current_line.spans.pop();
-            }
-        }
-
-        // Yielding the last ;ome
-        yield_!(current_line);
-    })
-    .into_iter();
+pub fn read_ansi_file_to_lines(options: ReadAnsiFileOptions) -> impl Iterator<Item=Line> {
+    return Gen::new(|co| read_ansi_file_to_lines_producer(options, co)).into_iter();
 }

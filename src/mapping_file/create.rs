@@ -72,5 +72,5 @@ fn create_line_map(line: Line) -> Vec<u8> {
         location_in_file.to_vec(),
         DELIMITER.as_bytes().to_vec(),
     ]
-    .concat();
+        .concat();
 }

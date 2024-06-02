@@ -23,7 +23,7 @@ pub fn run_parse_command(matches: &clap::ArgMatches) {
     let input_file_path = PathBuf::from(OsString::from(file_path));
 
     let middle_of_file_info =
-        get_from_middle_of_the_file_info(input_file_path, from_line, to_line, mapping_file);
+        get_from_middle_of_the_file_info(input_file_path, from_line.copied(), to_line.copied(), mapping_file.cloned());
 
     let file_reader_options = FileReaderOptions {
         file_path: file_path.clone(),

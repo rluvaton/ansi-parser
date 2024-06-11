@@ -1,15 +1,24 @@
 use std::ffi::OsString;
 use std::path::PathBuf;
-use ansi_parser_extended::parse_file::types::ReadAnsiFileOptions;
+
 use ansi_parser_extended::files::file_reader::FileReaderOptions;
 use ansi_parser_extended::parse_ansi_text::ansi::types::Span;
 use ansi_parser_extended::parse_ansi_text::parse_options::ParseOptions;
 use ansi_parser_extended::parse_file::file_to_lines_of_spans::read_ansi_file_to_lines;
 use ansi_parser_extended::parse_file::file_to_spans::read_ansi_file_to_spans;
 use ansi_parser_extended::parse_file::from_middle_of_file::get_from_middle_of_the_file_info;
+use ansi_parser_extended::parse_file::types::ReadAnsiFileOptions;
 
+use crate::cli::parse_in_memory_command::run_parse_command_in_memory;
 
 pub fn run_parse_command(matches: &clap::ArgMatches) {
+    let in_memory = *matches.get_one::<bool>("in-memory").unwrap();
+
+    if in_memory {
+        run_parse_command_in_memory(matches);
+        return
+    }
+
     let split_by_lines = *matches.get_one::<bool>("split-lines").unwrap();
 
     let from_line = matches.get_one::<usize>("from-line");

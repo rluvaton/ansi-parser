@@ -15,6 +15,8 @@ mod tests {
     use crate::parse_file::types::ReadAnsiFileOptions;
     use crate::types::Line;
 
+    // TODO - run all tests here on the buffer parse as well
+
     fn get_tmp_file_path() -> String {
         return NamedTempFile::new()
             .expect("create temp file")

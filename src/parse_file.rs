@@ -3,3 +3,5 @@ pub mod file_to_spans;
 pub mod from_middle_of_file;
 mod tests;
 pub mod types;
+pub mod text_to_spans;
+pub mod text_to_lines_of_spans;

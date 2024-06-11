@@ -14,6 +14,15 @@ pub fn get_cli() -> Command {
             .value_hint(ValueHint::FilePath)
             .help("file to read"))
 
+
+        .arg(Arg::new("in-memory")
+            .long("in-memory")
+            .required(false)
+            .help("to test the parsing if we have the text in memory")
+            .action(ArgAction::SetTrue)
+            .conflicts_with_all(["from-line", "to-line", "mapping-file"]))
+
+
         .arg(Arg::new("split-lines")
             .short('s')
             .long("split-lines")

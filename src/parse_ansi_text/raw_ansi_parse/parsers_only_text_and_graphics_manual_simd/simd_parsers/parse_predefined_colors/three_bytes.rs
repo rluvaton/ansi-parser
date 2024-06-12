@@ -3,12 +3,12 @@ use std::simd::cmp::{SimdPartialEq, SimdPartialOrd};
 use std::simd::num::SimdUint;
 use std::simd::Simd;
 
-const LANES: usize = 64;
+const LANES: usize = 32;
 
 // Predefined colors here are between 100 and 107
 pub const INVALID: u8 = 255;
 // b'\x1b[100m' or other number instead of 100
-pub const SIZE: usize = 5;
+pub const SIZE: usize = 6;
 
 const MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     255, // b'\x1b',
@@ -21,10 +21,7 @@ const MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     // Empty
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0,
 ]);
 
 const MIN_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
@@ -38,10 +35,7 @@ const MIN_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     // Empty
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0,
 ]);
 
 const MAX_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
@@ -55,10 +49,7 @@ const MAX_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     // Empty
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0,
 ]);
 
 

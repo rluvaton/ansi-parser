@@ -61,7 +61,6 @@ mod tests {
     use crate::parse_ansi_text::ansi::colors::*;
     use crate::parse_ansi_text::ansi::constants::RESET_CODE;
     use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics_manual_simd::constants::*;
-    use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics_manual_simd::parse_u8;
     use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics_manual_simd::simd_parsers::parse_u8::parse_u8_simd;
 
     use super::*;

@@ -3,7 +3,7 @@ use std::simd::cmp::{SimdPartialEq, SimdPartialOrd};
 use std::simd::num::SimdUint;
 use std::simd::Simd;
 
-const LANES: usize = 64;
+const LANES: usize = 32;
 
 pub const INVALID_STYLE: u8 = 255;
 // b'\x1b[0m' or other number instead of 0
@@ -18,10 +18,7 @@ const MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     // Empty
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
 ]);
 
 const MIN_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
@@ -33,10 +30,7 @@ const MIN_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     // Empty
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
 ]);
 
 const MAX_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
@@ -48,10 +42,7 @@ const MAX_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     // Empty
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
 ]);
 
 

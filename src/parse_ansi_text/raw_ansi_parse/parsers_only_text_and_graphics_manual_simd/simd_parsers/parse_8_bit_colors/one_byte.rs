@@ -3,7 +3,7 @@ use std::simd::cmp::{SimdPartialEq, SimdPartialOrd};
 use std::simd::num::SimdUint;
 use std::simd::Simd;
 
-const LANES: usize = 64;
+const LANES: usize = 32;
 
 pub const INVALID: (u8, u8) = (255, 255);
 
@@ -24,10 +24,7 @@ const MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     // Empty
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0,
+    0, 0, 0,
 ]);
 
 const MIN_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
@@ -44,10 +41,7 @@ const MIN_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     // Empty
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0,
+    0, 0, 0,
 ]);
 
 const MAX_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
@@ -64,10 +58,7 @@ const MAX_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     // Empty
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0,
+    0, 0, 0,
 ]);
 
 
@@ -99,7 +90,6 @@ mod tests {
     #[test]
     fn get_eight_bit_color_one_byte_should_support_all_eight_bit_colors_between_0_and_9() {
         for num in 0..=9 {
-            let byte = b'0' + num;
             assert_eq!(
                 get_eight_bit_color_one_byte(Simd::<u8, LANES>::load_or_default(EIGHT_BIT_FOREGROUND_CODE(num).as_bytes())),
                 (38, num)
@@ -115,7 +105,6 @@ mod tests {
     #[test]
     fn get_eight_bit_color_one_byte_should_return_color_even_if_have_other_bytes_after_color() {
         for num in 0..=9 {
-            let byte = b'0' + num;
             assert_eq!(
                 get_eight_bit_color_one_byte(Simd::<u8, LANES>::load_or_default((EIGHT_BIT_FOREGROUND_CODE(num) + "mhello").as_bytes())),
                 (38, num)

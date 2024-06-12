@@ -1,5 +1,5 @@
-pub mod two_bytes;
-pub mod three_bytes;
+mod two_bytes;
+mod three_bytes;
 
 pub use two_bytes::{
     INVALID as INVALID_PREDEFINED_COLOR_2_BYTES,

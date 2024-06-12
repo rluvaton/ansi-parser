@@ -3,12 +3,12 @@ use std::simd::cmp::{SimdPartialEq, SimdPartialOrd};
 use std::simd::num::SimdUint;
 use std::simd::Simd;
 
-const LANES: usize = 64;
+const LANES: usize = 32;
 
 // Predefined colors here are not numbers above 99 and one of the specific colors
 pub const INVALID: u8 = 255;
 // b'\x1b[38m' or other number instead of 38
-pub const SIZE: usize = 4;
+pub const SIZE: usize = 5;
 
 const MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     255, // b'\x1b',
@@ -20,10 +20,7 @@ const MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     // Empty
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0,
 ]);
 
 const MIN_REGULAR_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
@@ -36,10 +33,7 @@ const MIN_REGULAR_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     // Empty
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0,
 ]);
 
 const MAX_REGULAR_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
@@ -52,10 +46,7 @@ const MAX_REGULAR_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     // Empty
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0,
 ]);
 
 const MIN_BRIGHT_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
@@ -68,10 +59,7 @@ const MIN_BRIGHT_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     // Empty
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0,
 ]);
 
 const MAX_BRIGHT_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
@@ -84,10 +72,7 @@ const MAX_BRIGHT_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     // Empty
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0,
 ]);
 
 

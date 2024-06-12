@@ -1,3 +1,5 @@
+#![feature(portable_simd)]
+
 // TODO - don't make everything public, make it private and expose only what is needed
 
 pub mod files;

@@ -1,3 +1,4 @@
+use crate::parse_ansi_text::ansi::ansi_sequence_helpers::AnsiSequenceType;
 bitflags::bitflags! {
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
     pub struct TextStyle: u8 {
@@ -47,6 +48,19 @@ pub fn get_text_style_type(code: u8) -> TextStyle {
         7 => TextStyle::Inverse,
         9 => TextStyle::Strikethrough,
         _ => TextStyle::None,
+    };
+}
+
+pub fn get_style_type(code: u8) -> AnsiSequenceType {
+    return match code {
+        0 => AnsiSequenceType::Reset,
+        1 => AnsiSequenceType::Brightness(Brightness::Bold),
+        2 => AnsiSequenceType::Brightness(Brightness::Dim),
+        3 => AnsiSequenceType::TextStyle(TextStyle::Italic),
+        4 => AnsiSequenceType::TextStyle(TextStyle::Underline),
+        7 => AnsiSequenceType::TextStyle(TextStyle::Inverse),
+        9 => AnsiSequenceType::TextStyle(TextStyle::Strikethrough),
+        _ => AnsiSequenceType::Unsupported
     };
 }
 

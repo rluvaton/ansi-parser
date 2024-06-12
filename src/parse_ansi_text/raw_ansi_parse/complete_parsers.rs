@@ -1,4 +1,3 @@
-
 // Taken from ansi_parse and modify
 
 use atoi::atoi;
@@ -13,7 +12,6 @@ use nom::error::ErrorKind;
 use nom::sequence::{delimited, preceded, tuple};
 
 use crate::parse_ansi_text::raw_ansi_parse::enums::AnsiSequence;
-use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics;
 
 pub const ESCAPE_AS_BYTES: &[u8] = b"\x1b";
 const EMPTY_AS_BYTES: &[u8] = b"";
@@ -356,7 +354,7 @@ fn until_escape(s: &[u8]) -> IResult<&[u8], &[u8]> {
     };
 }
 
-pub fn parse_escape_old(input: &[u8], complete_string: bool) -> IResult<&[u8], AnsiSequence> {
+pub fn parse_escape(input: &[u8], complete_string: bool) -> IResult<&[u8], AnsiSequence> {
     if input.is_empty() {
         return Err(nom::Err::Incomplete(nom::Needed::Unknown));
     }
@@ -406,17 +404,6 @@ pub fn parse_escape_old(input: &[u8], complete_string: bool) -> IResult<&[u8], A
             }
         }
     }
-}
-
-
-#[inline]
-pub fn parse_escape(input: &[u8], complete_string: bool) -> IResult<&[u8], AnsiSequence> {
-    return parsers_only_text_and_graphics::parse_escape(input, complete_string);
-    // match parse_fn {
-    //     ParseFn::Complete => complete_parsers::parse_escape(input, complete_string),
-    //     ParseFn::OnlyGraphicAndText => parsers_only_text_and_graphics::parse_escape(input, complete_string),
-    //     ParseFn::OnlyGraphicAndTextManual => parsers_only_text_and_graphics_manual::parse_escape(input, complete_string),
-    // }
 }
 
 #[cfg(test)]

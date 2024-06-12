@@ -1,4 +1,5 @@
 use heapless::Vec;
+use crate::parse_ansi_text::ansi::ansi_sequence_helpers::AnsiSequenceType;
 
 pub const BLACK_FOREGROUND_CODE: &str = "\x1B[30m";
 pub const BLACK_BACKGROUND_CODE: &str = "\x1B[40m";
@@ -50,7 +51,7 @@ pub const BRIGHT_WHITE_BACKGROUND_CODE: &str = "\x1B[107m";
 
 #[allow(non_snake_case)]
 pub fn EIGHT_BIT_FOREGROUND_CODE(byte: u8) -> String {
-    // \x1B[38;2;R;G;Bm
+    // \x1B[38;5;Vm
     format!("\x1B[38;5;{}m", byte)
 }
 
@@ -262,6 +263,73 @@ pub fn get_color_type(vec: &Vec<u8, 5>) -> ColorType {
     }
 
     return ColorType::None;
+}
+
+pub fn get_predefined_color_type(code: u8) -> AnsiSequenceType {
+    // 3 bit color
+    if code >= 30 && code <= 49 {
+        let code_color_digit = code % 10;
+        let type_color_digit = (code / 10) % 10;
+
+        let color = match code_color_digit {
+            0 => Color::Black,
+            1 => Color::Red,
+            2 => Color::Green,
+            3 => Color::Yellow,
+            4 => Color::Blue,
+            5 => Color::Magenta,
+            6 => Color::Cyan,
+            7 => Color::White,
+            9 => Color::Default,
+            _ => panic!("Invalid color code: {:?}", code),
+        };
+
+        if type_color_digit == 3 {
+            return AnsiSequenceType::ForegroundColor(color);
+        }
+
+        if type_color_digit == 4 {
+            return AnsiSequenceType::BackgroundColor(color);
+        }
+    }
+
+    // 4 bit color
+    if code >= 90 && code <= 107 {
+        let code_color_digit = code % 10;
+        let type_color_digit = code / 10;
+
+        let color = match code_color_digit {
+            0 => Color::BrightBlack,
+            1 => Color::BrightRed,
+            2 => Color::BrightGreen,
+            3 => Color::BrightYellow,
+            4 => Color::BrightBlue,
+            5 => Color::BrightMagenta,
+            6 => Color::BrightCyan,
+            7 => Color::BrightWhite,
+            _ => panic!("Invalid color code: {:?}", code),
+        };
+
+        if type_color_digit == 9 {
+            return AnsiSequenceType::ForegroundColor(color);
+        }
+
+        if type_color_digit == 10 {
+            return AnsiSequenceType::BackgroundColor(color);
+        }
+    }
+
+    return AnsiSequenceType::Unsupported;
+}
+
+pub fn get_8_bit_color_type(color_type: u8, code: u8) -> AnsiSequenceType {
+    return match color_type {
+        38 => AnsiSequenceType::ForegroundColor(Color::EightBit(code)),
+        48 => AnsiSequenceType::BackgroundColor(Color::EightBit(code)),
+
+        // Can not reach here
+        _ => AnsiSequenceType::Unsupported,
+    };
 }
 
 pub fn get_rgb_values_from_8_bit(eight_bit_color: u8) -> (u8, u8, u8) {

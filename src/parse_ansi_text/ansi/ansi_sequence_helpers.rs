@@ -25,6 +25,7 @@ pub fn old_ansi_sequence_to_new<'a>(seq: ansi_parser::AnsiSequence) -> AnsiSeque
         ansi_parser::AnsiSequence::CursorRestore => AnsiSequence::CursorRestore,
         ansi_parser::AnsiSequence::EraseDisplay => AnsiSequence::EraseDisplay,
         ansi_parser::AnsiSequence::EraseLine => AnsiSequence::EraseLine,
+        // TODO - use SetGraphicsMode1Byte when only 1 byte
         ansi_parser::AnsiSequence::SetGraphicsMode(a) => AnsiSequence::SetGraphicsMode(a),
         ansi_parser::AnsiSequence::SetMode(a) => AnsiSequence::SetMode(a),
         ansi_parser::AnsiSequence::ResetMode(a) => AnsiSequence::ResetMode(a),
@@ -79,6 +80,15 @@ pub fn get_type_from_ansi_sequence(seq: &AnsiSequence) -> AnsiSequenceType {
 
     match seq {
         // TODO - what it means?
+        AnsiSequence::SetGraphicsMode1Byte(byte) => {
+            return get_style_type(*byte);
+        }
+        AnsiSequence::SetGraphicsModePredefinedColor(predefined_color) => {
+            return get_predefined_color_type(*predefined_color);
+        }
+        AnsiSequence::SetGraphicsModeEightBitColor(color_type, color) => {
+            return get_8_bit_color_type(*color_type, *color);
+        }
         AnsiSequence::SetGraphicsMode(vec) => {
             // println!("SetGraphicsMode: {:?}", vec);
 
@@ -134,6 +144,9 @@ pub fn is_ansi_sequence_code_supported(seq: &AnsiSequence) -> bool {
 
         // TODO - what it means?
         AnsiSequence::SetGraphicsMode(_) => true,
+        AnsiSequence::SetGraphicsMode1Byte(_) => true,
+        AnsiSequence::SetGraphicsModeEightBitColor(_, _) => true,
+        AnsiSequence::SetGraphicsModePredefinedColor(_) => true,
 
         // -- Unsupported --
 

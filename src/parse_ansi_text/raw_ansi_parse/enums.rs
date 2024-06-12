@@ -14,6 +14,9 @@ pub enum AnsiSequence<'a> {
     CursorRestore,
     EraseDisplay,
     EraseLine,
+    SetGraphicsMode1Byte(u8),
+    SetGraphicsModePredefinedColor(u8),
+    SetGraphicsModeEightBitColor(u8, u8),
     SetGraphicsMode(heapless::Vec<u8, 5>),
     SetMode(u8),
     ResetMode(u8),
@@ -80,4 +83,11 @@ impl Display for AnsiSequence<'_> {
             _ => write!(formatter, "<other>"),
         }
     }
+}
+
+
+pub enum ParseFn {
+    Complete,
+    OnlyGraphicAndText,
+    OnlyGraphicAndTextManual
 }

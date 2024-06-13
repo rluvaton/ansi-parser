@@ -3,7 +3,7 @@ pub mod output;
 pub mod parsers;
 mod complete_parsers;
 mod parsers_only_text_and_graphics_manual;
-mod parsers_only_text_and_graphics_manual_simd;
+pub mod parsers_only_text_and_graphics_manual_simd;
 mod parsers_only_text_and_graphics;
 
 

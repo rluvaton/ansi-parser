@@ -13,8 +13,7 @@ pub fn raw_parse_ansi_fn_compare(c: &mut Criterion, path: String) {
     let file_content = std::fs::read(path).expect("Failed to read file");
     let content = file_content.as_slice();
 
-    let mut group = c.benchmark_group("Raw parse ansi compare");
-
+    let mut group = c.benchmark_group("raw_parse_ansi_fn_compare");
 
     fn run_parse_fn_res<F>(mut content: &[u8], parse_fn: F) where F: Fn(&[u8], bool) -> IResult<&[u8], AnsiSequence> {
         let mut res = parse_fn(content, true);
@@ -43,12 +42,12 @@ pub fn raw_parse_ansi_fn_compare(c: &mut Criterion, path: String) {
         }
     }
 
-    group.bench_function(BenchmarkId::new("parse_escape_complete", 0),
-                         |b| b.iter(|| run_parse_fn_res(content, parse_escape_complete)));
-    group.bench_function(BenchmarkId::new("parse_escape_only_text_and_graphics", 0),
-                         |b| b.iter(|| run_parse_fn_res(content, parse_escape_only_text_and_graphics)));
-    group.bench_function(BenchmarkId::new("parse_escape_only_text_and_graphics_manual", 0),
-                         |b| b.iter(|| run_parse_fn_res(content, parse_escape_only_text_and_graphics_manual)));
+    // group.bench_function(BenchmarkId::new("parse_escape_complete", 0),
+    //                      |b| b.iter(|| run_parse_fn_res(content, parse_escape_complete)));
+    // group.bench_function(BenchmarkId::new("parse_escape_only_text_and_graphics", 0),
+    //                      |b| b.iter(|| run_parse_fn_res(content, parse_escape_only_text_and_graphics)));
+    // group.bench_function(BenchmarkId::new("parse_escape_only_text_and_graphics_manual", 0),
+    //                      |b| b.iter(|| run_parse_fn_res(content, parse_escape_only_text_and_graphics_manual)));
     group.bench_function(BenchmarkId::new("parse_escape_only_text_and_graphics_manual_simd", 0),
                          |b| b.iter(|| run_parse_fn_option(content, parse_escape_only_text_and_graphics_manual_simd)));
     group.finish();

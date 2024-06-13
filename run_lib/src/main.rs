@@ -11,7 +11,7 @@ mod cli;
 
 use std::env;
 use ansi_parser_extended::parse_ansi_text::raw_ansi_parse::{AnsiSequence, parse_escape_complete, parse_escape_only_text_and_graphics, parse_escape_only_text_and_graphics_manual_simd};
-const file_path: &str = "/Users/rluvaton/dev/personal/ansi-viewer/examples/fixtures/huge.ans";
+const file_path: &str = "/Users/rluvaton/dev/personal/ansi-viewer/examples/fixtures/medium.ans";
 
 
 fn run_cli() {

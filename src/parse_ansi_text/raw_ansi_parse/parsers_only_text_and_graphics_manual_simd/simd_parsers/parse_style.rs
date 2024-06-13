@@ -2,6 +2,7 @@ use std::ops::{BitAnd, BitAndAssign, BitOr, BitXor, Div, Index, Mul};
 use std::simd::cmp::{SimdPartialEq, SimdPartialOrd};
 use std::simd::num::SimdUint;
 use std::simd::{Mask, Simd};
+
 use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics_manual_simd::simd_parsers::helpers::{AllOrNone, build_graphics_mode_result};
 
 const LANES: usize = 32;

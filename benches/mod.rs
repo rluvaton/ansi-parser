@@ -1,5 +1,3 @@
-#![feature(custom_test_frameworks)]
-#![test_runner(criterion::runner)]
 
 use criterion::{Criterion, criterion_group, criterion_main};
 

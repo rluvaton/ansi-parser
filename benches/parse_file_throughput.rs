@@ -4,7 +4,6 @@ use nom::IResult;
 
 use ansi_parser_extended::files::file_reader::FileReaderOptions;
 use ansi_parser_extended::parse_ansi_text::parse_options::ParseOptions;
-use ansi_parser_extended::parse_ansi_text::raw_ansi_parse::{AnsiSequence, parse_escape_complete, parse_escape_only_text_and_graphics, parse_escape_only_text_and_graphics_manual};
 use ansi_parser_extended::parse_file::file_to_lines_of_spans::read_ansi_file_to_lines;
 use ansi_parser_extended::parse_file::file_to_spans::read_ansi_file_to_spans;
 use ansi_parser_extended::parse_file::text_to_lines_of_spans::buffer_to_lines;

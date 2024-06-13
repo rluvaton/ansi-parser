@@ -1,11 +1,5 @@
 use std::cmp::min;
-use std::simd::{Simd, ToBytes};
 
-pub fn simd_to_u64(simd: Simd<u8, 8>) -> u64 {
-    // unsafe { std::mem::transmute(simd) }
-
-    return u64::from_be_bytes(simd.to_be_bytes().into());
-}
 
 pub fn u8_array_to_u64(arr: [u8; 8]) -> u64 {
     return u64::from_be_bytes(arr);
@@ -32,6 +26,7 @@ pub unsafe fn u8_slice_to_u64_unchecked(slice: &[u8]) -> u64 {
     num.to_be()
 }
 
+#[inline(always)]
 pub fn u8_slice_to_u64(slice: &[u8]) -> u64 {
     if slice.len() < 8 {
         let mut arr: [u8; 8] = [0; 8];
@@ -54,16 +49,6 @@ pub fn u8_slice_to_u64(slice: &[u8]) -> u64 {
 mod tests {
     use super::*;
 
-    #[test]
-    fn should_convert_simd_to_u64() {
-        let simd = Simd::<u8, 8>::from_array([1, 2, 3, 4, 5, 6, 7, 8]);
-
-        let actual = simd_to_u64(simd);
-
-        let expected = 0x01_02_03_04_05_06_07_08;
-
-        assert_eq!(actual, expected);
-    }
 
     #[test]
     fn should_convert_u8_array_to_u64() {

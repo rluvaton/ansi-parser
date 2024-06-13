@@ -19,9 +19,9 @@ use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics_manua
     },
     parse_style::{get_style, get_style_simd, INVALID_STYLE, STYLE_SIZE},
 };
-use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics_manual_simd::simd_parsers::parse_predefined_colors::{get_predefined_color_2_bytes_simd, get_predefined_color_2_bytes_simd_small, get_predefined_color_3_bytes_simd, get_predefined_color_3_bytes_simd_small};
-use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics_manual_simd::simd_parsers::helpers::graphics_mode_result;
-use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics_manual_simd::simd_parsers::parse_style::get_style_simd_small;
+use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics_manual_simd::simd_parsers::parse_predefined_colors::{get_predefined_color_2_bytes_simd, get_predefined_color_2_bytes_simd_small, get_predefined_color_2_bytes_u64, get_predefined_color_3_bytes_simd, get_predefined_color_3_bytes_simd_small, get_predefined_color_3_bytes_u64};
+use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics_manual_simd::simd_parsers::helpers::{graphics_mode_result, u8_slice_to_u64, u8_slice_to_u64_unchecked};
+use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics_manual_simd::simd_parsers::parse_style::{get_style_simd_small, get_style_u64};
 
 mod constants;
 mod simd_parsers;
@@ -29,6 +29,7 @@ mod simd_parsers;
 
 const INCOMPLETE_RESULT: Simd::<u8, 32> = Simd::<u8, 32>::from_array([0; 32]);
 const INCOMPLETE_RESULT_SMALL: Simd::<u8, 8> = Simd::<u8, 8>::from_array([0; 8]);
+const INCOMPLETE_RESULT_SMALL_U64: u64 = 0;
 
 // all false to take the next result
 // const INITIAL_MASK: Mask<i8, 8> = Mask::from_array([false;8]);
@@ -92,41 +93,36 @@ fn parse_graphics_mode(input: &[u8]) -> ParseGraphicsMode<'_> {
     return ParseGraphicsMode::Incomplete;
 }
 
-fn parse_graphics_mode_simd_ifs(input: &[u8]) -> Simd::<u8, 8> {
+fn parse_graphics_mode_simd_ifs(input: &[u8]) -> u64 {
     // The minimum size of the input should be STYLE_SIZE
     if input.len() < STYLE_SIZE as usize {
-        return INCOMPLETE_RESULT_SMALL;
-    }
-    if input.len() < 8 {
-        return INCOMPLETE_RESULT_SMALL;
+        return INCOMPLETE_RESULT_SMALL_U64;
     }
 
     // TODO - change to load_or_default to avoid panic if the length is less than 32
-    let bytes = Simd::<u8, 8>::from_slice(&input[..8]);
+    let bytes = u8_slice_to_u64(input);
 
-    let (valid, possible_result) = get_style_simd_small(bytes);
+    let possible_result = get_style_u64(bytes);
 
-    if valid {
+    if possible_result > 0 {
         return possible_result;
     }
 
+    let possible_result = get_predefined_color_2_bytes_u64(bytes);
 
-
-    let (valid, possible_result) = get_predefined_color_2_bytes_simd_small(bytes);
-
-    if valid {
+    if possible_result > 0 {
         return possible_result;
     }
 
-    let (valid, possible_result) = get_predefined_color_3_bytes_simd_small(bytes);
+    let possible_result = get_predefined_color_3_bytes_u64(bytes);
 
-    if valid {
+    if possible_result > 0 {
         return possible_result;
     }
 
     // TODO - implement 8 bit colors and 255
 
-    return INCOMPLETE_RESULT_SMALL;
+    return INCOMPLETE_RESULT_SMALL_U64;
 }
 
 fn parse_graphics_mode_simd_bits_only(input: &[u8]) -> Simd::<u8, 32> {
@@ -233,13 +229,15 @@ pub fn parse_escape(input: &[u8], complete_string: bool) -> Option<(&[u8], AnsiS
 
     let res_simd = parse_graphics_mode_simd_ifs(input);
 
-    if !graphics_mode_result::is_valid(res_simd) {
+    // If the leftmost byte is not set then it is an invalid result
+    if res_simd == 0 {
         return None;
     }
 
-    let size = graphics_mode_result::get_size(res_simd) as usize;
+    let mut size = res_simd & 0x00_FF_00_00_00_00_00_00;
+    size = size >> 48;
 
-    return Some((&input[size..], AnsiSequence::SetGraphicsModeSimdSmall(res_simd)));
+    return Some((&input[size as usize..], AnsiSequence::SetGraphicsModeSimdSmallU64(res_simd)));
 }
 
 #[cfg(test)]

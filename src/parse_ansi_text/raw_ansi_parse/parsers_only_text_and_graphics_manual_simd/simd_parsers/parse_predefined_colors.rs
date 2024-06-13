@@ -8,6 +8,7 @@ pub use two_bytes::{
     get_predefined_color_2_bytes,
     get_predefined_color_2_bytes_simd,
     get_predefined_color_2_bytes_simd_small,
+    get_predefined_color_2_bytes_u64,
     SIZE as PREDEFINED_COLOR_SIZE_2_BYTES,
 
 };
@@ -17,5 +18,6 @@ pub use three_bytes::{
     get_predefined_color_3_bytes,
     get_predefined_color_3_bytes_simd,
     get_predefined_color_3_bytes_simd_small,
+    get_predefined_color_3_bytes_u64,
     SIZE as PREDEFINED_COLOR_SIZE_3_BYTES
 };

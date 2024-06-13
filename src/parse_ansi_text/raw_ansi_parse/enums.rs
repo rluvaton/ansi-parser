@@ -17,6 +17,7 @@ pub enum AnsiSequence<'a> {
     SetGraphicsMode1Byte(u8),
     SetGraphicsModeSimd(Simd<u8, 32>),
     SetGraphicsModeSimdSmall(Simd<u8, 8>),
+    SetGraphicsModeSimdSmallU64(u64),
     SetGraphicsModePredefinedColor(u8),
     SetGraphicsModeEightBitColor(u8, u8),
     SetGraphicsMode(heapless::Vec<u8, 5>),

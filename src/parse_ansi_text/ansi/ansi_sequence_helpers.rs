@@ -146,6 +146,7 @@ pub fn is_ansi_sequence_code_supported(seq: &AnsiSequence) -> bool {
         AnsiSequence::SetGraphicsMode(_) => true,
         AnsiSequence::SetGraphicsModeSimd(_) => true,
         AnsiSequence::SetGraphicsModeSimdSmall(_) => true,
+        AnsiSequence::SetGraphicsModeSimdSmallU64(_) => true,
         AnsiSequence::SetGraphicsMode1Byte(_) => true,
         AnsiSequence::SetGraphicsModeEightBitColor(_, _) => true,
         AnsiSequence::SetGraphicsModePredefinedColor(_) => true,

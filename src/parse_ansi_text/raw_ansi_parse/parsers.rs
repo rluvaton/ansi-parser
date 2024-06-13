@@ -13,7 +13,7 @@ use nom::error::ErrorKind;
 use nom::sequence::{delimited, preceded, tuple};
 
 use crate::parse_ansi_text::raw_ansi_parse::enums::AnsiSequence;
-use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics;
+use crate::parse_ansi_text::raw_ansi_parse::{parse_escape_only_text_and_graphics_manual_simd, parsers_only_text_and_graphics};
 
 pub const ESCAPE_AS_BYTES: &[u8] = b"\x1b";
 const EMPTY_AS_BYTES: &[u8] = b"";
@@ -411,7 +411,15 @@ pub fn parse_escape_old(input: &[u8], complete_string: bool) -> IResult<&[u8], A
 
 #[inline]
 pub fn parse_escape(input: &[u8], complete_string: bool) -> IResult<&[u8], AnsiSequence> {
-    return parsers_only_text_and_graphics::parse_escape(input, complete_string);
+    let res = parse_escape_only_text_and_graphics_manual_simd(input, complete_string);
+
+    if res.is_none() {
+        return Err(nom::Err::Incomplete(nom::Needed::Unknown));
+    }
+
+    return Ok(res.unwrap());
+
+    // return parsers_only_text_and_graphics::parse_escape(input, complete_string);
     // match parse_fn {
     //     ParseFn::Complete => complete_parsers::parse_escape(input, complete_string),
     //     ParseFn::OnlyGraphicAndText => parsers_only_text_and_graphics::parse_escape(input, complete_string),

@@ -72,3 +72,11 @@ Summary
    37.50 ± 3.10 times faster than './bench/mapping/run-without-mapping-sync.sh'
 
 ```
+
+
+----
+
+Running flame graph:
+```sh
+cargo flamegraph --root --open -- mapping create --input ../examples/fixtures/huge.ans --output ../examples/fixtures/huge.ans.mapping 
+```

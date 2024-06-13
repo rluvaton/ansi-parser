@@ -15,6 +15,7 @@ pub enum AnsiSequence<'a> {
     EraseDisplay,
     EraseLine,
     SetGraphicsMode1Byte(u8),
+    SetGraphicsModeSimd(Simd<u8, 32>),
     SetGraphicsModePredefinedColor(u8),
     SetGraphicsModeEightBitColor(u8, u8),
     SetGraphicsMode(heapless::Vec<u8, 5>),
@@ -59,6 +60,8 @@ pub enum AnsiSequence<'a> {
 }
 
 use core::fmt::{Display, Formatter, Result as DisplayResult};
+use std::simd::Simd;
+
 impl Display for AnsiSequence<'_> {
     fn fmt(&self, formatter: &mut Formatter) -> DisplayResult {
         write!(formatter, "\u{1b}")?;

@@ -103,7 +103,7 @@ fn parse_graphics_mode_simd_ifs(input: &[u8]) -> Simd::<u8, 32> {
     let bytes = Simd::<u8, 32>::from_slice(&input[..32]);
 
     // invalid result
-    let current_result = INCOMPLETE_RESULT;
+    // let current_result = INCOMPLETE_RESULT;
 
     let (mask, possible_result) = get_style_simd(bytes);
 
@@ -132,7 +132,7 @@ fn parse_graphics_mode_simd_ifs(input: &[u8]) -> Simd::<u8, 32> {
 
     // TODO - implement 8 bit colors and 255
 
-    return current_result;
+    return INCOMPLETE_RESULT;
 }
 
 fn parse_graphics_mode_simd_bits_only(input: &[u8]) -> Simd::<u8, 32> {
@@ -224,7 +224,7 @@ pub fn parse_escape(input: &[u8], complete_string: bool) -> Option<(&[u8], AnsiS
     }
 
     // If not starting with the escape code then the matching string shouldn't be empty, I think
-    if !input.starts_with(ESCAPE_AS_BYTES) {
+    if input[0] != b'\x1b' {
         let pos = memchr(b'\x1b', input);
 
         return Some(match pos {

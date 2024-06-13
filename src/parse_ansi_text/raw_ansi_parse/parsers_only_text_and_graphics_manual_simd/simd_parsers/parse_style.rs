@@ -1,4 +1,4 @@
-use std::ops::{BitAnd, BitAndAssign, BitOr, BitXor, Div, Index, Mul};
+use std::ops::{Add, BitAnd, BitAndAssign, BitOr, BitXor, Div, Index, Mul, Sub};
 use std::simd::cmp::{SimdPartialEq, SimdPartialOrd};
 use std::simd::num::SimdUint;
 use std::simd::{Mask, Simd};
@@ -50,6 +50,42 @@ const MAX_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
 ]);
 
 
+const SUBTRACT_NUM_TO_U8: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
+    0, // b'\x1b',
+    0, // b'[',
+    b'0', // b'9', // Everything
+    0, // b'm',
+
+    // Empty
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0
+]);
+
+const KEEP_VALUE_BYTE: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
+    0, // PARSE_GRAPHICS_MODE_STYLE_TYPE,
+    0, // SIZE,
+    0, // value size
+    255, // the value
+
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0
+]);
+
+const GRAPHICS_MODE_RESULT: Simd<u8, LANES> = build_graphics_mode_result!(
+    PARSE_GRAPHICS_MODE_STYLE_TYPE,
+    STYLE_SIZE,
+    1, // one byte for the number
+    0, // the value
+
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0
+);
+
 // INVALID_STYLE for invalid, otherwise the number
 pub fn get_style(bytes: Simd<u8, LANES>) -> u8 {
     let only_relevant_part = bytes & MASK;
@@ -73,24 +109,27 @@ pub fn get_style_simd(bytes: Simd<u8, LANES>) -> (Mask::<i8, 32>, Simd::<u8, 32>
         .bitand(only_relevant_part.simd_le(MAX_MASK))
         .all_or_none();
 
-    // 2 as we want to get the number after b"\x1b[",
-    let num = only_relevant_part.index(2);
+    if !valid_mask.test(0) {
+        return (
+            valid_mask,
+            GRAPHICS_MODE_RESULT
+        );
+    }
 
-    // Get the number from the ascii, using saturating_sub to avoid underflow when invalid as the valid mask will be all false
-    let number = num.saturating_sub(b'0');
+    let result = only_relevant_part
+        // Getting the number from the ascii not using saturating_sub as we know it's valid range
+        .sub(SUBTRACT_NUM_TO_U8)
+        // Move to the correct position
+        .rotate_elements_right::<1>()
+        // Keep only the value byte
+        .bitand(KEEP_VALUE_BYTE)
+
+        .add(GRAPHICS_MODE_RESULT);
+
 
     return (
         valid_mask,
-        build_graphics_mode_result!(
-            PARSE_GRAPHICS_MODE_STYLE_TYPE,
-            STYLE_SIZE,
-            1,
-            number,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0
-        )
+        result
     );
 }
 

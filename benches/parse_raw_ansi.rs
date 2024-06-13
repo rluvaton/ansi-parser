@@ -5,7 +5,6 @@ use ansi_parser_extended::parse_ansi_text::raw_ansi_parse::{
     AnsiSequence,
     parse_escape_complete,
     parse_escape_only_text_and_graphics,
-    parse_escape_only_text_and_graphics_manual,
     parse_escape_only_text_and_graphics_manual_simd,
 };
 
@@ -42,12 +41,10 @@ pub fn raw_parse_ansi_fn_compare(c: &mut Criterion, path: String) {
         }
     }
 
-    // group.bench_function(BenchmarkId::new("parse_escape_complete", 0),
-    //                      |b| b.iter(|| run_parse_fn_res(content, parse_escape_complete)));
-    // group.bench_function(BenchmarkId::new("parse_escape_only_text_and_graphics", 0),
-    //                      |b| b.iter(|| run_parse_fn_res(content, parse_escape_only_text_and_graphics)));
-    // group.bench_function(BenchmarkId::new("parse_escape_only_text_and_graphics_manual", 0),
-    //                      |b| b.iter(|| run_parse_fn_res(content, parse_escape_only_text_and_graphics_manual)));
+    group.bench_function(BenchmarkId::new("parse_escape_complete", 0),
+                         |b| b.iter(|| run_parse_fn_res(content, parse_escape_complete)));
+    group.bench_function(BenchmarkId::new("parse_escape_only_text_and_graphics", 0),
+                         |b| b.iter(|| run_parse_fn_res(content, parse_escape_only_text_and_graphics)));
     group.bench_function(BenchmarkId::new("parse_escape_only_text_and_graphics_manual_simd", 0),
                          |b| b.iter(|| run_parse_fn_option(content, parse_escape_only_text_and_graphics_manual_simd)));
     group.finish();

@@ -1,4 +1,4 @@
-use std::ops::{BitAnd, BitOr, Div, Index, Mul};
+use std::ops::{Add, AddAssign, BitAnd, BitOr, Div, Index, Mul, Sub};
 use std::simd::cmp::{SimdPartialEq, SimdPartialOrd};
 use std::simd::num::SimdUint;
 use std::simd::{Mask, Simd};
@@ -77,6 +77,55 @@ const MAX_BRIGHT_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, 0, 0, 0, 0, 0, 0,
 ]);
 
+const SUBTRACT_NUM_TO_U8: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
+    0, // b'\x1b',
+    0, // b'[',
+    b'0', // b'9', // Everything
+    b'0', // b'9', // Everything
+    0, // b'm',
+
+    // Empty
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0,
+]);
+
+const MULTIPLY_TO_U8: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
+    0, // b'\x1b',
+    0, // b'[',
+    10, // b'9', // Everything
+    1, // b'9', // Everything
+    0, // b'm',
+
+    // Empty
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0,
+]);
+
+const KEEP_VALUE_BYTE: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
+    0, // PARSE_GRAPHICS_MODE_PREDEFINED_COLOR_TYPE,
+    0, // SIZE,
+    0, // value size
+    255, // the value
+
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0
+]);
+
+const GRAPHICS_MODE_RESULT: Simd<u8, LANES> = build_graphics_mode_result!(
+    PARSE_GRAPHICS_MODE_PREDEFINED_COLOR_TYPE,
+    SIZE,
+    1, // one byte for the number
+    0, // the value
+
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0
+);
 
 // INVALID_PREDEFINED_COLOR for invalid, otherwise the number, doesn't support bright colors above 99 to have fixed size
 pub fn get_predefined_color_2_bytes(bytes: Simd<u8, LANES>) -> u8 {
@@ -111,30 +160,32 @@ pub fn get_predefined_color_2_bytes_simd(bytes: Simd<u8, LANES>) -> (Mask::<i8, 
         .bitand(only_relevant_part.simd_le(MAX_BRIGHT_COLOR_MASK))
         .all_or_none();
 
-
     // Because both masks are either all 1s or all 0s, we can just bitor them
     let valid_mask: Mask<i8, 32> = valid_mask_regular_color.bitor(valid_mask_bright_color);
 
-    // 2 as we want to get the number after b"\x1b[",
-    let first_digit = only_relevant_part.index(2);
-    let second_digit = only_relevant_part.index(3);
+    if !valid_mask.test(0) {
+        return (
+            valid_mask,
+            GRAPHICS_MODE_RESULT
+        );
+    }
 
-    // Get the number from the ascii (using saturating_<ops> to avoid overflow/underflow)
-    // This is basically: (first_digit - b'0') * 10 + (second_digit - b'0')
-    let number = first_digit.saturating_sub(b'0').saturating_mul(10).saturating_add(second_digit.saturating_sub(b'0'));
+    let digits_as_nums = only_relevant_part
+        // Getting the number from the ascii, not using saturating_sub as we already checked the range
+        .sub(SUBTRACT_NUM_TO_U8)
+        // This will make non-relevant numbers to 0
+        .mul(MULTIPLY_TO_U8);
+
+
+    let result = digits_as_nums
+        .rotate_elements_right::<1>()
+        .add(digits_as_nums)
+        .bitand(KEEP_VALUE_BYTE)
+        .add(GRAPHICS_MODE_RESULT);
 
     return (
         valid_mask,
-        build_graphics_mode_result!(
-            PARSE_GRAPHICS_MODE_PREDEFINED_COLOR_TYPE,
-            SIZE,
-            1, // one byte for the number
-            number,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0
-        )
+        result
     );
 }
 
@@ -282,8 +333,14 @@ mod tests {
 
     #[test]
     fn get_predefined_color_simd_should_support_all_predefined_colors() {
-
-
+        // let input = create_simd_from_str(RED_FOREGROUND_CODE);
+        // let actual = get_predefined_color_2_bytes_simd(input);
+        // let expected = create_valid_result_for_value(31);
+        //
+        // println!("input: {:?}", input.to_array());
+        // println!("actual: {:?}", actual.1.to_array());
+        // println!("expected: {:?}", expected.1.to_array());
+        // assert_eq!(actual, expected);
         assert_eq!(get_predefined_color_2_bytes_simd(create_simd_from_str(BLACK_FOREGROUND_CODE)), create_valid_result_for_value(30));
         assert_eq!(get_predefined_color_2_bytes_simd(create_simd_from_str(BLACK_BACKGROUND_CODE)), create_valid_result_for_value(40));
 

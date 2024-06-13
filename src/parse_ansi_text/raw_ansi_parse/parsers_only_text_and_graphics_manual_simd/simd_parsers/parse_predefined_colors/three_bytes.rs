@@ -1,4 +1,4 @@
-use std::ops::{BitAnd, BitOr, Div, Index, Mul};
+use std::ops::{Add, BitAnd, BitOr, Div, Index, IndexMut, Mul, Sub};
 use std::simd::cmp::{SimdPartialEq, SimdPartialOrd};
 use std::simd::num::SimdUint;
 use std::simd::{Mask, Simd};
@@ -54,6 +54,71 @@ const MAX_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, 0, 0, 0, 0, 0,
 ]);
 
+const SUBTRACT_NUM_TO_U8: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
+    0, // b'\x1b',
+    0, // b'[',
+    b'0', // b'1', // Everything
+    b'0', // b'0', // Everything
+    b'0', // b'7', // Everything
+    0, // b'm',
+
+    // Empty
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0,
+]);
+
+const MULTIPLY_TO_U8: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
+    0, // b'\x1b',
+    0, // b'[',
+    100, // b'1', // Everything
+    10, // b'0', // Everything
+    1, // b'7', // Everything
+    0, // b'm',
+
+    // Empty
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0,
+]);
+
+const KEEP_VALUE_BYTE: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
+    0, // PARSE_GRAPHICS_MODE_PREDEFINED_COLOR_TYPE,
+    0, // SIZE,
+    0, // value size
+    255, // the value
+
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0
+]);
+
+const HUNDRED_VALUE_BYTE: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
+    0, // PARSE_GRAPHICS_MODE_PREDEFINED_COLOR_TYPE,
+    0, // SIZE,
+    0, // value size
+    100, // the value
+
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0
+]);
+
+const GRAPHICS_MODE_RESULT: Simd<u8, LANES> = build_graphics_mode_result!(
+    PARSE_GRAPHICS_MODE_PREDEFINED_COLOR_TYPE,
+    SIZE,
+    1, // one byte for the number
+
+    // we do this calculation to avoid the need to subtract b'0' from the ascii number and add 100 as the range is between 100 and 107
+    100 - b'0', // the value
+
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0
+);
 
 // INVALID_PREDEFINED_COLOR_3_BYTES for invalid, otherwise the number, only support bright colors above 99 to have fixed size
 pub fn get_predefined_color_3_bytes(bytes: Simd<u8, LANES>) -> u8 {
@@ -81,38 +146,20 @@ pub fn get_predefined_color_3_bytes_simd(bytes: Simd<u8, LANES>) -> (Mask::<i8, 
         .bitand(only_relevant_part.simd_le(MAX_MASK))
         .all_or_none();
 
-    // 2 as we want to get the number after b"\x1b[",
-    let first_digit = only_relevant_part.index(2);
-    let second_digit = only_relevant_part.index(3);
-    let third_digit = only_relevant_part.index(4);
+    if !valid_mask.test(0) {
+        return (valid_mask, GRAPHICS_MODE_RESULT);
+    }
 
-    // Get the number from the ascii (using saturating_<ops> to avoid overflow/underflow)
-    // This is basically: (first_digit - b'0') * 100 + (second_digit - b'0') * 10 + (third_digit - b'0')
-    let number = first_digit
-        .saturating_sub(b'0')
-        .saturating_mul(100)
-        .saturating_add(
-            second_digit
-                .saturating_sub(b'0')
-                .saturating_mul(10)
-        )
-        .saturating_add(
-            third_digit
-                .saturating_sub(b'0')
-        );
+
+    let result = only_relevant_part
+        // add the ones (from 107 take the 7)
+        .rotate_elements_left::<1>()
+        .bitand(KEEP_VALUE_BYTE)
+        .add(GRAPHICS_MODE_RESULT);
 
     return (
         valid_mask,
-        build_graphics_mode_result!(
-            PARSE_GRAPHICS_MODE_PREDEFINED_COLOR_TYPE,
-            SIZE,
-            1, // one byte for the number
-            number,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0
-        )
+        result
     );
 }
 

@@ -19,14 +19,16 @@ use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics_manua
     },
     parse_style::{get_style, get_style_simd, INVALID_STYLE, STYLE_SIZE},
 };
-use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics_manual_simd::simd_parsers::parse_predefined_colors::{get_predefined_color_2_bytes_simd, get_predefined_color_3_bytes_simd};
+use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics_manual_simd::simd_parsers::parse_predefined_colors::{get_predefined_color_2_bytes_simd, get_predefined_color_2_bytes_simd_small, get_predefined_color_3_bytes_simd, get_predefined_color_3_bytes_simd_small};
 use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics_manual_simd::simd_parsers::helpers::graphics_mode_result;
+use crate::parse_ansi_text::raw_ansi_parse::parsers_only_text_and_graphics_manual_simd::simd_parsers::parse_style::get_style_simd_small;
 
 mod constants;
 mod simd_parsers;
 
 
 const INCOMPLETE_RESULT: Simd::<u8, 32> = Simd::<u8, 32>::from_array([0; 32]);
+const INCOMPLETE_RESULT_SMALL: (bool, Simd::<u8, 8>) = (false, Simd::<u8, 8>::from_array([0; 8]));
 
 // all false to take the next result
 // const INITIAL_MASK: Mask<i8, 8> = Mask::from_array([false;8]);
@@ -90,59 +92,49 @@ fn parse_graphics_mode(input: &[u8]) -> ParseGraphicsMode<'_> {
     return ParseGraphicsMode::Incomplete;
 }
 
-fn parse_graphics_mode_simd_ifs(input: &[u8]) -> Simd::<u8, 32> {
+fn parse_graphics_mode_simd_ifs(input: &[u8]) -> (bool, Simd::<u8, 8>) {
     // The minimum size of the input should be STYLE_SIZE
     if input.len() < STYLE_SIZE as usize {
-        return INCOMPLETE_RESULT
+        return INCOMPLETE_RESULT_SMALL;
     }
-    if input.len() < 32 {
-        return INCOMPLETE_RESULT
+    if input.len() < 8 {
+        return INCOMPLETE_RESULT_SMALL;
     }
 
     // TODO - change to load_or_default to avoid panic if the length is less than 32
-    let bytes = Simd::<u8, 32>::from_slice(&input[..32]);
+    let bytes = Simd::<u8, 8>::from_slice(&input[..8]);
 
-    // invalid result
-    // let current_result = INCOMPLETE_RESULT;
+    let res = get_style_simd_small(bytes);
 
-    let (mask, possible_result) = get_style_simd(bytes);
-
-    if mask.test(0) {
-        return possible_result;
+    if res.0 {
+        return res;
     }
 
-    // let current_result = mask.select(possible_result, current_result);
+    let res = get_predefined_color_2_bytes_simd_small(bytes);
 
-
-    let (mask, possible_result) = get_predefined_color_2_bytes_simd(bytes);
-
-    if mask.test(0) {
-        return possible_result;
+    if res.0 {
+        return res;
     }
 
-    // let current_result = mask.select(possible_result, current_result);
+    let res = get_predefined_color_3_bytes_simd_small(bytes);
 
-    let (mask, possible_result) = get_predefined_color_3_bytes_simd(bytes);
-
-    if mask.test(0) {
-        return possible_result;
+    if res.0 {
+        return res;
     }
-
-    // let current_result = mask.select(possible_result, current_result);
 
     // TODO - implement 8 bit colors and 255
 
-    return INCOMPLETE_RESULT;
+    return INCOMPLETE_RESULT_SMALL;
 }
 
 fn parse_graphics_mode_simd_bits_only(input: &[u8]) -> Simd::<u8, 32> {
     // The minimum size of the input should be STYLE_SIZE
     if input.len() < STYLE_SIZE as usize {
-        return INCOMPLETE_RESULT
+        return INCOMPLETE_RESULT;
     }
 
     if input.len() < 32 {
-        return INCOMPLETE_RESULT
+        return INCOMPLETE_RESULT;
     }
 
     // TODO - change to load_or_default to avoid panic if the length is less than 32
@@ -237,15 +229,15 @@ pub fn parse_escape(input: &[u8], complete_string: bool) -> Option<(&[u8], AnsiS
         });
     }
 
-    let res_simd = parse_graphics_mode_simd_ifs(input);
+    let (valid, res_simd) = parse_graphics_mode_simd_ifs(input);
 
-    if !graphics_mode_result::is_valid(res_simd) {
+    if !valid {
         return None;
     }
 
     let size = graphics_mode_result::get_size(res_simd) as usize;
 
-    return Some((&input[size..], AnsiSequence::SetGraphicsModeSimd(res_simd)));
+    return Some((&input[size..], AnsiSequence::SetGraphicsModeSimdSmall(res_simd)));
 }
 
 #[cfg(test)]
@@ -273,5 +265,22 @@ mod tests {
                 AnsiSequence::SetGraphicsMode(Vec::from_slice(&[0]).unwrap())
             ))
         );
+    }
+
+    #[test]
+    fn small_file() {
+        let file_path: &str = "/Users/rluvaton/dev/personal/ansi-viewer/examples/fixtures/tiny.ans";
+        let file_content = std::fs::read(file_path).expect("Failed to read file");
+        let content = file_content.as_slice();
+
+        let mut res = parse_escape(content, true);
+
+        loop {
+            if res.is_none() {
+                break;
+            }
+
+            res = parse_escape(res.unwrap().0, true);
+        }
     }
 }

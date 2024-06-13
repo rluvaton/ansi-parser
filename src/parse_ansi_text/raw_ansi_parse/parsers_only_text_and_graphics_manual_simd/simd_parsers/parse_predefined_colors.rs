@@ -7,6 +7,7 @@ pub use two_bytes::{
     INVALID as INVALID_PREDEFINED_COLOR_2_BYTES,
     get_predefined_color_2_bytes,
     get_predefined_color_2_bytes_simd,
+    get_predefined_color_2_bytes_simd_small,
     SIZE as PREDEFINED_COLOR_SIZE_2_BYTES,
 
 };
@@ -15,5 +16,6 @@ pub use three_bytes::{
     INVALID as INVALID_PREDEFINED_COLOR_3_BYTES,
     get_predefined_color_3_bytes,
     get_predefined_color_3_bytes_simd,
+    get_predefined_color_3_bytes_simd_small,
     SIZE as PREDEFINED_COLOR_SIZE_3_BYTES
 };

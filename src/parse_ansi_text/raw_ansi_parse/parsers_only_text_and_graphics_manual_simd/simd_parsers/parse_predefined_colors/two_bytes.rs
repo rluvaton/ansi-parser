@@ -25,6 +25,17 @@ const MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, 0, 0, 0, 0, 0, 0,
 ]);
 
+const MASK_SMALL: Simd<u8, 8> = Simd::<u8, 8>::from_array([
+    255, // b'\x1b',
+    255, //b'[',
+    255, // Everything
+    255, // Everything
+    255, //b'm',
+
+    // Empty
+    0, 0, 0,
+]);
+
 const MIN_REGULAR_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     b'\x1b',
     b'[',
@@ -36,6 +47,17 @@ const MIN_REGULAR_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0,
+]);
+
+const MIN_REGULAR_COLOR_MASK_SMALL: Simd<u8, 8> = Simd::<u8, 8>::from_array([
+    b'\x1b',
+    b'[',
+    b'3', // Everything
+    b'0', // Everything
+    b'm',
+
+    // Empty
+    0, 0, 0,
 ]);
 
 const MAX_REGULAR_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
@@ -51,6 +73,17 @@ const MAX_REGULAR_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, 0, 0, 0, 0, 0, 0,
 ]);
 
+const MAX_REGULAR_COLOR_MASK_SMALL: Simd<u8, 8> = Simd::<u8, 8>::from_array([
+    b'\x1b',
+    b'[',
+    b'4', // Everything
+    b'9', // Everything
+    b'm',
+
+    // Empty
+    0, 0, 0,
+]);
+
 const MIN_BRIGHT_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     b'\x1b',
     b'[',
@@ -62,6 +95,17 @@ const MIN_BRIGHT_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0,
+]);
+
+const MIN_BRIGHT_COLOR_MASK_SMALL: Simd<u8, 8> = Simd::<u8, 8>::from_array([
+    b'\x1b',
+    b'[',
+    b'9', // Everything
+    b'0', // Everything
+    b'm',
+
+    // Empty
+    0, 0, 0,
 ]);
 
 const MAX_BRIGHT_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
@@ -77,6 +121,17 @@ const MAX_BRIGHT_COLOR_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, 0, 0, 0, 0, 0, 0,
 ]);
 
+const MAX_BRIGHT_COLOR_MASK_SMALL: Simd<u8, 8> = Simd::<u8, 8>::from_array([
+    b'\x1b',
+    b'[',
+    b'9', // Everything
+    b'9', // Everything
+    b'm',
+
+    // Empty
+    0, 0, 0,
+]);
+
 const SUBTRACT_NUM_TO_U8: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, // b'\x1b',
     0, // b'[',
@@ -88,6 +143,17 @@ const SUBTRACT_NUM_TO_U8: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0,
+]);
+
+const SUBTRACT_NUM_TO_U8_SMALL: Simd<u8, 8> = Simd::<u8, 8>::from_array([
+    0, // b'\x1b',
+    0, // b'[',
+    b'0', // b'9', // Everything
+    b'0', // b'9', // Everything
+    0, // b'm',
+
+    // Empty
+    0, 0, 0,
 ]);
 
 const MULTIPLY_TO_U8: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
@@ -103,6 +169,17 @@ const MULTIPLY_TO_U8: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, 0, 0, 0, 0, 0, 0,
 ]);
 
+const MULTIPLY_TO_U8_SMALL: Simd<u8, 8> = Simd::<u8, 8>::from_array([
+    0, // b'\x1b',
+    0, // b'[',
+    10, // b'9', // Everything
+    1, // b'9', // Everything
+    0, // b'm',
+
+    // Empty
+    0, 0, 0,
+]);
+
 const KEEP_VALUE_BYTE: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, // PARSE_GRAPHICS_MODE_PREDEFINED_COLOR_TYPE,
     0, // SIZE,
@@ -113,6 +190,15 @@ const KEEP_VALUE_BYTE: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0
+]);
+
+const KEEP_VALUE_BYTE_SMALL: Simd<u8, 8> = Simd::<u8, 8>::from_array([
+    0, // PARSE_GRAPHICS_MODE_PREDEFINED_COLOR_TYPE,
+    0, // SIZE,
+    0, // value size
+    255, // the value
+
+    0, 0, 0, 0,
 ]);
 
 const GRAPHICS_MODE_RESULT: Simd<u8, LANES> = build_graphics_mode_result!(
@@ -126,6 +212,15 @@ const GRAPHICS_MODE_RESULT: Simd<u8, LANES> = build_graphics_mode_result!(
     0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0
 );
+
+const GRAPHICS_MODE_RESULT_SMALL: Simd<u8, 8> = Simd::<u8, 8>::from_array([
+    PARSE_GRAPHICS_MODE_PREDEFINED_COLOR_TYPE,
+    SIZE,
+    1, // one byte for the number
+    0, // the value
+
+    0, 0, 0, 0,
+]);
 
 // INVALID_PREDEFINED_COLOR for invalid, otherwise the number, doesn't support bright colors above 99 to have fixed size
 pub fn get_predefined_color_2_bytes(bytes: Simd<u8, LANES>) -> u8 {
@@ -185,6 +280,47 @@ pub fn get_predefined_color_2_bytes_simd(bytes: Simd<u8, LANES>) -> (Mask::<i8, 
 
     return (
         valid_mask,
+        result
+    );
+}
+
+pub fn get_predefined_color_2_bytes_simd_small(bytes: Simd<u8, 8>) -> (bool, Simd::<u8, 8>) {
+    let only_relevant_part = bytes & MASK_SMALL;
+
+    // merge the two masks and check if all the lanes are true
+    let valid_mask_regular_color: Mask<i8, 8> = only_relevant_part.simd_ge(MIN_REGULAR_COLOR_MASK_SMALL)
+        .bitand(only_relevant_part.simd_le(MAX_REGULAR_COLOR_MASK_SMALL))
+        .all_or_none();
+
+    let valid_mask_bright_color: Mask<i8, 8> = only_relevant_part.simd_ge(MIN_BRIGHT_COLOR_MASK_SMALL)
+        .bitand(only_relevant_part.simd_le(MAX_BRIGHT_COLOR_MASK_SMALL))
+        .all_or_none();
+
+    // Because both masks are either all 1s or all 0s, we can just bitor them
+    let valid = valid_mask_regular_color.bitor(valid_mask_bright_color).test(0);
+
+    if !valid {
+        return (
+            false,
+            GRAPHICS_MODE_RESULT_SMALL
+        );
+    }
+
+    let digits_as_nums = only_relevant_part
+        // Getting the number from the ascii, not using saturating_sub as we already checked the range
+        .sub(SUBTRACT_NUM_TO_U8_SMALL)
+        // This will make non-relevant numbers to 0
+        .mul(MULTIPLY_TO_U8_SMALL);
+
+
+    let result = digits_as_nums
+        .rotate_elements_right::<1>()
+        .add(digits_as_nums)
+        .bitand(KEEP_VALUE_BYTE_SMALL)
+        .add(GRAPHICS_MODE_RESULT_SMALL);
+
+    return (
+        true,
         result
     );
 }

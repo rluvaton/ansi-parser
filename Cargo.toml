@@ -39,3 +39,7 @@ pprof = { version = "0.13.0", features = ["flamegraph"] }
 [[bench]]
 name = "mod"
 harness = false
+
+[profile.profiling]
+inherits = "release"
+debug = true

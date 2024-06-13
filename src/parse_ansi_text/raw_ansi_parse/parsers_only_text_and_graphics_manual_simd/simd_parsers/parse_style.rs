@@ -25,6 +25,16 @@ const MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, 0, 0, 0, 0, 0, 0, 0,
 ]);
 
+const MASK_SMALL: Simd<u8, 8> = Simd::<u8, 8>::from_array([
+    255, // b'\x1b',
+    255, //b'[',
+    255, // Everything
+    255, //b'm',
+
+    // Empty
+    0, 0, 0, 0,
+]);
+
 const MIN_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     b'\x1b',
     b'[',
@@ -37,6 +47,16 @@ const MIN_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, 0, 0, 0, 0, 0, 0, 0,
 ]);
 
+const MIN_MASK_SMALL: Simd<u8, 8> = Simd::<u8, 8>::from_array([
+    b'\x1b',
+    b'[',
+    b'0', // Everything
+    b'm',
+
+    // Empty
+    0, 0, 0, 0,
+]);
+
 const MAX_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     b'\x1b',
     b'[',
@@ -47,6 +67,16 @@ const MAX_MASK: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0,
+]);
+
+const MAX_MASK_SMALL: Simd<u8, 8> = Simd::<u8, 8>::from_array([
+    b'\x1b',
+    b'[',
+    b'9', // Everything
+    b'm',
+
+    // Empty
+    0, 0, 0, 0,
 ]);
 
 
@@ -62,6 +92,16 @@ const SUBTRACT_NUM_TO_U8: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, 0, 0, 0, 0, 0, 0, 0
 ]);
 
+const SUBTRACT_NUM_TO_U8_SMALL: Simd<u8, 8> = Simd::<u8, 8>::from_array([
+    0, // b'\x1b',
+    0, // b'[',
+    b'0', // b'9', // Everything
+    0, // b'm',
+
+    // Empty
+    0, 0, 0, 0,
+]);
+
 const KEEP_VALUE_BYTE: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, // PARSE_GRAPHICS_MODE_STYLE_TYPE,
     0, // SIZE,
@@ -72,6 +112,16 @@ const KEEP_VALUE_BYTE: Simd<u8, LANES> = Simd::<u8, LANES>::from_array([
     0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0
+]);
+
+const KEEP_VALUE_BYTE_SMALL: Simd<u8, 8> = Simd::<u8, 8>::from_array([
+    0, // PARSE_GRAPHICS_MODE_STYLE_TYPE,
+    0, // SIZE,
+    0, // value size
+    255, // the value
+
+    // Empty
+    0, 0, 0, 0,
 ]);
 
 const GRAPHICS_MODE_RESULT: Simd<u8, LANES> = build_graphics_mode_result!(
@@ -85,6 +135,16 @@ const GRAPHICS_MODE_RESULT: Simd<u8, LANES> = build_graphics_mode_result!(
     0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0
 );
+
+
+const GRAPHICS_MODE_RESULT_SMALL: Simd<u8, 8> = Simd::<u8, 8>::from_array([
+    PARSE_GRAPHICS_MODE_STYLE_TYPE,
+    STYLE_SIZE,
+    1, // one byte for the number
+    0, // the value
+
+    0, 0, 0, 0,
+]);
 
 // INVALID_STYLE for invalid, otherwise the number
 pub fn get_style(bytes: Simd<u8, LANES>) -> u8 {
@@ -129,6 +189,38 @@ pub fn get_style_simd(bytes: Simd<u8, LANES>) -> (Mask::<i8, 32>, Simd::<u8, 32>
 
     return (
         valid_mask,
+        result
+    );
+}
+
+pub fn get_style_simd_small(bytes: Simd<u8, 8>) -> (bool, Simd::<u8, 8>) {
+    let only_relevant_part = bytes & MASK_SMALL;
+
+    // merge the two masks and check if all the lanes are true
+    let valid_mask = only_relevant_part.simd_ge(MIN_MASK_SMALL)
+        .bitand(only_relevant_part.simd_le(MAX_MASK_SMALL))
+        .all();
+
+    if !valid_mask {
+        return (
+            false,
+            GRAPHICS_MODE_RESULT_SMALL
+        );
+    }
+
+    let result = only_relevant_part
+        // Getting the number from the ascii not using saturating_sub as we know it's valid range
+        .sub(SUBTRACT_NUM_TO_U8_SMALL)
+        // Move to the correct position
+        .rotate_elements_right::<1>()
+        // Keep only the value byte
+        .bitand(KEEP_VALUE_BYTE_SMALL)
+
+        .add(GRAPHICS_MODE_RESULT_SMALL);
+
+
+    return (
+        true,
         result
     );
 }

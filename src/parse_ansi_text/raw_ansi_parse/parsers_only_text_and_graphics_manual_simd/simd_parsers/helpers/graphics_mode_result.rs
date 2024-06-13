@@ -21,22 +21,22 @@ macro_rules! build_graphics_mode_result {
 }
 
 #[inline(always)]
-pub fn is_valid(result: Simd::<u8, 32>) -> bool {
+pub fn is_valid(result: Simd::<u8, 8>) -> bool {
     return get_type(result) != 0;
 }
 
 #[inline(always)]
-pub fn get_type(result: Simd::<u8, 32>) -> u8 {
+pub fn get_type(result: Simd::<u8, 8>) -> u8 {
     *result.index(0)
 }
 
 #[inline(always)]
-pub fn get_size(result: Simd::<u8, 32>) -> u8 {
+pub fn get_size(result: Simd::<u8, 8>) -> u8 {
     *result.index(1)
 }
 
 #[inline(always)]
-pub fn get_value_size(result: Simd::<u8, 32>) -> u8 {
+pub fn get_value_size(result: Simd::<u8, 8>) -> u8 {
     *result.index(2)
 }
 

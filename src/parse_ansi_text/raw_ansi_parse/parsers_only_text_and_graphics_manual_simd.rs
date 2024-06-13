@@ -28,7 +28,7 @@ mod simd_parsers;
 
 
 const INCOMPLETE_RESULT: Simd::<u8, 32> = Simd::<u8, 32>::from_array([0; 32]);
-const INCOMPLETE_RESULT_SMALL: (bool, Simd::<u8, 8>) = (false, Simd::<u8, 8>::from_array([0; 8]));
+const INCOMPLETE_RESULT_SMALL: Simd::<u8, 8> = Simd::<u8, 8>::from_array([0; 8]);
 
 // all false to take the next result
 // const INITIAL_MASK: Mask<i8, 8> = Mask::from_array([false;8]);
@@ -92,7 +92,7 @@ fn parse_graphics_mode(input: &[u8]) -> ParseGraphicsMode<'_> {
     return ParseGraphicsMode::Incomplete;
 }
 
-fn parse_graphics_mode_simd_ifs(input: &[u8]) -> (bool, Simd::<u8, 8>) {
+fn parse_graphics_mode_simd_ifs(input: &[u8]) -> Simd::<u8, 8> {
     // The minimum size of the input should be STYLE_SIZE
     if input.len() < STYLE_SIZE as usize {
         return INCOMPLETE_RESULT_SMALL;
@@ -104,22 +104,24 @@ fn parse_graphics_mode_simd_ifs(input: &[u8]) -> (bool, Simd::<u8, 8>) {
     // TODO - change to load_or_default to avoid panic if the length is less than 32
     let bytes = Simd::<u8, 8>::from_slice(&input[..8]);
 
-    let res = get_style_simd_small(bytes);
+    let (valid, possible_result) = get_style_simd_small(bytes);
 
-    if res.0 {
-        return res;
+    if valid {
+        return possible_result;
     }
 
-    let res = get_predefined_color_2_bytes_simd_small(bytes);
 
-    if res.0 {
-        return res;
+
+    let (valid, possible_result) = get_predefined_color_2_bytes_simd_small(bytes);
+
+    if valid {
+        return possible_result;
     }
 
-    let res = get_predefined_color_3_bytes_simd_small(bytes);
+    let (valid, possible_result) = get_predefined_color_3_bytes_simd_small(bytes);
 
-    if res.0 {
-        return res;
+    if valid {
+        return possible_result;
     }
 
     // TODO - implement 8 bit colors and 255
@@ -229,9 +231,9 @@ pub fn parse_escape(input: &[u8], complete_string: bool) -> Option<(&[u8], AnsiS
         });
     }
 
-    let (valid, res_simd) = parse_graphics_mode_simd_ifs(input);
+    let res_simd = parse_graphics_mode_simd_ifs(input);
 
-    if !valid {
+    if !graphics_mode_result::is_valid(res_simd) {
         return None;
     }
 
